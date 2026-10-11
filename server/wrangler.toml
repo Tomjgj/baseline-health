@@ -1,0 +1,9 @@
+# Cloudflare Worker for the Baseline coach. Deploy with:  npx wrangler deploy
+# Secrets (never in this file):  npx wrangler secret put ANTHROPIC_API_KEY   and   npx wrangler secret put COACH_ACCESS_CODE
+name = "baseline-coach"
+main = "coach.mjs"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Where the app is hosted, comma-separated. "*" allows any origin (the access code still guards the key).
+ALLOWED_ORIGINS = "*"

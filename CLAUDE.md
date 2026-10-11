@@ -24,8 +24,15 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - UI helpers: `Tabs.eff` has `pill`, `range`, `bar`, `num`, `more` and `MEASURES`. Labels use shape as well as tone (filled, half or ring dot).
 - Experiments live in `profile.experiments` as `{id, habit, target, from, to, measure, ended?}`. `C.experiment(id)` compares the window with the 28 days before, intention-to-treat. One runs at a time.
 
+## Conventions added in phase 3 (Claude coach)
+- The backend is `server/coach.mjs` (a Cloudflare Worker; `dev.mjs` runs it under Node). It holds the key and owns the model, system prompt and tools. The page only sends `messages`. Keep `SYSTEM` and `TOOLS` byte-stable: changing either mid-conversation invalidates Claude's earlier thinking and the cache. Run `cd server && npm test` after touching it.
+- `Coach` in `index.html` keeps the conversation as API-shaped messages in localStorage, append-only. The data snapshot (`Coach.snapshot`) goes in the first user message, and a fresh one is appended as a `system` message when the data changed. A failed or refused turn is popped off the end; never edit earlier turns.
+- Actions: every proposal goes through `check` → card → Confirm → `run`, which returns an undo record; `show_chart` alone runs without confirmation. A new tool needs a schema in `TOOLS` (strict, all fields required) plus `check`, `describe`, `run` and `undo` in `Coach`.
+- Memory lives in `profile.coachMemory` (`profile.coachMemoryOn`), and check-in note frequency in `profile.coachNotes`. The server address and access code stay on the device (`baseline:coach`), never in the profile or the code.
+- Gate Claude entry points on `Coach.available()`, not `App.sample`. Food describe/photo still use the artifact runtime only.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
-3. Claude coach with editable memory and confirm/undo actions (needs the backend).
+3. ~~Claude coach~~ (done, Oct 2026): backend in `server/`, editable memory, six tools with confirm/undo, inline charts, rare check-in notes, day-specific starting points. Not done: Claude-written check-in notes (they're local rules today), and food describe/photo through the backend.
 4. Data pipeline from Apple Health, then the iOS app.

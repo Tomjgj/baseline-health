@@ -765,6 +765,28 @@ a.btn { text-decoration: none; }
 .composer textarea { flex: 1; min-width: 0; border: 0; background: transparent; resize: none; font-size: calc(16 * var(--fs)); line-height: 1.4; padding: 11px 0; max-height: 140px; color: var(--ink); }
 .composer textarea:focus { outline: none; }
 .composer .btn { width: 44px; height: 44px; padding: 0; flex: none; }
+/* starting points stack instead of hiding in a sideways row */
+.prompts.stack { display: grid; gap: 6px; overflow: visible; }
+.prompt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 14px; border: 0; border-radius: 16px; background: var(--claude-bg-2); color: var(--ink); text-align: left; font-size: calc(14.5 * var(--fs)); font-weight: 700; line-height: 1.35; }
+.prompt svg { width: 16px; height: 16px; flex: none; color: var(--claude); }
+/* an action Claude proposes: what it does, then Confirm or Dismiss */
+.card.act-card { display: grid; gap: 10px; padding: 14px 16px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--claude) 40%, transparent); }
+.act-card .ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--surface-2); color: var(--ink-2); }
+.act-card .ic svg { width: 18px; height: 18px; }
+.act-card b { font-size: calc(15 * var(--fs)); font-weight: 800; line-height: 1.3; }
+.act-lines { display: grid; gap: 4px; }
+.act-lines > div { display: flex; justify-content: space-between; gap: 10px; font-size: calc(13.5 * var(--fs)); color: var(--ink-2); }
+.act-lines > div > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.act-lines .num { flex: none; color: var(--muted); font-weight: 700; }
+.act-btns { display: flex; justify-content: flex-end; gap: 8px; }
+.act-state { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: calc(13.5 * var(--fs)); font-weight: 750; color: var(--muted); }
+.act-state > span { display: inline-flex; align-items: center; gap: 6px; }
+.act-state svg { width: 16px; height: 16px; }
+.act-state.done > span { color: var(--good-ink); }
+.act-state.invalid > span { color: var(--crit-ink); }
+.card.chart-card { padding: 14px 16px; }
+.mem-row { display: flex; align-items: flex-start; gap: 6px; padding-block: 6px; }
+.mem-row .input { flex: 1; min-width: 0; resize: vertical; min-height: 44px; }
 
 /* ---------- sheets ---------- */
 .sheet-scrim { position: fixed; inset: 0; z-index: 60; background: var(--scrim); opacity: 0; transition: opacity 0.3s; }
@@ -4890,7 +4912,7 @@ function scorePager(current, args) {
     onclick: () => { if (id !== current) App.open(id, args, { replace: true }); } }, name)));
 }
 function askBtn(question, label = 'Ask Claude') {
-  if (!App.sample) return null;
+  if (!Coach.available()) return null;
   return h('button', { class: 'ask', onclick: () => App.open('coach', question ? { q: question } : {}), 'aria-label': label }, icon('spark'), label);
 }
 function datePicker(date, onPick, text) {
@@ -5299,6 +5321,9 @@ const Tabs = (() => {
       const info = tm.info;
       rows.push([7, prow({ ic: 'train', t: `${slot.label}: ${tm.r.name}`, s: info.tired.length ? `${info.fresh.slice(0, 2).join(' and ') || 'Most muscles'} ${info.fresh.length === 1 ? 'is' : 'are'} fresh. ${info.tired.slice(0, 2).join(' and ')} still recovering.` : `${info.groups.slice(0, 3).join(', ')} are all fresh.`, onclick: () => App.go('train') })]);
     }
+    // a rare note from the coach: the evening before an exam, a morning with low recovery
+    const note = date === C.todayStr ? Coach.note(C) : null;
+    if (note) rows.push([0, prow({ ic: note.ic, tone: 'claude', t: note.t, s: note.s, onclick: () => Coach.openNote(note) })]);
     // a running experiment, or one that just finished
     const ex = T.currentExperiment(C);
     if (ex && ex.status === 'running') {
@@ -5424,7 +5449,7 @@ const Tabs = (() => {
       h('h3', null, f.head), h('p', null, f.body),
       f.action ? h('button', { class: 'btn primary', style: { marginTop: '14px' }, onclick: f.action[1] }, f.action[0]) : null,
       next.length ? h('div', { class: 'next' }, h('div', { class: 'eyebrow' }, 'Next up'), h('div', { class: 'list' }, next.slice(0, shown)), more, moreBtn) : null,
-      App.sample && f.asks.length ? h('div', { class: 'chips wrap' }, f.asks.map((q) => h('button', { class: 'chip claude', onclick: () => App.open('coach', { q }) }, q))) : null));
+      Coach.available() && f.asks.length ? h('div', { class: 'chips wrap' }, f.asks.map((q) => h('button', { class: 'chip claude', onclick: () => App.open('coach', { q }) }, q))) : null));
     const hr = habitsRow(C, date);
     if (hr) out.push(hr);
     // the rest folds away: the day's timeline and the key numbers, each one tap from open
@@ -6092,7 +6117,7 @@ const Tabs = (() => {
     const wc = weekCompare(C, date);
     let dataDays = 0;
     for (let k = 0; k < 7; k++) { const d = addDays(date, -k); if (C.sleepOf(d) || (C.strain(d)?.trimp || 0) > 0 || Object.keys(C.days[d] || {}).length) dataDays++; }
-    if (App.sample && dataDays >= 3) {
+    if (Coach.available() && dataDays >= 3) {
       const bits = [wc.sleep != null && Math.abs(wc.sleep) >= 5 ? `Sleep ${wc.sleep < 0 ? 'down' : 'up'} ${Math.round(Math.abs(wc.sleep))} min` : null,
         wc.train != null && Math.abs(wc.train) >= 5 ? `training ${wc.train < 0 ? 'down' : 'up'} ${Math.round(Math.abs(wc.train))}%` : null].filter(Boolean);
       out.push(h('button', { class: 'card claude tap', onclick: () => App.open('coach', { q: 'Give me my weekly report: compare this week with last week for sleep, recovery, training load, stress, food and weight, and tell me the one thing to change next week.' }) },
@@ -6120,7 +6145,7 @@ const Pages = {};
   const { fmtDur, fmtInt, fmt1, fmtSigned, addDays } = U;
   const view = (...kids) => h('div', { class: 'view' }, kids);
   const expander = (title, ...paras) => h('details', { class: 'card expander' }, h('summary', null, title, icon('plus')), h('div', { class: 'body' }, paras.map((p) => (typeof p === 'string' ? h('p', null, p) : p))));
-  const askRow = (text, q) => (App.sample ? h('button', { class: 'card claude tap ask-row', style: { padding: '14px 16px' }, onclick: () => App.open('coach', { q }) },
+  const askRow = (text, q) => (Coach.available() ? h('button', { class: 'card claude tap ask-row', style: { padding: '14px 16px' }, onclick: () => App.open('coach', { q }) },
     h('div', { class: 'row' }, h('span', { style: { color: 'var(--claude)', display: 'grid' } }, icon('spark')), h('b', { class: 'grow', style: { fontSize: 'calc(15 * var(--fs))', fontWeight: 800 } }, text), icon('chevR'))) : null);
   const clock = (m) => { const c = ((Math.round(m) % 1440) + 1440) % 1440; return `${U.pad(Math.floor(c / 60))}:${U.pad(c % 60)}`; };
   const relClock = (m) => clock(m + 720);
@@ -6872,75 +6897,121 @@ Answer using this data. Be specific and brief because they read on a phone: lead
 DATA
 ${ctx}`;
 
-  function suggestionsFor(C) {
-    const r = C.recovery(App.date), h0 = new Date().getHours();
-    const s0 = [];
-    if (r && !r.calibrating && r.band === 'low') s0.push('Why is my recovery low today?'); else s0.push('How recovered am I, and what should I do today?');
-    s0.push(h0 >= 15 ? 'What can I eat to hit my protein tonight?' : 'What should I eat today?');
-    s0.push('Plan my next 3 workouts', 'Why was my sleep score what it was?', 'Am I on track with my weight goal?', 'What has been driving my stress?');
-    return s0;
+  /** An action Claude proposed: what it will do, then Confirm / Dismiss, or what became of it. */
+  function actionCard(b, redraw) {
+    const C = App.ctx(), st = Coach.act(b.id), err = Coach.check(b.name, b.input, C);
+    let d = null;
+    try { d = Coach.describe(b.name, b.input, C); } catch { d = null; }
+    const state = st ? { done: [icon('check'), 'Done'], undone: 'Undone', declined: 'Dismissed', expired: 'Not confirmed', invalid: `Couldn’t use this: ${st.err}` }[st.status] : null;
+    const foot = !st && !err ? h('div', { class: 'act-btns' },
+      h('button', { class: 'btn sm ghost', onclick: () => { Coach.dismiss(b.id); redraw(); } }, 'Dismiss'),
+      h('button', { class: 'btn sm primary', onclick: () => { Coach.confirm(b.id, b.name, b.input); redraw(); } }, 'Confirm'))
+      : h('div', { class: 'act-state ' + (st?.status || 'invalid') }, h('span', null, state || `Can’t use this: ${err}`),
+        st?.status === 'done' && st.undo ? h('button', { class: 'link', onclick: () => { Coach.undo(b.id); redraw(); } }, 'Undo') : null);
+    return h('section', { class: 'card act-card', 'aria-label': d ? `Proposed: ${d.t}` : 'Proposed action' },
+      h('div', { class: 'row' }, h('span', { class: 'ic ' + (d?.tone || '') }, icon(d?.ic || 'spark')), h('b', { class: 'grow' }, d?.t || 'A change Claude suggested')),
+      d?.lines?.length ? h('div', { class: 'act-lines' }, d.lines.map(([l, r]) => h('div', null, h('span', null, l), r ? h('span', { class: 'num' }, r) : null))) : null,
+      d?.foot ? h('p', { class: 'note' }, d.foot) : null, foot);
+  }
+  /** One message of the conversation as the person sees it (the data snapshot, tool results and thinking stay hidden). */
+  function messageView(m, redraw) {
+    if (m.role === 'system') return null;
+    const blocks = typeof m.content === 'string' ? [{ type: 'text', text: m.content }] : m.content;
+    if (m.role === 'user') {
+      const t = blocks.filter((x) => x.type === 'text' && !x.text.startsWith('<app-data>')).map((x) => x.text).join('\n');
+      return t ? h('div', { class: 'msg me' }, t) : null;
+    }
+    const out = [];
+    for (const x of blocks) {
+      if (x.type === 'text' && x.text.trim()) out.push(h('div', { class: 'msg ai', html: mdLite(x.text) }));
+      else if (x.type === 'tool_use') out.push(Coach.AUTO.has(x.name) ? (Coach.check(x.name, x.input, App.ctx()) ? null : Coach.chart(x.input)) : actionCard(x, redraw));
+    }
+    if (m.stop === 'max_tokens') out.push(h('p', { class: 'note' }, 'Answer cut short.'));
+    return out;
   }
   Pages.coach = {
     flow: true,
     keep: true,
+    // data changed elsewhere (a confirmed action, an undo): redraw the cards, unless an answer is streaming in
+    refresh(el, C, args, entry) { if (!entry.busy) entry.draw?.(); },
     render(C, args, entry) {
       setTint('#8f7bf0', '#3b8deb');
+      const mode = Coach.mode();
       let ctl = null;
       const chat = h('div', { class: 'chat', 'aria-live': 'polite' });
-      const prompts = h('div', { class: 'prompts' });
-      const box = h('textarea', { id: 'coach-box', rows: 1, placeholder: 'Ask about your sleep, training, food…', 'aria-label': 'Message',
+      const prompts = h('div', { class: 'prompts stack' });
+      const box = h('textarea', { id: 'coach-box', rows: 1, placeholder: mode === 'backend' ? 'Ask, or tell it what to log…' : 'Ask about your sleep, training, food…', 'aria-label': 'Message',
         onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }, oninput: (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(140, e.target.scrollHeight) + 'px'; } });
       const sendBtn = h('button', { class: 'btn primary', 'aria-label': 'Send', onclick: () => send() }, icon('send'));
       const stopBtn = h('button', { class: 'btn', 'aria-label': 'Stop', hidden: true, onclick: () => ctl?.abort() }, icon('stop'));
-      const newBtn = h('button', { class: 'icon-btn', 'aria-label': 'New chat', hidden: !App.chat.length, onclick: () => { ctl?.abort(); App.chat = []; draw(); newBtn.hidden = true; } }, icon('edit'));
+      const turns = () => (mode === 'backend' ? Coach.log() : App.chat);
+      const newBtn = h('button', { class: 'icon-btn', 'aria-label': 'New chat', hidden: !turns().length, onclick: () => { ctl?.abort(); if (mode === 'backend') Coach.reset(); else App.chat = []; draw(); newBtn.hidden = true; } }, icon('edit'));
+      const longNote = h('p', { class: 'note', hidden: true, style: { textAlign: 'center' } }, 'This chat is getting long. A new one keeps answers quick.');
       const scrollEnd = () => requestAnimationFrame(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }));
       function draw() {
-        put(chat, App.chat.map((m) => (m.role === 'user' ? h('div', { class: 'msg me' }, m.content) : h('div', { class: 'msg ai', html: mdLite(m.content) }))));
-        if (!App.chat.length) chat.append(h('div', { class: 'col', style: { paddingTop: '20px' } }, h('div', { class: 'eic', style: { width: '52px', height: '52px', borderRadius: '16px', display: 'grid', placeItems: 'center', background: 'var(--claude-bg-2)', color: 'var(--claude)' } }, icon('spark')),
+        if (!mode) {
+          put(chat, card(emptyState('spark', 'Connect the coach', 'Claude runs through a small server you control, so the API key never sits in this page. Set it up once (it takes a few minutes), then add its address here.',
+            h('button', { class: 'btn primary', onclick: () => App.open('settings', { focus: 'coach' }) }, 'Open coach settings'))));
+          put(prompts, null);
+          return;
+        }
+        put(chat, mode === 'backend' ? Coach.log().map((m) => messageView(m, draw)) : App.chat.map((m) => (m.role === 'user' ? h('div', { class: 'msg me' }, m.content) : h('div', { class: 'msg ai', html: mdLite(m.content) }))));
+        if (!turns().length) chat.append(h('div', { class: 'col', style: { paddingTop: '20px' } }, h('div', { class: 'eic', style: { width: '52px', height: '52px', borderRadius: '16px', display: 'grid', placeItems: 'center', background: 'var(--claude-bg-2)', color: 'var(--claude)' } }, icon('spark')),
           h('h2', { style: { fontSize: 'calc(24 * var(--fs))', fontWeight: 800, letterSpacing: '-0.02em' } }, 'Ask about your data'),
-          h('p', { class: 'ink2' }, 'Claude sees your last two weeks of scores, stress and HRV through the day, check-ins, food, workouts and targets each time you ask.')));
-        put(prompts, suggestionsFor(C).map((q) => h('button', { class: 'chip claude', onclick: () => { box.value = q; send(); } }, q)));
+          h('p', { class: 'ink2' }, mode === 'backend' ? 'Claude sees your last two weeks in detail, eight weeks of averages, your habit effects and the notes in its memory. It can log food, tag activities, answer habits or move a workout, each only after you confirm.'
+            : 'Claude sees your last two weeks of scores, stress, check-ins, food and workouts each time you ask.')));
+        put(prompts, turns().length ? null : Coach.suggestions(App.ctx()).map((q) => h('button', { class: 'prompt', onclick: () => { box.value = q; send(); } }, icon('spark'), h('span', null, q))));
         prompts.hidden = !!ctl;
+        longNote.hidden = !(mode === 'backend' && Coach.long());
+        newBtn.hidden = !turns().length;
       }
+      entry.draw = draw;
       async function send() {
         const q = box.value.trim();
-        if (!q || ctl) return;
-        if (!App.sample) { toast('Claude isn’t available in this view.'); return; }
+        if (!q || ctl || !mode) return;
         box.value = ''; box.style.height = '';
-        App.chat.push({ role: 'user', content: q });
         newBtn.hidden = false;
+        if (mode === 'artifact') App.chat.push({ role: 'user', content: q });
         draw();
+        if (mode === 'backend') chat.append(h('div', { class: 'msg me' }, q));
         const bubble = h('div', { class: 'msg ai thinking' }, 'Looking at your data…');
         chat.append(bubble);
         scrollEnd();
-        ctl = new AbortController();
+        ctl = new AbortController(); entry.busy = true;
         prompts.hidden = true; sendBtn.hidden = true; stopBtn.hidden = false;
-        const turns = App.chat.slice(-12);
-        while (turns.length && turns[0].role !== 'user') turns.shift();
+        const onText = (t) => { if (t) { bubble.classList.remove('thinking'); bubble.innerHTML = mdLite(t); } else { bubble.classList.add('thinking'); bubble.textContent = 'Drawing a chart…'; } };
         try {
-          const { text, truncated } = await App.sample([{ role: 'user', content: RULES(coachContext(App.ctx())) }, ...turns], {
-            cache: false, signal: ctl.signal, onText: ({ text: t }) => { bubble.classList.remove('thinking'); bubble.innerHTML = mdLite(t); },
-          });
-          App.chat.push({ role: 'assistant', content: text + (truncated ? '\n\n(Answer cut short.)' : '') });
-          ctl = null; draw();
+          if (mode === 'backend') { await Coach.send(q, { onText, signal: ctl.signal }); ctl = null; entry.busy = false; draw(); }
+          else {
+            const ts = App.chat.slice(-12);
+            while (ts.length && ts[0].role !== 'user') ts.shift();
+            const { text, truncated } = await App.sample([{ role: 'user', content: RULES(Coach.snapshot(App.ctx())) }, ...ts], { cache: false, signal: ctl.signal, onText: ({ text: t }) => onText(t) });
+            App.chat.push({ role: 'assistant', content: text + (truncated ? '\n\n(Answer cut short.)' : '') });
+            ctl = null; entry.busy = false; draw();
+          }
         } catch (e) {
-          if (e?.text) App.chat.push({ role: 'assistant', content: e.text + (e.code === 'cancelled' ? '' : '\n\n(Interrupted.)') });
-          ctl = null; draw();
-          if (e?.code !== 'cancelled') chat.append(h('p', { class: 'error-text' }, aiError(e)));
+          ctl = null; entry.busy = false;
+          if (mode === 'artifact' && e?.text) App.chat.push({ role: 'assistant', content: e.text + (e.code === 'cancelled' ? '' : '\n\n(Interrupted.)') });
+          draw();
+          if (e?.code !== 'cancelled') {
+            chat.append(h('p', { class: 'error-text' }, mode === 'backend' ? Coach.errorText(e) : aiError(e)));
+            if (mode === 'backend') box.value = q; // nothing was kept, so the question goes back in the box
+          }
         } finally {
-          ctl = null; sendBtn.hidden = false; stopBtn.hidden = true; prompts.hidden = false;
+          ctl = null; entry.busy = false; sendBtn.hidden = false; stopBtn.hidden = true; prompts.hidden = false;
           scrollEnd();
         }
       }
       draw();
       const isToday = App.date === C.todayStr;
       const el = view(
-        pageHead(null, { center: h('div', { class: 'pt row', style: { gap: '8px' } }, h('span', { style: { color: 'var(--claude)', display: 'grid' } }, icon('spark')), h('h1', null, 'Claude')), right: newBtn }),
-        h('div', { class: 'ctx-chips' }, 'Using', h('span', { class: 'c' }, isToday ? `Today, ${U.fmtDay(App.date)}` : U.fmtDay(App.date)), h('span', { class: 'c plain' }, '+ last 14 days')),
+        pageHead(null, { center: h('div', { class: 'pt row', style: { gap: '8px' } }, h('span', { style: { color: 'var(--claude)', display: 'grid' } }, icon('spark')), h('h1', null, 'Claude')),
+          right: h('div', { class: 'row', style: { gap: '6px' } }, newBtn, h('button', { class: 'icon-btn', 'aria-label': 'Coach settings and memory', onclick: () => App.open('settings', { focus: 'coach' }) }, icon('gear'))) }),
+        mode ? h('div', { class: 'ctx-chips' }, 'Using', h('span', { class: 'c' }, isToday ? `Today, ${U.fmtDay(App.date)}` : U.fmtDay(App.date)), h('span', { class: 'c plain' }, mode === 'backend' ? `+ 8 weeks · ${plural(Coach.memoryOn() ? Coach.memory().length : 0, 'memory note')}` : '+ last 14 days')) : null,
         chat,
         h('div', { style: { height: '120px' } }),
-        h('div', { class: 'composer-wrap' }, prompts, h('div', { class: 'composer' }, box, stopBtn, sendBtn)));
-      if (args.q && !entry.sent) { entry.sent = true; box.value = args.q; setTimeout(send, 60); }
+        mode ? h('div', { class: 'composer-wrap' }, longNote, prompts, h('div', { class: 'composer' }, box, stopBtn, sendBtn)) : null);
+      if (args.q && !entry.sent && mode) { entry.sent = true; box.value = args.q; setTimeout(send, 60); }
       else setTimeout(() => { if (!('ontouchstart' in window)) box.focus({ preventScroll: true }); }, 120);
       return el;
     },
@@ -6990,6 +7061,7 @@ ${ctx}`;
             prow({ ic: 'pulse', tone: 'stress', t: 'HRV up to every 5 minutes', s: 'Daytime HRV feeds stress; overnight HRV feeds recovery' }),
             prow({ ic: 'moon', tone: 'sleep', t: 'Sleep stages, vitals and sleep score', s: 'Breathing, blood oxygen and wrist temperature overnight' }),
             prow({ ic: 'watch', t: 'This web version reads your Health export', s: 'The iPhone app will read HealthKit directly and stream live data' }))),
+        sec('coach', 'Claude coach', ...Coach.settings()),
         sec('data', 'Data',
           h('button', { class: 'btn block', onclick: () => App.open('import') }, icon('upload'), 'Import Apple Health data'),
           st.meta?.lastImport ? h('p', { class: 'note' }, `Last import ${U.fmtDay(st.meta.lastImport.at.slice(0, 10))}: ${st.meta.lastImport.days} days${st.meta.lastImport.from ? `, ${U.fmtShort(st.meta.lastImport.from)}–${U.fmtShort(st.meta.lastImport.to)}` : ''}.`) : null,
@@ -7385,6 +7457,388 @@ ${ctx}`;
     },
   };
 
+})();
+
+/* ===== coach.js — the Claude coach: a snapshot of the data, the conversation, actions you confirm, memory, check-in notes =====
+   Claude runs behind a small backend (server/coach.mjs) that holds the API key; the page keeps the conversation and never sees a key.
+   Inside the Claude artifact runtime, without a backend, the coach falls back to plain answers (no actions). */
+const Coach = (() => {
+  const { addDays, fmtSigned, fmtInt } = U;
+  const K = {};
+  const LS_CFG = 'coach', LS_LOG = 'chat';
+
+  // ---------- connection ----------
+  K.config = () => { try { return JSON.parse(Store.lsGet(LS_CFG) || '{}') || {}; } catch { return {}; } };
+  K.setConfig = (c) => Store.lsSet(LS_CFG, JSON.stringify(c));
+  K.mode = () => { const c = K.config(); return c.url && c.code ? 'backend' : App.sample ? 'artifact' : null; };
+  K.available = () => !!K.mode();
+  K.actions = () => K.mode() === 'backend';
+
+  // ---------- the conversation: API-shaped messages, append-only, kept in this browser ----------
+  // Append-only matters: Claude's earlier thinking stays valid only while every earlier turn is byte-identical.
+  let log = [], acts = {}, sentSnap = null;
+  try { const s = JSON.parse(Store.lsGet(LS_LOG) || 'null'); if (s && Array.isArray(s.log)) { log = s.log; acts = s.acts || {}; sentSnap = s.snap || null; } } catch {}
+  const save = () => { try { const t = JSON.stringify({ log, acts, snap: sentSnap }); Store.lsSet(LS_LOG, t.length < 1.5e6 ? t : null); } catch {} };
+  K.log = () => log;
+  K.act = (id) => acts[id] || null;
+  K.reset = () => { log = []; acts = {}; sentSnap = null; save(); };
+  K.long = () => log.length > 60;
+
+  // ---------- memory ----------
+  const prof = () => Store.state().profile || {};
+  K.memory = () => (Array.isArray(prof().coachMemory) ? prof().coachMemory : []);
+  K.memoryOn = () => prof().coachMemoryOn !== false;
+  K.setMemory = (list) => Store.setProfile({ coachMemory: list });
+
+  // ---------- what Claude sees: one snapshot of the data ----------
+  const hm = (d) => `${U.pad(d.getHours())}:${U.pad(d.getMinutes())}`;
+  function weekly(C) {
+    const rows = [];
+    const avg = (f, from, to) => { const v = []; for (let d = from; d <= to; d = addDays(d, 1)) { const x = f(d); if (x != null && isFinite(x)) v.push(x); } return v.length ? U.mean(v) : null; };
+    for (let w = 7; w >= 0; w--) {
+      const to = addDays(C.todayStr, -7 * w), from = addDays(to, -6);
+      const r = avg((d) => { const x = C.recovery(d); return x && !x.calibrating ? x.score : null; }, from, to), s = avg((d) => C.sleepScore(d)?.score, from, to),
+        st = avg((d) => C.strain(d)?.value, from, to), sx = avg((d) => C.stress(d)?.avg, from, to), hv = avg((d) => C.days[d]?.hrv, from, to), wt = C.trendWeight(to);
+      rows.push(`${from}..${to}: recovery ${r == null ? '-' : Math.round(r)}, sleep ${s == null ? '-' : Math.round(s)}, strain ${st == null ? '-' : st.toFixed(1)}, stress ${sx == null ? '-' : Math.round(sx)}, HRV ${hv == null ? '-' : Math.round(hv)} ms, trend weight ${wt == null ? '-' : U.round(wt, 1)} kg`);
+    }
+    return rows;
+  }
+  K.snapshot = (C) => {
+    const now = new Date(), L = [];
+    L.push(`Today is ${U.fmtDayLong(C.todayStr)} (${C.todayStr}), ${hm(now)} local time. The day open in the app is ${App.date}. Units: ${prof().units === 'imperial' ? 'imperial' : 'metric'}.`);
+    const mem = K.memory();
+    L.push(K.memoryOn() ? (mem.length ? 'Notes the person keeps in your memory:\n' + mem.map((m) => `- ${m.text}`).join('\n') : 'Your memory about the person is empty.') : 'The person has turned memory off: do not propose remember.');
+    L.push('Habit ids for answer_habits: ' + C.habits.map((hb) => `${hb.id} (${hb.name})`).join(', ') + '.');
+    L.push('Activity types for tag_activity: ' + E.ACTIVITY_TYPES.map((a) => a.id).join(', ') + '.');
+    const plans = [];
+    for (let k = 0; k < 14; k++) { const d = addDays(C.todayStr, k); for (const p of C.planOn(d)) if (p.status !== 'done') plans.push(`${p.id} on ${d}${p.time ? ' at ' + p.time : ''}: ${p.name}`); }
+    L.push(plans.length ? 'Planned workouts, next 14 days (plan_id on date): ' + plans.join('; ') + '.' : 'No planned workouts in the next 14 days.');
+    L.push('Weekly averages, last 8 weeks:\n' + weekly(C).join('\n'));
+    L.push(Pages.coachContext(C));
+    return L.join('\n\n');
+  };
+  const dataBlock = (snap) => `<app-data>\n${snap}\n</app-data>`;
+
+  // ---------- actions Claude proposes, run only after the person confirms ----------
+  const DATE = /^\d{4}-\d{2}-\d{2}$/, TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const okDate = (d, { past = 60, future = 0 } = {}) => DATE.test(d || '') && d >= addDays(U.today(), -past) && d <= addDays(U.today(), future);
+  const AUTO = new Set(['show_chart']);
+  const num = (v, max) => typeof v === 'number' && isFinite(v) && v >= 0 && v <= max;
+  /** Check a proposal before showing it: inputs can arrive incomplete, and the data may have changed since. Returns an error or null. */
+  function check(name, x, C) {
+    if (!x || typeof x !== 'object') return 'The proposal came back incomplete.';
+    if (name === 'log_food') {
+      if (!okDate(x.date)) return 'That date is outside the last two months.';
+      if (!['breakfast', 'lunch', 'dinner', 'snack'].includes(x.meal)) return 'Unknown meal.';
+      if (!Array.isArray(x.items) || !x.items.length || x.items.length > 20) return 'No foods to log.';
+      if (!x.items.every((i) => i && typeof i.name === 'string' && i.name.trim() && num(i.kcal, 5000) && num(i.protein_g, 400) && num(i.carbs_g, 800) && num(i.fat_g, 400))) return 'A food is missing its numbers.';
+    } else if (name === 'tag_activity') {
+      if (!okDate(x.date, { future: 14 })) return 'That date is out of range.';
+      if (!E.ACTIVITY_TYPES.some((a) => a.id === x.type)) return 'Unknown activity type.';
+      if (!TIME.test(x.start || '') || !TIME.test(x.end || '') || x.end <= x.start) return 'The times don’t make sense.';
+      if (x.type === 'other' && !String(x.label || '').trim()) return 'An “other” activity needs a name.';
+    } else if (name === 'answer_habits') {
+      if (!okDate(x.date)) return 'That date is out of range.';
+      if (!Array.isArray(x.answers) || !x.answers.length) return 'No answers.';
+      if (!x.answers.every((a) => a && C.habits.some((hb) => hb.id === a.habit_id) && typeof a.yes === 'boolean')) return 'One of those habits isn’t in your list.';
+    } else if (name === 'move_workout') {
+      const p = (Store.state().training?.plan || []).find((q) => q.id === x.plan_id);
+      if (!p) return 'That planned workout no longer exists.';
+      if (!okDate(x.from_date, { past: 7, future: 60 }) || !okDate(x.to_date, { past: 0, future: 60 })) return 'Those dates are out of range.';
+      if (x.time && !TIME.test(x.time)) return 'The time doesn’t make sense.';
+      if (!C.planOn(x.from_date).some((q) => q.id === x.plan_id)) return 'That workout isn’t planned on that day.';
+    } else if (name === 'remember') {
+      if (typeof x.note !== 'string' || !x.note.trim() || x.note.length > 300) return 'The note is empty or too long.';
+      if (!K.memoryOn()) return 'Memory is off in Settings.';
+    } else if (name === 'show_chart') {
+      if (!CHART[x.metric]) return 'Unknown measure.';
+    } else return 'Unknown action.';
+    return null;
+  }
+  const mealLabel = (m) => mealName(m).toLowerCase();
+  const dayLabel = (d) => (d === U.today() ? 'today' : d === addDays(U.today(), -1) ? 'yesterday' : d === addDays(U.today(), 1) ? 'tomorrow' : U.fmtDay(d));
+  /** What a proposal will do, in words, for its card. */
+  function describe(name, x, C) {
+    if (name === 'log_food') return { ic: 'food', tone: 'food', t: `Log ${plural(x.items.length, 'food')} to ${mealLabel(x.meal)}, ${dayLabel(x.date)}`,
+      lines: x.items.map((i) => [`${i.name}${i.amount ? ` · ${i.amount}` : ''}`, `${fmtInt(i.kcal)} kcal · P ${Math.round(i.protein_g)}`]),
+      foot: `${fmtInt(x.items.reduce((a, i) => a + i.kcal, 0))} kcal in all. Claude’s estimate: check the amounts.` };
+    if (name === 'tag_activity') return { ic: E.actType(x.type).icon, tone: 'stress', t: `Tag ${x.type === 'other' ? x.label : E.actType(x.type).name}, ${dayLabel(x.date)}`, lines: [[`${x.start}–${x.end}`, '']] };
+    if (name === 'answer_habits') return { ic: 'check', tone: 'good', t: `Answer ${plural(x.answers.length, 'habit')} for ${dayLabel(x.date)}`,
+      lines: x.answers.map((a) => [C.habits.find((hb) => hb.id === a.habit_id)?.name || a.habit_id, a.yes ? 'Yes' : 'No']) };
+    if (name === 'move_workout') { const p = (Store.state().training?.plan || []).find((q) => q.id === x.plan_id); return { ic: 'calendar', tone: 'strain', t: `Move ${p?.name || 'workout'}`, lines: [[`${dayLabel(x.from_date)} → ${dayLabel(x.to_date)}`, x.time || p?.time || '']] }; }
+    if (name === 'remember') return { ic: 'spark', tone: 'claude', t: 'Remember this', lines: [[x.note, '']], foot: 'You can edit or delete notes in Settings.' };
+    return { ic: 'info', t: name, lines: [] };
+  }
+  /** Do it. Returns a sentence for Claude and an undo record (plain data, so Undo still works after a reload). */
+  function run(name, x, C) {
+    if (name === 'log_food') {
+      const at = x.date === U.today() ? U.isoLocal(new Date()) : `${x.date}T12:00`;
+      const items = x.items.map((i) => { const m = /^\s*(\d+(?:[.,]\d+)?)\s*([a-zA-Zµ]+)\s*$/.exec(i.amount || '');
+        return { id: U.uid(), meal: x.meal, name: i.name.trim().slice(0, 80), kcal: Math.round(i.kcal), p: U.round(i.protein_g, 1), c: U.round(i.carbs_g, 1), f: U.round(i.fat_g, 1), fiber: 0,
+          qty: m ? U.num(m[1]) : 1, unit: m ? m[2] : (i.amount || 'serving').slice(0, 24), grams: m && /^g$/i.test(m[2]) ? U.num(m[1]) : null, src: 'claude', est: true, at }; });
+      Store.addFood(x.date, items);
+      return { said: `Logged ${items.length} item(s) to ${x.meal} on ${x.date}.`, undo: { k: 'food', date: x.date, ids: items.map((i) => i.id) } };
+    }
+    if (name === 'tag_activity') {
+      const prev = Store.activityItems(x.date), one = { id: 'a' + U.uid(), type: x.type, start: x.start, end: x.end, ...(x.type === 'other' ? { label: x.label.trim().slice(0, 40) } : {}) };
+      Store.putActivities(x.date, [...prev, one].sort((a, b) => a.start.localeCompare(b.start)));
+      return { said: `Tagged ${x.type} ${x.start}-${x.end} on ${x.date}.`, undo: { k: 'acts', date: x.date, id: one.id } };
+    }
+    if (name === 'answer_habits') {
+      const prev = {};
+      for (const a of x.answers) { const v = C.journal[x.date]?.a?.[a.habit_id]; prev[a.habit_id] = v === 0 || v === 1 ? v : null; Store.setJournal(x.date, a.habit_id, a.yes ? 1 : 0); }
+      return { said: `Saved ${x.answers.length} habit answer(s) for ${x.date}.`, undo: { k: 'habits', date: x.date, prev } };
+    }
+    if (name === 'move_workout') {
+      const all = (Store.state().training?.plan || []).slice(), p = all.find((q) => q.id === x.plan_id);
+      const time = x.time || p.time || null;
+      let next;
+      if (p.date) next = all.map((q) => (q.id === p.id ? { ...q, date: x.to_date, time } : q));
+      else { // a weekly plan: skip this one day and add a one-off copy on the new day
+        const { days, from, until, skip, ...rest } = p; void days; void from; void until; void skip;
+        next = [...all.map((q) => (q.id === p.id ? { ...q, skip: [...new Set([...(q.skip || []), x.from_date])] } : q)), { ...rest, id: 'p' + U.uid(), date: x.to_date, time }];
+      }
+      Store.setTraining({ plan: next });
+      return { said: `Moved ${p.name} from ${x.from_date} to ${x.to_date}${time ? ' at ' + time : ''}.`, undo: { k: 'plans', prev: all } };
+    }
+    if (name === 'remember') {
+      const note = { id: 'm' + U.uid(), text: x.note.trim().slice(0, 300), at: U.today(), by: 'claude' };
+      K.setMemory([...K.memory(), note]);
+      return { said: 'Saved to memory.', undo: { k: 'memory', id: note.id } };
+    }
+    return { said: 'Done.', undo: null };
+  }
+  function undo(u) {
+    if (!u) return;
+    if (u.k === 'food') for (const id of u.ids) Store.removeFood(u.date, id);
+    else if (u.k === 'acts') Store.putActivities(u.date, Store.activityItems(u.date).filter((x) => x.id !== u.id));
+    else if (u.k === 'habits') for (const id in u.prev) Store.setJournal(u.date, id, u.prev[id]);
+    else if (u.k === 'plans') Store.setTraining({ plan: u.prev });
+    else if (u.k === 'memory') K.setMemory(K.memory().filter((m) => m.id !== u.id));
+  }
+  K.confirm = (id, name, input) => {
+    const C = App.ctx(), err = check(name, input, C);
+    if (err) { acts[id] = { status: 'invalid', err }; save(); toast(err); return; }
+    const r = run(name, input, C);
+    acts[id] = { status: 'done', said: r.said, undo: r.undo }; save();
+    toast(`Done: ${describe(name, input, C).t}`, { action: 'Undo', onAction: () => K.undo(id) });
+  };
+  K.dismiss = (id) => { acts[id] = { status: 'declined' }; save(); };
+  K.undo = (id) => { const a = acts[id]; if (!a || a.status !== 'done') return; undo(a.undo); acts[id] = { ...a, status: 'undone' }; save(); App.render(); };
+
+  // ---------- charts Claude asks for, drawn by the app ----------
+  const CHART = {
+    recovery: ['Recovery', '%', (C, d) => { const r = C.recovery(d); return r && !r.calibrating ? r.score : null; }, 'var(--good)'],
+    sleep_score: ['Sleep score', '', (C, d) => C.sleepScore(d)?.score ?? null, 'var(--sleep)'],
+    sleep_hours: ['Time asleep', 'h', (C, d) => { const s = C.sleepOf(d); return s ? U.round(s.asleep / 60, 2) : null; }, 'var(--sleep)'],
+    strain: ['Strain', '', (C, d) => C.strain(d)?.value ?? null, 'var(--strain)'],
+    hrv: ['HRV', 'ms', (C, d) => C.days[d]?.hrv ?? null, 'var(--hrv)'],
+    resting_hr: ['Resting heart rate', 'bpm', (C, d) => C.days[d]?.rhr ?? null, 'var(--hr)'],
+    stress: ['Stress', '', (C, d) => C.stress(d)?.avg ?? null, 'var(--stress)'],
+    weight: ['Trend weight', 'kg', (C, d) => (C.trendWeight(d) != null ? U.round(C.trendWeight(d), 1) : null), 'var(--ink-2)'],
+    steps: ['Steps', '', (C, d) => C.days[d]?.steps ?? null, 'var(--strain)'],
+    calories: ['Calories eaten', 'kcal', (C, d) => C.intake(d)?.kcal || null, 'var(--food)'],
+    protein: ['Protein', 'g', (C, d) => (C.intake(d)?.p ? Math.round(C.intake(d).p) : null), 'var(--protein)'],
+    active_energy: ['Active energy', 'kcal', (C, d) => C.days[d]?.active ?? null, 'var(--strain)'],
+  };
+  function series(C, x) {
+    const [name, unit, f, color] = CHART[x.metric], n = Math.max(7, Math.min(180, Math.round(x.days) || 30)), dates = [], vals = [];
+    for (let k = n - 1; k >= 0; k--) { const d = addDays(C.todayStr, -k); dates.push(d); vals.push(f(C, d)); }
+    return { name, unit, color, dates, vals };
+  }
+  function chartSummary(C, x) {
+    const s = series(C, x), v = s.vals.filter((y) => y != null);
+    if (!v.length) return `No ${s.name.toLowerCase()} data in those ${s.dates.length} days.`;
+    const last = [...s.vals].reverse().find((y) => y != null), r = (y) => U.round(y, 1);
+    return `Shown: ${s.name} over ${s.dates.length} days (${v.length} with data): mean ${r(U.mean(v))}, min ${r(Math.min(...v))}, max ${r(Math.max(...v))}, latest ${r(last)}${s.unit ? ' ' + s.unit : ''}.`;
+  }
+  K.chart = (x) => {
+    const C = App.ctx(), s = series(C, x), every = Math.max(1, Math.round(s.dates.length / 4));
+    return h('section', { class: 'card chart-card', 'aria-label': x.title || s.name },
+      h('div', { class: 'card-title' }, h('h2', null, x.title || s.name), h('span', { class: 'r' }, `${s.dates.length} days`)),
+      s.vals.some((y) => y != null) ? Charts.trend({ labels: s.dates.map((d) => ({ label: U.fmtShort(d), full: U.fmtDayLong(d) })), series: [{ values: s.vals, color: s.color, width: 2.2, name: s.name, dots: s.dates.length <= 31 ? 'all' : undefined, r: 2 }],
+        height: 140, xEvery: every, fmt: (y) => String(U.round(y, 1)), caption: `${s.name}, last ${s.dates.length} days` }) : Charts.emptyChart(120, 'No data for these days'),
+      h('p', { class: 'note', style: { marginTop: '6px' } }, chartSummary(C, x)));
+  };
+
+  // ---------- one turn with the backend ----------
+  const lastAssistant = () => { for (let i = log.length - 1; i >= 0; i--) if (log[i].role === 'assistant') return log[i]; return null; };
+  /** A tool_result for every tool call in Claude's last message, saying what became of it. */
+  function results(C) {
+    const a = lastAssistant(), out = [];
+    if (!a || !Array.isArray(a.content) || log[log.length - 1] !== a) return out;
+    for (const b of a.content) {
+      if (b.type !== 'tool_use') continue;
+      const st = acts[b.id];
+      let text, isErr = false;
+      if (AUTO.has(b.name)) { const err = check(b.name, b.input, C); text = err || chartSummary(C, b.input); isErr = !!err; }
+      else if (!st) { const err = check(b.name, b.input, C); if (err) { text = `Couldn’t be used: ${err}`; isErr = true; acts[b.id] = { status: 'invalid', err }; } else text = 'The person hasn’t confirmed this, so nothing changed.'; }
+      else if (st.status === 'done') text = `Confirmed. ${st.said}`;
+      else if (st.status === 'undone') text = 'The person confirmed this, then undid it. Nothing changed.';
+      else if (st.status === 'declined') text = 'The person dismissed this. Nothing changed.';
+      else { text = `Couldn’t be used: ${st.err}`; isErr = true; }
+      if (!acts[b.id] && !AUTO.has(b.name)) acts[b.id] = { status: 'expired' };
+      out.push({ type: 'tool_result', tool_use_id: b.id, content: text, ...(isErr ? { is_error: true } : {}) });
+    }
+    return out;
+  }
+  async function call(messages, { onText, signal }) {
+    const c = K.config();
+    let res;
+    try {
+      res = await fetch(c.url, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${c.code}` }, body: JSON.stringify({ messages }), signal });
+    } catch (e) { throw { code: signal?.aborted ? 'cancelled' : 'unreachable' }; }
+    if (!res.ok) { let j = null; try { j = await res.json(); } catch {} throw { code: j?.error?.code || 'http_' + res.status, message: j?.error?.message }; }
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = '', text = '', done = null;
+    for (;;) {
+      let r;
+      try { r = await reader.read(); } catch { throw { code: signal?.aborted ? 'cancelled' : 'unreachable', text }; }
+      if (r.done) break;
+      buf += dec.decode(r.value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (!line) continue;
+        let ev; try { ev = JSON.parse(line); } catch { continue; }
+        if (ev.t === 'text') { text += ev.v; onText?.(text); }
+        else if (ev.t === 'done') done = ev.message;
+        else if (ev.t === 'error') throw { code: ev.code, message: ev.message, text };
+      }
+    }
+    if (!done) throw { code: 'unreachable', text };
+    return done;
+  }
+  /**
+   * Send what the person typed. Appends the user turn (with any pending tool results and, if the data changed,
+   * a fresh snapshot as a system message), then Claude's reply. Charts run at once and the turn continues;
+   * other proposals wait for the person. On failure the new turns are taken back off, so the log stays valid.
+   */
+  K.send = async (text, { onText, signal } = {}) => {
+    const C = App.ctx(), snap = K.snapshot(C), first = !log.length;
+    const mark = log.length;
+    const content = [...results(C)];
+    if (first) content.push({ type: 'text', text: dataBlock(snap) });
+    content.push({ type: 'text', text });
+    log.push({ role: 'user', content });
+    if (!first && snap !== sentSnap) log.push({ role: 'system', content: `Fresher data from the app, replacing the earlier snapshot:\n${dataBlock(snap)}` });
+    try {
+      for (let hop = 0; hop < 4; hop++) {
+        const m = await call(log.map(({ role, content: c }) => ({ role, content: c })), { onText, signal });
+        if (m.stop_reason === 'refusal') throw { code: 'refused' };
+        log.push({ role: 'assistant', content: m.content, stop: m.stop_reason });
+        sentSnap = snap; save();
+        const uses = m.content.filter((b) => b.type === 'tool_use');
+        // keep going only when every call this turn runs on its own (charts); anything else waits for the person
+        if (m.stop_reason !== 'tool_use' || !uses.length || !uses.every((b) => AUTO.has(b.name))) return m;
+        log.push({ role: 'user', content: results(App.ctx()) }); save();
+        onText?.('');
+      }
+      return null;
+    } catch (e) {
+      // take unanswered turns back off the end (nothing after them depends on them yet), so the log ends on Claude's last reply
+      while (log.length > mark && log[log.length - 1].role !== 'assistant') log.pop();
+      save();
+      throw e;
+    }
+  };
+  K.ping = async (c) => {
+    const res = await fetch(c.url, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${c.code}` }, body: JSON.stringify({ ping: true }) });
+    let j = null; try { j = await res.json(); } catch {}
+    if (!res.ok) throw { code: j?.error?.code || 'http_' + res.status, message: j?.error?.message };
+    return j;
+  };
+  K.errorText = (e) => ({
+    unauthorized: 'The access code doesn’t match the one on your coach server. Check it in Settings.', not_configured: 'The coach server is missing its API key or access code.',
+    server_key: 'The coach server’s API key was rejected. Check ANTHROPIC_API_KEY on the server.', rate_limited: 'Claude is busy for this key right now. Try again in a minute.',
+    overloaded: 'Claude is overloaded right now. Try again shortly.', unreachable: 'Couldn’t reach your coach server. Check the address in Settings and your connection.',
+    too_large: 'This chat has grown too long. Start a new one.', refused: 'Claude couldn’t help with that. Try asking differently.', bad_request: 'The request was refused. Starting a new chat usually fixes this.',
+  }[e?.code] || (e?.message ? `Couldn’t get an answer: ${e.message}` : 'Something went wrong reaching Claude. Try again.'));
+
+  // ---------- rare check-ins: one note before an exam or after a hard night ----------
+  /** At most one note a day, picked locally (no API call). Frequency: profile.coachNotes = 'off' | 'key' (default) | 'more'. */
+  K.note = (C) => {
+    const freq = prof().coachNotes || 'key';
+    if (freq === 'off') return null;
+    const hour = new Date().getHours(), today = C.todayStr, tmr = addDays(today, 1);
+    const seen = (k) => !!App.ui.notesSeen?.[k];
+    const out = [];
+    const exam = C.activitiesOn(tmr).find((a) => a.type === 'exam');
+    if (exam && hour >= 15) {
+      const lo = Tabs.lightsOut(C, today);
+      out.push({ key: 'exam-' + tmr, ic: 'pen', t: `${exam.label || 'Exam'} tomorrow at ${exam.start}`, s: `A calm evening and lights out by ${lo.time || 'your usual time'} help most.`, q: `I have ${exam.name.toLowerCase().startsWith('exam') ? 'an exam' : exam.name.toLowerCase()} tomorrow at ${exam.start}. Help me plan tonight and tomorrow morning.`, page: ['sleep', { date: today }] });
+    }
+    const r = C.recovery(today);
+    if (r && !r.calibrating && r.band === 'low' && hour < 16) out.push({ key: 'low-' + today, ic: 'heart', t: `Recovery is ${r.score}% today`, s: 'A lighter day helps it bounce back. Ask what to change.', q: 'My recovery is low today. What should I change today?', page: ['recovery', { date: today }] });
+    if (freq === 'more') {
+      const ss = C.sleepScore(today);
+      if (ss && ss.score < 60 && hour < 16) out.push({ key: 'sleep-' + today, ic: 'moon', t: `Sleep score ${ss.score} last night`, s: 'Ask how to make up for it today.', q: 'I slept badly last night. How do I get through today and sleep better tonight?', page: ['sleep', { date: today }] });
+      const ld = C.load(today);
+      if (ld && ld.ratio > 1.3) out.push({ key: 'load-' + today, ic: 'bolt', t: 'Training load is climbing fast', s: `This week is ${ld.ratio.toFixed(1)}× your usual. Ask whether to ease off.`, q: 'My training load is well above my usual. Should I take a rest day?', page: ['strain', { date: today }] });
+    }
+    return out.find((n) => !seen(n.key)) || null;
+  };
+  K.openNote = (n) => {
+    App.ui.notesSeen = { ...Object.fromEntries(Object.entries(App.ui.notesSeen || {}).slice(-30)), [n.key]: true }; App.saveUi();
+    if (K.available()) App.open('coach', { q: n.q }); else App.open(n.page[0], n.page[1]);
+  };
+
+  // ---------- starting points that fit the day ----------
+  K.suggestions = (C) => {
+    const r = C.recovery(C.todayStr), ss = C.sleepScore(C.todayStr), h0 = new Date().getHours(), out = [];
+    const exam = C.activitiesOn(addDays(C.todayStr, 1)).some((a) => a.type === 'exam') || C.activitiesOn(C.todayStr).some((a) => a.type === 'exam');
+    if (exam) out.push('I have an exam coming up. How should I sleep, eat and train around it?');
+    if (ss && ss.score < 60) out.push('Why did I sleep badly, and how do I make up for it today?');
+    if (r && !r.calibrating && r.band === 'low') out.push('Why is my recovery low today?');
+    else out.push('How recovered am I, and what should I do today?');
+    if (!C.planOn(C.todayStr).length && (C.strain(C.todayStr)?.value ?? 0) < 8) out.push('Is today better for rest or for training?');
+    if (K.actions()) out.push(h0 < 11 ? 'Log my usual breakfast' : h0 < 15 ? 'I had a chicken wrap and an apple for lunch. Log it.' : 'What should I eat tonight to hit my protein?');
+    else out.push(h0 >= 15 ? 'What can I eat to hit my protein tonight?' : 'What should I eat today?');
+    out.push('Plan my next 3 workouts', 'What has been driving my stress?');
+    return [...new Set(out)].slice(0, 3);
+  };
+
+  // ---------- settings: connection, memory, check-ins ----------
+  K.settings = () => {
+    const c = K.config();
+    const urlIn = h('input', { class: 'input', id: 'coach-url', type: 'url', inputmode: 'url', autocomplete: 'off', value: c.url || '', placeholder: 'https://your-coach.workers.dev' });
+    const codeIn = h('input', { class: 'input', id: 'coach-code', type: 'password', autocomplete: 'off', value: c.code || '', placeholder: 'the code you set on the server' });
+    const status = h('p', { class: 'note', 'aria-live': 'polite' }, c.url ? (c.code ? 'Saved on this device.' : 'Add the access code.') : App.sample ? 'Running inside Claude: answers work, actions need your own coach server.' : 'Not connected yet.');
+    const saveConn = () => { K.setConfig({ url: urlIn.value.trim(), code: codeIn.value.trim() }); };
+    const memList = h('div', { class: 'list' });
+    const drawMem = () => put(memList, K.memory().length ? K.memory().map((m) => {
+      const t = h('textarea', { class: 'input', rows: 2, maxlength: 300, 'aria-label': 'Memory note' }, m.text);
+      t.value = m.text;
+      t.addEventListener('change', () => { const v = t.value.trim(); K.setMemory(v ? K.memory().map((x) => (x.id === m.id ? { ...x, text: v, by: 'you' } : x)) : K.memory().filter((x) => x.id !== m.id)); });
+      return h('div', { class: 'mem-row' }, t, h('button', { class: 'icon-btn sm plain', 'aria-label': 'Delete this note', onclick: () => { const prev = K.memory(); K.setMemory(prev.filter((x) => x.id !== m.id)); toast('Note deleted', { action: 'Undo', onAction: () => K.setMemory(prev) }); } }, icon('trash')));
+    }) : h('p', { class: 'small muted', style: { padding: '6px 0' } }, 'Nothing yet. Add goals, exam dates, injuries or routines Claude should keep in mind.'));
+    drawMem();
+    const addIn = h('input', { class: 'input', id: 'coach-mem-add', maxlength: 300, placeholder: 'e.g. Physics exam on Nov 3', onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } } });
+    const add = () => { const v = addIn.value.trim(); if (!v) return; K.setMemory([...K.memory(), { id: 'm' + U.uid(), text: v, at: U.today(), by: 'you' }]); addIn.value = ''; };
+    return [
+      h('p', { class: 'small ink2', style: { lineHeight: 1.55 } }, 'Claude answers from your data and can log food, tag activities, answer habits or move a workout, each only after you confirm. It runs through your own small server, which keeps the API key off this page.'),
+      field('Coach server address', urlIn), field('Access code', codeIn),
+      h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: async () => {
+        saveConn(); const cfg = K.config();
+        if (!cfg.url || !cfg.code) { status.textContent = 'Add both the address and the access code.'; return; }
+        status.textContent = 'Checking…';
+        try { const j = await K.ping(cfg); status.textContent = `Connected. Using ${j.model || 'Claude'}.`; } catch (e) { status.textContent = K.errorText(e); }
+      } }, 'Save and test'), c.url ? h('button', { class: 'btn ghost', onclick: () => { K.setConfig({}); urlIn.value = ''; codeIn.value = ''; status.textContent = 'Disconnected on this device.'; App.render(); } }, 'Disconnect') : null),
+      status,
+      h('div', { class: 'divider' }),
+      h('label', { class: 'switch', for: 'coach-mem-on' }, h('span', null, 'Let Claude remember notes about you'), h('input', { type: 'checkbox', id: 'coach-mem-on', checked: K.memoryOn(), onchange: (e) => Store.setProfile({ coachMemoryOn: e.target.checked }) })),
+      h('p', { class: 'note', style: { marginTop: '-6px' } }, 'Claude reads these every time. It can suggest new ones, which you confirm. With memory off, it reads none of them.'),
+      memList,
+      h('div', { class: 'row' }, addIn, h('button', { class: 'btn sm', onclick: add }, icon('plus'), 'Add')),
+      h('div', { class: 'divider' }),
+      field('Check-in notes on Today', seg([['off', 'Off'], ['key', 'Important'], ['more', 'More']], prof().coachNotes || 'key', (v) => Store.setProfile({ coachNotes: v }), { label: 'Check-in notes' }),
+        (prof().coachNotes || 'key') === 'more' ? 'also after a poor night or a big jump in training' : (prof().coachNotes || 'key') === 'off' ? 'none' : 'the evening before an exam, and mornings with low recovery'),
+      log.length ? h('button', { class: 'btn ghost block', onclick: () => { K.reset(); toast('Chat cleared on this device'); App.render(); } }, icon('trash'), 'Clear the chat on this device') : null,
+    ];
+  };
+
+  K.describe = describe; K.check = check; K.AUTO = AUTO;
+  return K;
 })();
 
 /* ===== ui-train.js — workout logger, finish summary, sessions, exercises, routines, muscles, load ===== */
@@ -7906,7 +8360,7 @@ const Train = (() => {
             h('span', { style: { fontWeight: 750, minWidth: '150px', textAlign: 'center' } }, d === C.todayStr ? `Today, ${U.fmtShort(d)}` : U.fmtDayLong(d)),
             h('button', { class: 'icon-btn sm', 'aria-label': 'Next day', disabled: d >= C.todayStr, onclick: () => { entry.d = addDays(d, 1); reDraw(); } }, icon('chevR')))),
         trained ? h('section', { class: 'card claude' }, h('p', { style: { lineHeight: 1.55 } }, T.muscleInsight(mst)),
-          App.sample ? h('button', { class: 'btn sm tint', style: { marginTop: '12px' }, onclick: () => App.open('coach', { q: 'Based on my muscle freshness and recent training, plan my next 3 sessions.' }) }, icon('spark'), 'Plan my next 3 sessions') : null) : h('p', { class: 'note' }, 'Log strength sets to see which muscles are fresh and which need rest.'),
+          Coach.available() ? h('button', { class: 'btn sm tint', style: { marginTop: '12px' }, onclick: () => App.open('coach', { q: 'Based on my muscle freshness and recent training, plan my next 3 sessions.' }) }, icon('spark'), 'Plan my next 3 sessions') : null) : h('p', { class: 'note' }, 'Log strength sets to see which muscles are fresh and which need rest.'),
         h('section', { class: 'card flush' }, h('div', { class: 'list' }, rows)),
         h('p', { class: 'note' }, mode === 'fresh' ? 'Freshness drops with the hard sets you log and recovers over two to three days. Helper muscles count as half a set.' : 'Hard sets in the last 7 days. Helper muscles count as half a set; warm-ups don’t count.'));
     },

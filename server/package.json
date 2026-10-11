@@ -1,0 +1,13 @@
+{
+  "name": "baseline-coach",
+  "private": true,
+  "type": "module",
+  "description": "Backend for the Baseline Health Claude coach: holds the API key and streams Claude's replies to the page.",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0"
+  }
+}
