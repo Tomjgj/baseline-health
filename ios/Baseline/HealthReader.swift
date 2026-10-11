@@ -38,7 +38,7 @@ final class HealthReader {
     ]
 
     private lazy var readTypes: Set<HKObjectType> = {
-        var types = Set<HKObjectType>(quantities.map { HKQuantityType($0.0) })
+        var types = Set<HKObjectType>(quantities.map { HKQuantityType($0.0) as HKObjectType })
         types.insert(HKQuantityType(.height))
         types.insert(HKCategoryType(.sleepAnalysis))
         types.insert(HKCategoryType(.mindfulSession))

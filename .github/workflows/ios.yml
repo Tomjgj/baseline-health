@@ -1,0 +1,57 @@
+# Builds the iPhone app on a macOS runner and launches it in the iOS Simulator.
+# Runs when ios/ or index.html changes, or by hand from the Actions tab.
+name: iOS build
+
+on:
+  push:
+    paths: ['ios/**', 'index.html', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['ios/**', 'index.html', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Build for the simulator
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+          test -d build/Build/Products/Debug-iphonesimulator/Baseline.app
+
+      - name: Launch in the simulator
+        run: |
+          set -x
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in sorted(d, reverse=True) if 'iOS' in k for x in d[k] if x['name'].startswith('iPhone')))")
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl install "$DEVICE" ios/build/Build/Products/Debug-iphonesimulator/Baseline.app
+          xcrun simctl launch "$DEVICE" com.example.baseline
+          sleep 20
+          xcrun simctl io "$DEVICE" screenshot launch.png
+          # the app must still be running after 20 seconds
+          xcrun simctl spawn "$DEVICE" launchctl list | grep -i baseline
+
+      - name: Keep the build log and screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: |
+            ios/xcodebuild.log
+            launch.png
+          if-no-files-found: ignore
