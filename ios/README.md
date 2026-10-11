@@ -9,12 +9,23 @@ A thin native shell around `index.html`. The interface is the web app, unchanged
 
 Not yet checked: the HealthKit permission sheet and real Health data, which need a device.
 
-## Build
+## Run it on your iPhone
 
-1. Install XcodeGen: `brew install xcodegen`
-2. `cd ios && xcodegen generate && open Baseline.xcodeproj`
-3. In the target's *Signing & Capabilities*, pick your team and change the bundle id (`com.example.baseline`). HealthKit is already listed in `Baseline.entitlements`.
-4. Run on an iPhone (HealthKit has no real data in the simulator). Allow the Health categories when asked.
+With the iPhone connected and unlocked, and Developer Mode on (Settings → Privacy & Security → Developer Mode):
+
+```
+TEAM=ABCDE12345 ./ios/run-on-iphone.sh
+```
+
+`TEAM` is your team id from Xcode → Settings → Accounts (a free Apple ID's Personal Team is fine). The script:
+1. installs XcodeGen if needed and generates the project;
+2. finds the iPhone;
+3. builds and signs with your team, using `com.<your username>.baseline` unless you set `BUNDLE`;
+4. installs the app and opens it.
+
+Allow the Health categories when asked. If iOS says the developer isn't trusted, trust your Apple ID under Settings → General → VPN & Device Management.
+
+To work in Xcode instead: `cd ios && xcodegen generate && open Baseline.xcodeproj`, set your team and bundle id under *Signing & Capabilities*, and run.
 
 ## How it fits together
 
