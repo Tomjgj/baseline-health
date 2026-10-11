@@ -34,7 +34,9 @@ targets:
         com.apple.developer.healthkit.access: []
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.baseline
+        # unique per developer team, so nobody has to invent a bundle id before pressing Run
+        PRODUCT_BUNDLE_IDENTIFIER: com.baselinehealth.app.$(DEVELOPMENT_TEAM)
+        CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO

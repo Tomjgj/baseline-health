@@ -1,2 +1,5 @@
-Baseline.xcodeproj/
+# Baseline.xcodeproj is committed (CI regenerates it from project.yml) so it opens with a double-click
+build/
 DerivedData/
+xcuserdata/
+*.xcuserstate

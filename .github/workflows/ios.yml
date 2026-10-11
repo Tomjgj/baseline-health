@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: macos-15
     timeout-minutes: 30
+    permissions:
+      contents: write   # to commit the regenerated Xcode project
     steps:
       - uses: actions/checkout@v4
 
@@ -24,13 +26,25 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
+      # keep the committed project in step with project.yml, so it can be opened with a double-click
+      - name: Commit the Xcode project if it changed
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ios/Baseline.xcodeproj
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate ios/Baseline.xcodeproj from project.yml"
+            git push
+          fi
+
       - name: Build for the simulator
         run: |
           cd ios
           set -o pipefail
           xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=com.example.baseline build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
           test -d build/Build/Products/Debug-iphonesimulator/Baseline.app
 
       - name: Launch in the simulator
