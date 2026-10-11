@@ -9,7 +9,17 @@ A thin native shell around `index.html`. The interface is the web app, unchanged
 
 Not yet checked: the HealthKit permission sheet and real Health data, which need a device.
 
-## Run it on your iPhone
+## Run it on your iPhone (no Terminal)
+
+1. Download this branch as a ZIP from GitHub (Code → Download ZIP) and double-click it to unzip.
+2. Open `ios/Baseline.xcodeproj` (double-click).
+3. Connect your iPhone, unlock it, and pick it at the top of the Xcode window.
+4. Click *Baseline* in the left sidebar → *Signing & Capabilities* → *Team* → your Apple ID.
+5. Press ▶ (Run).
+
+`Baseline.xcodeproj` is generated from `project.yml` by CI and committed, so don't edit it by hand.
+
+## Run it on your iPhone (Terminal)
 
 With the iPhone connected and unlocked, and Developer Mode on (Settings → Privacy & Security → Developer Mode):
 
