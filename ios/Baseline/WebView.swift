@@ -58,6 +58,8 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "sync", id, from: "YYYY-MM-DD", to: "YYYY-MM-DD" }  → a baseline.health/1 payload
     ///   { type: "scan", id }                                        → { code } from the camera
     ///   { type: "food", id, path }                                  → { text } from Open Food Facts (path starts with /)
+    ///   { type: "notify", id, key, at: ms since 1970, title, body } and { type: "unnotify", id, key } → local reminders
+    ///   { type: "share", id, filename, text }                       → the share sheet with that file
     ///   { type: "latest", id }                                      → { at, hr: [[time, bpm]], hrv: [[time, ms]] }, the last few hours
     /// and tells the page when the watch has delivered new readings by calling BaselineBridge.changed().
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -76,6 +78,19 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             return
         case "food":
             fetchFood(id: id, path: body["path"] as? String ?? "")
+            return
+        case "notify":
+            if let key = body["key"] as? String, let at = body["at"] as? Double {
+                Notifier.schedule(key: key, at: Date(timeIntervalSince1970: at / 1000), title: body["title"] as? String ?? "Baseline", body: body["body"] as? String ?? "")
+            }
+            reply(["id": id, "ok": true, "payload": [:] as [String: Any]])
+            return
+        case "unnotify":
+            if let key = body["key"] as? String { Notifier.cancel(key: key) }
+            reply(["id": id, "ok": true, "payload": [:] as [String: Any]])
+            return
+        case "share":
+            share(id: id, filename: body["filename"] as? String ?? "baseline-export.json", text: body["text"] as? String ?? "")
             return
         case "latest":
             Task {
@@ -107,6 +122,23 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
                 await MainActor.run { self.reply(["id": id, "ok": false, "error": "sync-failed"]) }
             }
         }
+    }
+
+    /// Hands a file to the share sheet (Save to Files, AirDrop, Mail…). Replies once the sheet closes.
+    private func share(id: String, filename: String, text: String) {
+        let safe = filename.replacingOccurrences(of: "/", with: "-")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(safe.isEmpty ? "baseline-export.json" : safe)
+        guard (try? text.write(to: url, atomically: true, encoding: .utf8)) != nil, var top = webView.window?.rootViewController else {
+            reply(["id": id, "ok": false, "error": "share_failed"])
+            return
+        }
+        while let p = top.presentedViewController { top = p }
+        let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        sheet.popoverPresentationController?.sourceView = webView
+        sheet.completionWithItemsHandler = { _, completed, _, _ in
+            self.reply(completed ? ["id": id, "ok": true, "payload": ["saved": true]] : ["id": id, "ok": false, "error": "cancelled"])
+        }
+        top.present(sheet, animated: true)
     }
 
     /// Food lookups go through the app rather than the page, so they don't depend on the web view's cross-origin rules.

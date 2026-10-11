@@ -1455,7 +1455,7 @@ const FOODS = (() => {
     'Latte / cappuccino': 'flat white coffee milk', Cola: 'coke soda', 'Cola zero / diet': 'coke diet soda', 'Ground beef 85% lean, cooked': 'mince minced burger',
     'Whey protein powder': 'protein shake', 'French fries': 'chips fries', 'Potato chips': 'crisps', 'Tuna, canned in water': 'tin', 'Spirits (vodka, gin, whisky)': 'liquor alcohol shot rum',
     'Whole wheat bread': 'toast wholemeal', 'Chocolate hazelnut spread': 'nutella', 'Edamame': 'soy beans', 'Mixed salad greens': 'lettuce salad', 'Bell pepper': 'paprika capsicum',
-    'Doughnut, glazed': 'donut', 'Zucchini': 'courgette', 'Sweetcorn': 'corn', 'Rolled oats (dry)': 'oatmeal porridge', 'Pizza Margherita': 'cheese pizza', 'Water': 'sparkling still' };
+    'Doughnut, glazed': 'donut', Gouda: 'cheese', Cheddar: 'cheese', Mozzarella: 'cheese', 'Emmental / Swiss cheese': 'cheese', 'Zucchini': 'courgette', 'Sweetcorn': 'corn', 'Rolled oats (dry)': 'oatmeal porridge', 'Pizza Margherita': 'cheese pizza', 'Water': 'sparkling still' };
   const list = raw.map(([name, kcal, p, c, f, fiber, serv, group], i) => ({
     id: 'f' + i, name, kcal, p, c, f, fiber, group, alias: ALIAS[name] || '',
     liquid: group === 'Drinks' || /milk|drink|juice|shake/i.test(name),
@@ -1476,18 +1476,23 @@ const FOODS = (() => {
     };
   }
 
+  // the everyday meaning of a one-word search goes first: "rice" is cooked rice, not rice cakes
+  const TOP = { rice: 'White rice, cooked', pasta: 'Pasta, cooked', potato: 'Potatoes, boiled', potatoes: 'Potatoes, boiled', bread: 'Whole wheat bread', milk: 'Milk 1.5%', yogurt: 'Plain yogurt, whole milk',
+    chicken: 'Chicken breast, cooked', beef: 'Beef steak, cooked', fish: 'Cod, cooked', cheese: 'Gouda', coffee: 'Coffee, black', tea: 'Black tea', juice: 'Orange juice', wine: 'Red wine', egg: 'Egg', eggs: 'Egg',
+    oats: 'Rolled oats (dry)', chips: 'French fries', salad: 'Mixed salad greens', beans: 'Black beans, cooked', noodles: 'Egg noodles, cooked' };
   function search(q, extra = []) {
-    q = q.trim().toLowerCase();
+    q = q.trim().toLowerCase().replace(/yoghurt/g, 'yogurt').replace(/\s+/g, ' ');
     const all = [...extra, ...list];
     if (!q) return all.slice(0, 40);
-    const words = q.split(/\s+/);
-    // "eggs" finds "Egg", "berries" finds "Blueberries"
+    const words = q.split(' ');
+    // "eggs" finds "Egg", "berries" finds "Blueberries"; words match from their start, so "tea" doesn't find "steak"
     const stem = (w) => (w.length > 3 && w.endsWith('ies') ? w.slice(0, -3) : w.length > 3 && w.endsWith('es') ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w);
+    const has = (hay, w) => { const i = hay.indexOf(w); return i >= 0 && (i === 0 || !/[a-z]/.test(hay[i - 1]) || w.length >= 4); };
     return all
       .map((f) => {
         const n = f.name.toLowerCase(), hay = n + ' ' + (f.alias || '');
-        if (!words.every((w) => hay.includes(w) || hay.includes(stem(w)))) return null;
-        return { f, s: (n.startsWith(q) ? 0 : n.includes(q) ? 0.5 : 1) + n.length / 100 };
+        if (!words.every((w) => has(hay, w) || has(hay, stem(w)))) return null;
+        return { f, s: (f.custom ? -0.5 : 0) + (TOP[q] === f.name ? -1 : 0) + (n.startsWith(q) ? 0 : has(n, q) ? 0.5 : 1) + n.length / 100 };
       })
       .filter(Boolean).sort((a, b) => a.s - b.s).map((x) => x.f).slice(0, 40);
   }
@@ -1611,7 +1616,8 @@ const E = (() => {
       const info = exerciseInfo(ex.name);
       for (const st of ex.sets || []) {
         if (!(+st.r > 0) || st.done === false) continue;
-        if (st.t !== 'W') sets++;
+        if (st.t === 'W') continue; // warm-ups count toward neither sets nor volume
+        sets++;
         if (/seconds/i.test(ex.name)) continue;
         const eff = (+st.w || 0) + (info.bw ? (BW_FACTOR[ex.name] ?? 0.5) * bw : 0);
         volume += eff * +st.r;
@@ -1867,13 +1873,14 @@ const E = (() => {
         const wkKcal = (day.workouts || []).reduce((a, w) => a + (w.kcal || 0), 0);
         cardio += 0.04 * Math.max(0, (day.active || 0) - wkKcal);
         basis = 'hr';
-        // logged workouts with no heart-rate coverage (watch off) add effort-based load
+        // logged workouts the watch didn't see (taken off, or logged at a different time) add effort-based load
         for (const s of ss) {
           if (s.source !== 'app' || s.merged || !s.start) continue;
           const b0 = Math.floor(U.minOfDay(s.start) / 30), b1 = Math.min(47, Math.floor((U.minOfDay(s.start) + (s.min || 0)) / 30));
-          let covered = 0, total = 0;
-          for (let b = b0; b <= b1; b++) { total++; if (day.hrB?.[b] != null) covered++; }
-          if (covered / Math.max(1, total) < 0.5) cardio += s.cardio;
+          let covered = 0, total = 0, hrSum = 0;
+          for (let b = b0; b <= b1; b++) { total++; if (day.hrB?.[b] != null) { covered++; hrSum += day.hrB[b]; } }
+          const seen = covered / Math.max(1, total) >= 0.5 && hrSum / covered >= p.rest + 0.3 * (p.max - p.rest);
+          if (!seen) cardio += s.cardio;
         }
       } else if (day?.active != null || ss.length) {
         cardio = (day?.active || 0) * 0.22;
@@ -2177,8 +2184,11 @@ const E = (() => {
     });
 
     // ---------- training load ----------
+    // days without data (watch off, before you started logging) are left out, not counted as zero load
     const ratioOf = (arr) => {
-      const acute = mean(arr.slice(0, 7)), chronic = mean(arr);
+      const a7 = arr.slice(0, 7).filter((v) => v != null), all = arr.filter((v) => v != null);
+      if (a7.length < 4) return null;
+      const acute = mean(a7), chronic = mean(all);
       if (!chronic) return null;
       const ratio = acute / chronic;
       return { acute, chronic, ratio, today: arr[0], status: ratio < 0.8 ? 'low' : ratio <= 1.3 ? 'steady' : ratio <= 1.5 ? 'high' : 'very high' };
@@ -2188,12 +2198,16 @@ const E = (() => {
       let n = 0;
       for (let i = 0; i < 28; i++) {
         const s = strain(addDays(d, -i));
-        if (s) { n++; t.push(s.trimp); c.push(s.cardio); mu.push(s.muscular); } else { t.push(0); c.push(0); mu.push(0); }
+        if (s) { n++; t.push(s.trimp); c.push(s.cardio); mu.push(s.muscular); } else { t.push(null); c.push(null); mu.push(null); }
       }
       if (n < 14) return null;
       const all = ratioOf(t);
       if (!all) return null;
-      return { ...all, cardio: ratioOf(c), muscular: mu.some((x) => x > 0) ? ratioOf(mu) : null };
+      // lifting load needs three weeks of logging before "normal" means anything
+      const lifts = Object.keys(loggedByDate).filter((x) => x <= d && (loggedByDate[x] || []).some((w) => w.exercises?.length)).sort();
+      const since = lifts.length ? U.daysBetween(lifts[0], d) : -1;
+      const muscular = since < 0 ? null : since < 21 ? { building: true, days: since + 1 } : ratioOf(mu.slice(0, since + 1).map((v) => v ?? 0));
+      return { ...all, cardio: ratioOf(c), muscular };
     });
 
     // ---------- muscles worked (logged strength sets, last 7 days) ----------
@@ -5248,6 +5262,20 @@ function mealForNow(d = new Date()) {
   const m = d.getHours() * 60 + d.getMinutes();
   return m < 4 * 60 ? 'snack' : m < 630 ? 'breakfast' : m < 900 ? 'lunch' : m < 1050 ? 'snack' : m < 1290 ? 'dinner' : 'snack';
 }
+/** "2 eggs", "1.5 × 1 slice (32 g)", "150 g": an amount and unit, without "1 2 eggs" when the unit already says how many. */
+function qtyText(x) {
+  const q = U.round(+x.qty, 2), u = String(x.unit || '');
+  if (/^[\d½¼¾]/.test(u)) return q === 1 ? u : `${q} × ${u}`;
+  return `${q} ${u}`;
+}
+/** When food logged for a meal happened: now if it's that meal's time of day, otherwise the meal's usual time (never later than now). */
+function mealAt(date, meal, d = new Date()) {
+  const usual = { breakfast: '08:00', lunch: '12:30', snack: '16:00', dinner: '19:30' }[meal] || '12:00';
+  if (date !== U.today()) return `${date}T${usual}`;
+  const now = U.isoLocal(d).slice(0, 16);
+  if (mealForNow(d) === meal) return now;
+  return `${date}T${usual}` < now ? `${date}T${usual}` : now;
+}
 const units = () => Store.state().profile.units || 'metric';
 const fmtW = (kg, d = 1) => {
   if (kg == null) return '–';
@@ -5490,13 +5518,13 @@ const Tabs = (() => {
       h('div', { class: 'hgrid' }, C.habits.map((hb) => {
         const meta = C.habitMeta(hb), tr = C.habitTrack(hb.id, date), a = ansOf(date, hb.id), lk = habitLook(meta, a, tr);
         const own = C.journal[date]?.a?.[hb.id], auto = own !== 0 && own !== 1 && a != null ? C.autoAnswer(hb.id, date) : null;
-        // from-data answers flip like any other; an answer of your own goes yes → no → cleared
-        const next = auto ? 1 - a : a == null ? 1 : a === 1 ? 0 : null;
+        // a tap answers yes, the next one switches between yes and no (the check-in can clear an answer)
+        const next = a == null ? 1 : 1 - a;
         return h('button', { class: 'hchip tap ' + lk.cls + (auto ? ' auto' : ''), 'aria-label': `${hb.name}: ${a == null ? 'not logged' : a ? 'yes' : 'no'}${auto ? `, from your data (${auto.why})` : ''}. Tap to change`, onclick: () => Store.setJournal(date, hb.id, next) },
           h('span', { class: 'tx' }, h('b', null, E.habitShort(hb)), h('span', { class: 'st' }, auto ? [icon('watch'), 'From your data'] : lk.st)), h('span', { class: 'mk' }, icon(lk.mk)));
       })),
       h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '4px' } },
-        h('span', { class: 'note' }, `${isToday ? 'Today' : U.fmtShort(date)}: tap for yes, again for no.`),
+        h('span', { class: 'note' }, `${isToday ? 'Today' : U.fmtShort(date)}: tap for yes, tap again to switch to no.`),
         h('button', { class: 'link', onclick: () => App.open('tracker', { date }) }, 'Tracker', icon('chevR'))));
     if (open) draw();
     const head = h('button', { class: 'fold-head', 'aria-expanded': String(open), 'aria-label': `Habits: ${sub}. ${open ? 'Hide' : 'Show'} today’s habits` , onclick: () => {
@@ -5845,7 +5873,7 @@ const Tabs = (() => {
     const kLeft = en.target - it.kcal, pLeft = en.protein - it.p;
     if (kLeft < 40) return [];
     const cands = [];
-    for (const r of recentFoods(C, date, 30)) cands.push({ name: r.name, kcal: r.kcal, p: r.p, c: r.c, f: r.f, fiber: r.fiber || 0, qty: r.qty, unit: r.unit, grams: r.grams, label: r.qty && r.unit ? `${U.round(r.qty, 1)} ${r.unit}` : '1 serving', src: r.src, foodId: r.foodId });
+    for (const r of recentFoods(C, date, 30)) cands.push({ name: r.name, kcal: r.kcal, p: r.p, c: r.c, f: r.f, fiber: r.fiber || 0, qty: r.qty, unit: r.unit, grams: r.grams, label: r.qty && r.unit ? qtyText(r) : '1 serving', src: r.src, foodId: r.foodId });
     for (const name of FIT_IDEAS) {
       const f = FOODS.byName[name];
       if (!f || cands.some((c) => c.name === name)) continue;
@@ -5859,7 +5887,7 @@ const Tabs = (() => {
   T.fitsLeft = fitsLeft;
   function logItem(date, meal, x) {
     const item = { id: U.uid(), meal, name: x.name, kcal: Math.round(x.kcal), p: U.round(x.p, 1), c: U.round(x.c, 1), f: U.round(x.f, 1), fiber: U.round(x.fiber || 0, 1),
-      qty: x.qty ?? 1, unit: x.unit || 'serving', grams: x.grams ?? null, src: x.src || 'db', foodId: x.foodId || null, at: date === U.today() ? U.isoLocal(new Date()) : `${date}T12:00` };
+      qty: x.qty ?? 1, unit: x.unit || 'serving', grams: x.grams ?? null, src: x.src || 'db', foodId: x.foodId || null, at: mealAt(date, meal) };
     Store.addFood(date, [item]);
     toast(`Added ${x.name} to ${mealName(meal).toLowerCase()}`, { action: 'Undo', onAction: () => Store.removeFood(date, item.id) });
     return item;
@@ -5885,7 +5913,7 @@ const Tabs = (() => {
         Charts.meter(eaten, target, color, { over: eaten > target * 1.05, h: 5 }), h('div', { class: 'of' }, `${Math.round(eaten)} of ${target} g`));
     };
     out.push(h('section', { class: 'card left-card', 'aria-label': 'Calories and macros' },
-      h('div', { class: 'row base' }, h('div', null, h('div', { class: 'eyebrow' }, mode === 'left' ? (left >= 0 ? 'Left today' : 'Over today') : 'Eaten today'),
+      h('div', { class: 'row base' }, h('div', null, h('div', { class: 'eyebrow' }, (mode === 'left' ? (left >= 0 ? 'Left' : 'Over') : 'Eaten') + (date === C.todayStr ? ' today' : date === addDays(C.todayStr, -1) ? ' yesterday' : ` on ${U.fmtShort(date)}`)),
         h('div', { class: 'huge-num', style: { marginTop: '4px' } }, fmtInt(mode === 'left' ? Math.abs(left) : it.kcal), h('small', null, 'kcal'))),
         h('button', { class: 'btn sm', onclick: () => { App.ui.foodMode = mode === 'left' ? 'eaten' : 'left'; App.saveUi(); App.render(); } }, mode === 'left' ? 'Show eaten' : 'Show left')),
       h('div', { style: { marginTop: '12px' } }, Charts.meter(it.kcal, en.target, 'var(--accent)', { over: left < -50, h: 8 })),
@@ -5907,7 +5935,7 @@ const Tabs = (() => {
       return h('div', { class: 'meal' }, head,
         mi.length || (yesterday.length && isToday && m === mealForNow()) ? h('div', { class: 'meal-body' },
           mi.map((x) => h('button', { class: 'food-li tap', onclick: () => Sheet.foodItem(date, x) },
-            h('span', { class: 'tx' }, h('span', { class: 't', style: { display: 'block' } }, x.name), h('span', { class: 's', style: { display: 'block' } }, [x.qty && x.unit ? `${U.round(x.qty, 1)} ${x.unit}` : null, `P ${Math.round(x.p)} · C ${Math.round(x.c)} · F ${Math.round(x.f)}`].filter(Boolean).join(' · '))),
+            h('span', { class: 'tx' }, h('span', { class: 't', style: { display: 'block' } }, x.name), h('span', { class: 's', style: { display: 'block' } }, [x.qty && x.unit ? qtyText(x) : null, `P ${Math.round(x.p)} · C ${Math.round(x.c)} · F ${Math.round(x.f)}`].filter(Boolean).join(' · '))),
             h('span', { class: 'kc' }, fmtInt(x.kcal)))),
           !mi.length && yesterday.length && isToday && m === mealForNow() ? h('button', { class: 'add-line', style: { color: 'var(--ink-2)', paddingTop: 0 }, onclick: () => {
             const copy = yesterday.map((x) => ({ ...x, id: U.uid(), at: isToday ? U.isoLocal(new Date()) : `${date}T12:00` }));
@@ -5935,6 +5963,7 @@ const Tabs = (() => {
   const LOAD_STATUS = (r) => (r == null ? null : r < 0.8 ? ['Detraining', 'var(--warn-ink)'] : r < 1.0 ? ['Maintaining', 'var(--ink-2)'] : r <= 1.3 ? ['Building', 'var(--good-ink)'] : ['Overreaching', 'var(--crit-ink)']);
   T.LOAD_STATUS = LOAD_STATUS;
   function loadGauge(title, key, x, color, date) {
+    if (x?.building) x = null;
     const st = LOAD_STATUS(x?.ratio);
     const opt = x ? [x.chronic * 0.8, x.chronic * 1.3] : null;
     const max = x ? Math.max(10, Math.ceil(Math.max(x.chronic * 1.75, x.acute * 1.15))) : 10;
@@ -5942,7 +5971,7 @@ const Tabs = (() => {
       h('span', { class: 'gt' }, title, icon('chevR')),
       h('span', { class: 'gs', style: { color: st ? st[1] : 'var(--muted)' } }, st ? st[0] : 'No data yet'),
       Charts.segGauge({ value: x?.acute ?? null, max, optimal: opt, color, display: x ? String(Math.round(x.acute)) : '–', sub: '7-day avg', label: `${title} load ${x ? Math.round(x.acute) : 'no data'}`, animKey: `g-${key}-${date}` }),
-      h('span', { class: 'go' }, h('i'), opt ? h('span', null, 'Optimal ', h('b', null, `${Math.round(opt[0])}–${Math.round(opt[1])}`)) : key === 'muscular' ? 'Log sets to start' : 'Needs 2 weeks'));
+      h('span', { class: 'go' }, h('i'), opt ? h('span', null, 'Optimal ', h('b', null, `${Math.round(opt[0])}–${Math.round(opt[1])}`)) : key === 'muscular' ? (App.ctx().load(date)?.muscular?.building ? 'Needs 3 weeks of logged sets' : 'Log sets to start') : 'Needs 2 weeks'));
   }
   T.loadGauge = loadGauge;
   function routineLine(C, ex) {
@@ -6045,9 +6074,9 @@ const Tabs = (() => {
     const r = C.recovery(date), st = C.strain(date), tgt = C.strainTarget(date);
     const isToday = date === C.todayStr;
     const wdIdx = (U.parseYmd(date).getDay() + 6) % 7, mon = addDays(date, -wdIdx);
-    let wkN = 0, wkStrain = 0;
-    for (let i = 0; i < 7; i++) { const d = addDays(mon, i); if (d > C.todayStr) break; wkN += C.sessions(d).length; wkStrain += C.strain(d)?.value || 0; }
-    const out = [tabHead('Train', `This week: ${plural(wkN, 'session')} · ${fmt1(wkStrain)} strain`, askBtn('What should I train today?'), settingsBtn())];
+    let wkN = 0, wkStrain = 0, wkDays = 0;
+    for (let i = 0; i < 7; i++) { const d = addDays(mon, i); if (d > C.todayStr) break; wkN += C.sessions(d).length; const sv = C.strain(d)?.value; if (sv != null) { wkStrain += sv; wkDays++; } }
+    const out = [tabHead('Train', `This week: ${plural(wkN, 'session')}${wkDays ? ` · strain ${fmt1(wkStrain / wkDays)} a day` : ''}`, askBtn('What should I train today?'), settingsBtn())];
     // readiness
     const v = st?.value ?? 0;
     const recOk = r && !r.calibrating;
@@ -6241,7 +6270,10 @@ const Tabs = (() => {
         daily.push(d === C.todayStr && PARTIAL_TODAY.has(b.key) ? null : C.dailyValue(b.key, d));
       }
       const now = C.baseline(b.key, date)?.v ?? null, then = base.find((v) => v != null) ?? null;
-      const ch = blChange(b, now, then);
+      // compare with the oldest baseline in view, and say how old that really is; under three weeks there's no trend to tell
+      const spanDays = range - 1 - base.findIndex((v) => v != null);
+      const ch = spanDays >= 21 ? blChange(b, now, then) : null;
+      const sinceTxt = spanDays >= range - 3 ? `${range === 90 ? '3' : '6'} months` : spanDays >= 60 ? `${Math.round(spanDays / 30)} months` : `${Math.round(spanDays / 7)} weeks`;
       const wide = b.dur || b.key === 'steps';
       const chart = Charts.trend({ labels, series: [{ values: base, color: b.color, width: 2.6, name: 'Your normal' }, { values: daily, color: b.color, line: false, dots: 'all', r: range > 100 ? 1.6 : 2.1, dotOpacity: 0.4, name: 'That day' }],
         band, bandFill: b.color, bandOpacity: 0.13, height: 156, padL: wide ? 46 : 34, fmt: (v) => blFmt(b, v), tickFmt: (v) => (b.dur ? U.fmtHrs(v) : b.key === 'steps' ? fmtInt(v) : Number.isInteger(v) ? String(v) : v.toFixed(b.dp)), caption: `${b.name}, your normal over the last ${range} days`, xEvery: Math.round((range - 1) / 3) });
@@ -6261,7 +6293,7 @@ const Tabs = (() => {
       put(el,
         h('div', { class: 'card-title' }, h('h2', null, 'Your baselines'), seg([[90, '3M'], [180, '6M']], range, (v) => { App.ui.blRange = v; App.saveUi(); draw(); }, { label: 'Range', cls: 'small' })),
         h('div', { class: 'bl-head' }, h('div', { style: { minWidth: 0 } }, h('div', { class: 'k' }, b.name), h('div', { class: 'stat' }, h('div', { class: 'v' }, blFmt(b, now), b.unit && !b.dur ? h('small', { class: 'muted', style: { fontSize: 'calc(13 * var(--fs))', fontWeight: 650, marginLeft: '4px', fontFamily: 'var(--font)' } }, b.unit) : null))),
-          ch ? h('div', { style: { textAlign: 'right' } }, h('div', { class: 'small ' + ch.cls, style: { fontWeight: 800 } }, ch.word === 'steady' ? 'Steady' : `${blDelta(b, ch.dl)}${b.unit && !b.dur && b.unit !== '/100' ? ' ' + b.unit : ''} · ${ch.word}`), h('div', { class: 'xs muted', style: { fontWeight: 650 } }, `vs ${range === 90 ? '3' : '6'} months ago`)) : null),
+          ch ? h('div', { style: { textAlign: 'right' } }, h('div', { class: 'small ' + ch.cls, style: { fontWeight: 800 } }, ch.word === 'steady' ? 'Steady' : `${blDelta(b, ch.dl)}${b.unit && !b.dur && b.unit !== '/100' ? ' ' + b.unit : ''} · ${ch.word}`), h('div', { class: 'xs muted', style: { fontWeight: 650 } }, `vs ${sinceTxt} ago`)) : null),
         chart,
         h('div', { style: { marginTop: '8px' } }, legend(['Your normal', b.color, 'ln'], ['Each day', b.color, 'dot'], ['Normal range', `color-mix(in srgb, ${b.color} 25%, transparent)`])),
         h('p', { class: 'note', style: { marginTop: '6px' } }, b.about),
@@ -6386,7 +6418,10 @@ const Tabs = (() => {
         (grp[g.id] ||= []).push(x.healthAge != null && fs.length ? fs.reduce((a, f) => a + f.years, 0) : null);
       }
     }
-    const first = pts.find((v) => v != null);
+    const firstIdx = pts.findIndex((v) => v != null), spanW = firstIdx < 0 ? 0 : pts.length - 1 - firstIdx;
+    // a change needs at least a month of history, and says how long it's over
+    const first = spanW >= 4 ? pts[firstIdx] : null;
+    const overTxt = spanW >= 24 ? 'in 6 months' : spanW >= 8 ? `in ${Math.round(spanW / 4.35)} months` : `in ${spanW} weeks`;
     const younger = diff < 0;
     const yrs = (v) => (Math.abs(v) < 0.05 ? '0.0' : fmtSigned(v, 1));
     const groups = E.AGE_GROUPS.map((g) => ({ g, fs: ha.factors.filter((f) => g.keys.includes(f.key)) })).filter((x) => x.fs.length);
@@ -6396,7 +6431,7 @@ const Tabs = (() => {
         h('p', { style: { fontSize: 'calc(14 * var(--fs))', fontWeight: 750, color: younger ? 'var(--strain-ink)' : 'var(--stress-ink)', marginTop: '4px' } },
           Math.abs(diff) < 0.1 ? `Same as your age of ${fmt1(ha.age)}` : `${fmt1(Math.abs(diff))} years ${younger ? 'younger' : 'older'} than your age of ${fmt1(ha.age)}`)),
         first != null ? h('div', { style: { textAlign: 'right', paddingTop: '22px' } }, h('div', { class: 'small ' + (ha.healthAge - first < -0.05 ? 'up' : ha.healthAge - first > 0.05 ? 'down' : 'muted'), style: { fontWeight: 800 } }, `${yrs(ha.healthAge - first)} yrs`),
-          h('div', { class: 'xs muted', style: { fontWeight: 650 } }, 'in 6 months')) : null),
+          h('div', { class: 'xs muted', style: { fontWeight: 650 } }, overTxt)) : null),
       h('div', { style: { marginTop: '12px' } }, Charts.trend({ labels, series: [{ values: pts, color: younger ? 'var(--younger)' : 'var(--older)', width: 2.6, name: 'Health age' }, { values: ages, color: 'var(--muted)', dash: '4 4', width: 1.4, name: 'Your age' }],
         height: 128, fmt: (v) => (v % 1 ? v.toFixed(1) : String(v)), caption: 'Health age by week, last 6 months', xEvery: 8, tipFor: (i) => (pts[i] == null ? null : `<b>${labels[i].full}</b><br>Health age ${fmt1(pts[i])}<br>Your age ${fmt1(ages[i])}`) })),
       h('div', { style: { marginTop: '8px' } }, legend(['Health age', younger ? 'var(--younger)' : 'var(--older)', 'ln'], ['Your age', 'var(--muted)', 'ln'])),
@@ -6452,7 +6487,7 @@ const Tabs = (() => {
       const clock = (m) => { const c = ((Math.round(m) + 720) % 1440 + 1440) % 1440; return `${U.pad(Math.floor(c / 60))}:${U.pad(c % 60)}`; };
       const spread = (U.sd(beds) + U.sd(wakes)) / 2;
       const consistency = Math.round(U.clamp(100 - (spread - 15) * 1.1, 0, 100));
-      return cardT('Sleep timing, 14 nights', h('span', { class: 'xs', style: { fontWeight: 800, color: consistency >= 75 ? 'var(--good-ink)' : consistency >= 55 ? 'var(--warn-ink)' : 'var(--crit-ink)' } }, `consistency ${consistency}`),
+      return cardT(`Sleep timing, ${beds.length === 14 ? '14 nights' : `${beds.length} of 14 nights`}`, h('span', { class: 'xs', style: { fontWeight: 800, color: consistency >= 75 ? 'var(--good-ink)' : consistency >= 55 ? 'var(--warn-ink)' : 'var(--crit-ink)' } }, `consistency ${consistency}`),
         h('p', { class: 'small muted', style: { marginTop: '-6px', marginBottom: '8px' } }, `Average bed ${clock(U.mean(beds))} · wake ${clock(U.mean(wakes))} · ${fmtDur(U.mean(asleep))} asleep`),
         Charts.windows({ nights, caption: 'Bed and wake times, last 14 nights', usual: U.mean(beds), highlightLast: 7 }),
         h('p', { class: 'note', style: { marginTop: '6px' } }, 'Dashed line: your usual bedtime. Brighter bars are the last 7 nights.'),
@@ -6647,7 +6682,7 @@ const Pages = {};
         const prev = addDays(date, -1);
         out.push(h('section', { class: 'card' }, h('div', { class: 'row', style: { gap: '16px' } },
           Charts.scoreRing({ value: ss.score, max: 100, color: 'var(--sleep)', display: String(ss.score), unit: 'score', size: 112, stroke: 10, animKey: `sleep-page-${date}` }),
-          h('div', { class: 'grow' }, h('div', { class: 'xs muted', style: { fontWeight: 700 } }, `Last night · ${U.wd(prev)} → ${U.wd(date)}`),
+          h('div', { class: 'grow' }, h('div', { class: 'xs muted', style: { fontWeight: 700 } }, `${date === C.todayStr ? 'Last night' : 'Night'} · ${U.wd(prev)} → ${U.wd(date)}`),
             h('div', { class: 'big-num', style: { marginTop: '2px' } }, fmtDur(sl.asleep)),
             h('div', { class: 'small ink2' }, 'asleep, you needed ', h('b', null, fmtDur(ss.need))),
             h('div', { class: 'small', style: { marginTop: '6px' } }, h('span', { class: 'num', style: { fontSize: 'calc(16 * var(--fs))', fontWeight: 700 } }, `${U.fmtClock(sl.start)} → ${U.fmtClock(sl.end)}`), h('span', { class: 'muted' }, ` · ${Math.round((sl.asleep / sl.span) * 100)}% efficient`))))));
@@ -6744,7 +6779,7 @@ const Pages = {};
         const lo = Math.floor((Math.min(...nums) - 5) / 10) * 10, hi = Math.ceil((Math.max(...nums, day.hrMax || 0) + 5) / 10) * 10;
         const shades = [...C.activeWindows(date).map(([a, b, n]) => ({ a, b, kind: 'active', label: n })), ...C.sleepWindows(date).filter((w) => w[2] === 'nap').map(([a, b]) => ({ a, b, kind: 'nap', label: 'Nap' }))];
         let nowIdx = null; if (isToday) { const nm = nowMinutes(); nowIdx = Math.min(47, Math.floor(nm / 30)); }
-        out.push(cardT('Heart rate today', `max ${day.hrMax ?? '–'} · resting ${day.rhr ?? Math.round(st.rest)}`,
+        out.push(cardT(date === C.todayStr ? 'Heart rate today' : 'Heart rate through the day', `max ${day.hrMax ?? '–'} · resting ${day.rhr ?? Math.round(st.rest)}`,
           Charts.dayLine({ values: vals, min: lo, max: hi, height: 140, color: 'var(--hr)', shades, nowIdx, yTicks: [lo, Math.round((lo + hi) / 20) * 10, hi], fmt: (x) => String(Math.round(x)), caption: 'Heart rate through the day',
             tipFor: (i) => (vals[i] == null ? null : `<b>${clockOf(i)}</b><br>${vals[i]} bpm average${day.hrLo?.[i] != null ? `<br>${day.hrLo[i]}–${day.hrHi[i]} range` : ''}`) }),
           h('div', { style: { marginTop: '8px' } }, legend(['Workout', 'var(--shade-active)'], ['Nap', 'var(--shade-sleep)']))));
@@ -6767,7 +6802,7 @@ const Pages = {};
           h('div', { style: { marginTop: '8px' } }, legend(['Day strain', 'var(--strain)', 'ln'], ['Target for that day’s recovery', 'color-mix(in srgb, var(--go) 30%, transparent)']))));
       }
       const ld = C.load(date);
-      if (ld) out.push(h('section', { class: 'card tight' }, prow({ ic: 'trend', tone: 'strain', t: 'Training load this week', s: ['cardio', 'muscular'].filter((k) => ld[k]).map((k) => `${k} ${Tabs.LOAD_STATUS(ld[k].ratio)[0].toLowerCase()}`).join(' · '), onclick: () => App.open('load', { key: 'cardio', date }) })));
+      if (ld) out.push(h('section', { class: 'card tight' }, prow({ ic: 'trend', tone: 'strain', t: 'Training load this week', s: ['cardio', 'muscular'].filter((k) => ld[k]?.ratio != null).map((k) => `${k} ${Tabs.LOAD_STATUS(ld[k].ratio)[0].toLowerCase()}`).join(' · '), onclick: () => App.open('load', { key: 'cardio', date }) })));
       out.push(expander('How strain and its target work',
         'Strain is how hard your heart worked over the day, from 0 to 21. Every minute counts by where your heart rate sits between resting and max, and higher zones count far more. Everyday walking adds a little; logged workouts without heart rate count by length and effort.',
         'The scale is curved: going from 18 to 19 takes far more work than 8 to 9. Your target follows recovery: high 14–18, moderate 10–14, low 5–10.'));
@@ -7186,7 +7221,8 @@ const Pages = {};
         h('p', { class: 'note' }, 'After a few weeks of answers, Health shows which habits go with better or worse recovery and sleep, and how sure that is.'),
         h('div', { class: 'stickyfoot' }, h('button', { class: 'btn primary block lg', onclick: () => {
           const out = {};
-          for (const k in a) if (a[k] != null && (k === 'feel' || k === 'drinks' || C.habits.some((hb) => hb.id === k))) out[k] = a[k];
+          // answers the data gave stay the data's (they update if the data does); only yours are saved as yours
+          for (const k in a) if (a[k] != null && (k === 'feel' || k === 'drinks' || C.habits.some((hb) => hb.id === k)) && (!fromData[k] || k === 'stressful')) out[k] = a[k];
           if (out.alcohol !== 1) delete out.drinks;
           Store.putJournal(jd, out, note.trim());
           toast('Check-in saved');
@@ -7259,7 +7295,7 @@ const Pages = {};
     if (sched.length) L.push('Weekly schedule: ' + sched.map((x) => `${x.type === 'other' ? x.label : E.actType(x.type).name} ${Tabs.repeatLower(x.days)} ${x.start}-${x.end}`).join('; ') + '.');
     const ld = C.load(d);
     const lst = (x) => (x.ratio < 0.8 ? 'detraining' : x.ratio < 1 ? 'maintaining' : x.ratio <= 1.3 ? 'building' : 'overreaching');
-    if (ld) L.push(`Training load: last 7 days are ${ld.ratio.toFixed(2)}× the 4-week average.` + ['cardio', 'muscular'].filter((k) => ld[k]).map((k) => ` ${k} ${Math.round(ld[k].acute)} (7-day avg) vs optimal ${Math.round(ld[k].chronic * 0.8)}–${Math.round(ld[k].chronic * 1.3)}, ${lst(ld[k])}.`).join(''));
+    if (ld) L.push(`Training load: last 7 days are ${ld.ratio.toFixed(2)}× the 4-week average.` + ['cardio', 'muscular'].filter((k) => ld[k]?.ratio != null).map((k) => ` ${k} ${Math.round(ld[k].acute)} (7-day avg) vs optimal ${Math.round(ld[k].chronic * 0.8)}–${Math.round(ld[k].chronic * 1.3)}, ${lst(ld[k])}.`).join(''));
     const plans = []; for (let k = 0; k < 7; k++) { const x = addDays(C.todayStr, k); for (const p of C.planOn(x)) plans.push(`${x} ${p.time || ''} ${p.name} (${p.status})`.replace(/\s+/g, ' ')); }
     if (plans.length) L.push('Planned workouts for the next 7 days: ' + plans.join('; ') + '.');
     const mfs = C.muscleState(d);
@@ -7447,21 +7483,28 @@ ${ctx}`;
           h('div', { class: 'row' }, h('span', { class: 'grow', style: { fontWeight: 650 } }, 'Baseline sleep need'), h('div', { class: 'qty' },
             h('button', { type: 'button', 'aria-label': 'Less sleep need', onclick: () => { set({ sleepNeedH: Math.max(6.5, P.sleepNeedH - 0.25) }); needOut.textContent = fmtDur(P.sleepNeedH * 60); } }, '−'), needOut,
             h('button', { type: 'button', 'aria-label': 'More sleep need', onclick: () => { set({ sleepNeedH: Math.min(10, P.sleepNeedH + 0.25) }); needOut.textContent = fmtDur(P.sleepNeedH * 60); } }, '+'))),
-          field('Max heart rate (bpm)', hrIn, 'leave empty to estimate it')),
+          field('Max heart rate (bpm)', hrIn, 'leave empty to estimate it'),
+          HealthSync.native() ? h('label', { class: 'switch', for: 'set-bed' }, h('span', null, h('b', { style: { display: 'block' } }, 'Bedtime reminder'), h('span', { class: 'xs muted' }, '30 minutes before tonight’s lights-out time')),
+            h('input', { type: 'checkbox', id: 'set-bed', checked: !!P.bedReminder, onchange: (e) => { set({ bedReminder: e.target.checked }); setTimeout(HealthSync.planBedtime, 300); } })) : null),
         sec('coach', 'Claude coach', ...Coach.settings()),
         sec('data', 'Data',
           HealthSync.native() ? HealthSync.row() : null,
           h('button', { class: 'btn block', onclick: () => App.open('import') }, icon('upload'), HealthSync.native() ? 'Import older history from an export' : 'Import Apple Health data'),
           st.meta?.lastImport ? h('p', { class: 'note' }, `Last import ${U.fmtDay(st.meta.lastImport.at.slice(0, 10))}: ${st.meta.lastImport.days} days${st.meta.lastImport.from ? `, ${U.fmtShort(st.meta.lastImport.from)}–${U.fmtShort(st.meta.lastImport.to)}` : ''}.`) : null,
-          h('label', { class: 'switch', for: 'set-demo' }, h('span', null, 'Show sample data'), h('input', { type: 'checkbox', id: 'set-demo', checked: Store.demo, onchange: (e) => { Store.setDemo(e.target.checked); toast(e.target.checked ? 'Showing sample data' : 'Showing your data'); App.render(); } })),
-          App.downloads ? h('button', { class: 'btn block ghost', onclick: async () => {
-            try { await App.downloads.save({ filename: `baseline-export-${U.today()}.json`, data: Store.exportJSON() }); } catch (e) { if (e?.code !== 'declined') toast('Couldn’t export right now.'); }
-          } }, icon('download'), 'Export my data') : null,
-          h('button', { class: 'btn block danger', onclick: () => confirmSheet({ title: 'Delete all your data?', text: 'This removes every imported day, food entry, workout, check-in, measurement and your profile. It can’t be undone.', confirm: 'Delete everything', danger: true, onConfirm: async () => {
+          HealthSync.native() && !Store.demo ? null : h('label', { class: 'switch', for: 'set-demo' }, h('span', null, 'Show sample data'), h('input', { type: 'checkbox', id: 'set-demo', checked: Store.demo, onchange: (e) => { Store.setDemo(e.target.checked); toast(e.target.checked ? 'Showing sample data' : 'Showing your data'); App.render(); } })),
+          h('button', { class: 'btn block ghost', onclick: async () => {
+            const filename = `baseline-export-${U.today()}.json`, data = Store.exportJSON();
+            try {
+              if (HealthSync.native()) { await HealthSync.share(filename, data); toast('Exported'); }
+              else if (App.downloads) await App.downloads.save({ filename, data });
+              else { const a = h('a', { href: URL.createObjectURL(new Blob([data], { type: 'application/json' })), download: filename }); document.body.append(a); a.click(); a.remove(); }
+            } catch (e) { if (e?.code !== 'declined' && e?.code !== 'cancelled') toast('Couldn’t export right now.'); }
+          } }, icon('download'), 'Export my data'),
+          h('button', { class: 'btn block danger', onclick: () => confirmSheet({ title: 'Delete all your data?', text: HealthSync.native() ? 'This removes every food entry, workout, check-in, measurement and your profile from Baseline. It can’t be undone. Apple Health isn’t touched, and your watch data comes back on the next sync.' : 'This removes every imported day, food entry, workout, check-in, measurement and your profile. It can’t be undone.', confirm: 'Delete everything', danger: true, onConfirm: async () => {
             toast('Deleting…', { ms: 60000 });
             try { await Store.clearAll(); toast('All your data was deleted'); } catch { toast('Some items couldn’t be deleted. Try again.'); }
           } }) }, icon('trash'), 'Delete all my data'),
-          h('p', { class: 'note' }, Store.mode === 'db' ? 'Your data is saved privately with this app. Only you can see it, even if you share the link.' : Store.mode === 'local' ? 'This copy of the app saves data in this browser only.' : '')),
+          h('p', { class: 'note' }, Store.mode === 'db' ? 'Your data is saved privately with this app. Only you can see it, even if you share the link.' : HealthSync.native() ? 'Your data stays on this iPhone, inside the app. Deleting the app deletes it, so export a copy now and then.' : Store.mode === 'local' ? 'This copy of the app saves data in this browser only.' : '')),
         sec('look', 'Appearance', seg([['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], theme, (v) => App.setTheme(v), { label: 'Theme' })));
       if (args.focus) setTimeout(() => document.getElementById('set-' + args.focus)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 120);
       return el;
@@ -7964,7 +8007,7 @@ const Coach = (() => {
   /** Do it. Returns a sentence for Claude and an undo record (plain data, so Undo still works after a reload). */
   function run(name, x, C) {
     if (name === 'log_food') {
-      const at = x.date === U.today() ? U.isoLocal(new Date()) : `${x.date}T12:00`;
+      const at = mealAt(x.date, x.meal);
       const items = x.items.map((i) => { const m = /^\s*(\d+(?:[.,]\d+)?)\s*([a-zA-Zµ]+)\s*$/.exec(i.amount || '');
         return { id: U.uid(), meal: x.meal, name: i.name.trim().slice(0, 80), kcal: Math.round(i.kcal), p: U.round(i.protein_g, 1), c: U.round(i.carbs_g, 1), f: U.round(i.fat_g, 1), fiber: 0,
           qty: m ? U.num(m[1]) : 1, unit: m ? m[2] : (i.amount || 'serving').slice(0, 24), grams: m && /^g$/i.test(m[2]) ? U.num(m[1]) : null, src: 'claude', est: true, at }; });
@@ -8269,6 +8312,23 @@ const HealthSync = (() => {
   S.food = (path) => ask({ type: 'food', path }, 30000);
   /** The last few hours of heart rate and HRV, straight from Health: { at, hr: [[time, bpm]], hrv: [[time, ms]] }. */
   S.latest = () => ask({ type: 'latest' }, 30000);
+  /** A local reminder at `at` (ms), shown only while the app isn't open; the same key replaces it. */
+  S.notify = (key, at, title, body) => { if (S.native()) ask({ type: 'notify', key, at, title, body }, 10000).catch(() => {}); };
+  S.unnotify = (key) => { if (S.native()) ask({ type: 'unnotify', key }, 10000).catch(() => {}); };
+  /** The bedtime reminder, 30 minutes before tonight's lights-out, when it's on. */
+  S.planBedtime = () => {
+    if (!S.native() || Store.demo) return;
+    const C = App.ctx();
+    if (!Store.state().profile.bedReminder) { S.unnotify('bedtime'); return; }
+    const lo = Tabs.lightsOut(C, C.todayStr);
+    if (!lo.time || lo.passed) { S.unnotify('bedtime'); return; }
+    const [hh, mm] = lo.time.split(':').map(Number);
+    const at = new Date(); at.setHours(hh, mm, 0, 0);
+    if (hh < 12) at.setDate(at.getDate() + 1); // lights out after midnight
+    S.notify('bedtime', at.getTime() - 30 * 60e3, 'Wind down', `Lights out by ${lo.time} gets you ${U.fmtDur(lo.need.total)} of sleep before your usual ${lo.wake} wake.`);
+  };
+  /** Offer a file through the iPhone share sheet (Save to Files, AirDrop, Mail). */
+  S.share = (filename, text) => ask({ type: 'share', filename, text }, 30 * 60e3);
   const last = () => Store.state().meta?.lastSync || null;
   S.last = last;
   S.error = () => lastError;
@@ -8286,6 +8346,9 @@ const HealthSync = (() => {
         const res = HI.fromJSON(payload, { todayStr: today });
         await Store.applyImport(res, null, { kind: 'sync' });
         lastError = null;
+        S.planBedtime();
+        // after the first sync, ask the few things Health can't tell (or confirm what it did)
+        if (!prev && !Store.state().profile.setupDone && !Sheets.count) setTimeout(() => Sheet.aboutYou(), 700);
         if (!quiet) toast(res.stats.days ? `Synced ${plural(res.stats.days, 'day')} from Apple Health` : 'Apple Health is up to date');
         return res;
       } catch (e) {
@@ -8529,7 +8592,9 @@ const Train = (() => {
           const label = x.t === 'N' ? String(n) : x.t;
           const pv = prev?.sets?.[si];
           const row = h('div', { class: 'set-row' + (x.done ? ' done' : '') });
-          const kg = h('input', { class: 'set-in', inputmode: 'decimal', 'aria-label': `${ex.name} set ${si + 1} weight in ${wU()}`, value: wDisp(x.w), placeholder: cfg.bodyweight ? '+0' : '–',
+          // an empty weight carries over from the set above (or the same set last time), shown as the placeholder
+          const carry = ex.sets.slice(0, si).reverse().find((y) => y.w !== '' && y.w != null)?.w ?? (pv && pv.w !== '' && pv.w != null ? +pv.w : null);
+          const kg = h('input', { class: 'set-in', inputmode: 'decimal', 'aria-label': `${ex.name} set ${si + 1} weight in ${wU()}`, value: wDisp(x.w), placeholder: cfg.bodyweight ? '+0' : carry != null ? wDisp(carry) : '–',
             onchange: (e) => { x.w = e.target.value === '' ? '' : U.toKg(U.num(e.target.value), units()); save(); stats(); } });
           const reps = h('input', { class: 'set-in', inputmode: 'numeric', 'aria-label': `${ex.name} set ${si + 1} ${cfg.timed ? 'seconds' : 'reps'}`, value: x.r === '' ? '' : String(x.r), placeholder: x.ph !== '' && x.ph != null ? String(x.ph) : '–',
             onchange: (e) => { x.r = e.target.value === '' ? '' : Math.round(U.num(e.target.value)); save(); stats(); } });
@@ -8539,7 +8604,11 @@ const Train = (() => {
             if (!x.done) {
               if (x.r === '' && x.ph !== '' && x.ph != null && x.ph !== 'max') x.r = +x.ph;
               if (!(+x.r > 0)) { reps.focus(); toast(`Enter ${cfg.timed ? 'seconds' : 'reps'} for this set`); return; }
-              if (x.w === '') x.w = cfg.bodyweight ? 0 : x.w;
+              if (x.w === '' || x.w == null) {
+                if (cfg.bodyweight) x.w = 0;
+                else if (carry != null) x.w = +carry;
+                else { kg.focus(); toast('Enter the weight for this set'); return; }
+              }
               x.done = true;
               try { navigator.vibrate?.(12); } catch {}
               const g2 = groupInfo(ei);
@@ -8602,11 +8671,13 @@ const Train = (() => {
       const done = d.exercises.map((ex) => ({ name: ex.name, sets: ex.sets.filter((x) => x.done && +x.r > 0).map((x) => ({ w: +x.w || 0, r: +x.r, t: x.t === 'N' ? undefined : x.t, rpe: x.rpe === '' ? undefined : +x.rpe, done: true })) })).filter((ex) => ex.sets.length);
       const sec = App.elapsed(), min = Math.max(1, Math.round(sec / 60));
       const hard = done.reduce((a, ex) => a + ex.sets.filter((x) => x.t !== 'W').length, 0);
-      const vol = done.reduce((a, ex) => a + ex.sets.reduce((b, x) => b + x.w * x.r, 0), 0);
+      // the same volume the saved session will show: bodyweight counts for pull-ups and the like, warm-ups don't
+      const bwKg = C.trendWeight(d.date) ?? 75;
+      const vol = E.liftStats({ exercises: done }, bwKg).volume;
       const rpes = done.flatMap((ex) => ex.sets.map((x) => x.rpe).filter(Boolean));
       let rpe = d.rpe || (rpes.length ? Math.round(U.mean(rpes)) : 7);
       const prev = d.routineId ? C.workoutsSorted.find((w) => w.routineId === d.routineId) : C.workoutsSorted.find((w) => w.name === d.name);
-      const prevVol = prev ? prev.exercises.reduce((a, ex) => a + (ex.sets || []).filter((x) => x.done !== false && +x.r > 0).reduce((b, x) => b + (+x.w || 0) * +x.r, 0), 0) : null;
+      const prevVol = prev ? E.liftStats(prev, bwKg).volume : null;
       const strainOf = (r) => { const musc = hard * 2.5 * (r / 8), card0 = 0.08 * min * r; return { v: E.strainFromTrimp(musc + card0), musc, card0 }; };
       const prs = done.flatMap((ex) => C.prCheck(ex.name, ex.sets, d.id, null));
       const sets = {};
@@ -8619,7 +8690,10 @@ const Train = (() => {
       const notes = h('textarea', { class: 'input', id: 'sum-notes', rows: 2, placeholder: 'Grip felt weak on pull-ups, left shoulder fine…' });
       notes.value = d.notes || '';
       const routine = d.routineId ? C.routines.find((r) => r.id === d.routineId) : null;
-      const upd = h('input', { type: 'checkbox', id: 'sum-upd', checked: true });
+      // offer to change the routine only when today's exercises differ from it, and never by default
+      const doneNames = done.map((ex) => ex.name).join('|');
+      const changed = routine && doneNames !== (routine.exercises || []).map((ex) => ex.name).join('|');
+      const upd = h('input', { type: 'checkbox', id: 'sum-upd', checked: false });
       const startT = U.isoLocal(new Date(d.startedAt));
       const tileK = (k, v, sub, cls = '') => h('div', { class: 'mtile' }, h('span', { class: 'k' }, k), h('span', { class: 'v ' + cls }, v), sub ? h('span', { class: 'd', style: { paddingRight: 0 } }, sub) : null);
       drawRpe();
@@ -8645,12 +8719,12 @@ const Train = (() => {
           h('input', { type: 'range', class: 'slider', id: 'sum-rpe', min: 1, max: 10, step: 1, value: rpe, 'aria-label': 'Effort, 1 to 10', oninput: (e) => { rpe = +e.target.value; d.rpe = rpe; drawRpe(); } }),
           h('div', { class: 'row', style: { justifyContent: 'space-between' } }, h('span', { class: 'xs muted' }, '1 · very easy'), h('span', { class: 'xs muted' }, '10 · all-out'))),
         field('Notes', notes),
-        routine ? h('section', { class: 'card tight' }, h('label', { class: 'switch', for: 'sum-upd' }, h('span', null, h('b', { style: { display: 'block' } }, `Update the ${routine.name} routine`), h('span', { class: 'xs muted' }, 'Save today’s exercises and set counts as next time’s plan')), upd)) : null,
+        changed ? h('section', { class: 'card tight' }, h('label', { class: 'switch', for: 'sum-upd' }, h('span', null, h('b', { style: { display: 'block' } }, `Change the ${routine.name} routine to match`), h('span', { class: 'xs muted' }, 'Today’s exercises and set counts become next time’s plan')), upd)) : null,
         !done.length ? h('p', { class: 'error-text' }, 'No completed sets yet. Go back and tick at least one set.') : null,
         h('div', { class: 'stickyfoot' }, h('button', { class: 'btn primary block lg', disabled: !done.length, onclick: () => {
           const start = startT, end = U.isoLocal(new Date(new Date(d.startedAt).getTime() + min * 60000));
           Store.saveWorkout({ id: d.id, date: d.date, start, end, min, type: 'Strength', name: d.name || 'Strength', kind: 'strength', routineId: d.routineId || null, exercises: done, rpe, notes: notes.value.trim() || null, src: 'app' });
-          if (routine && upd.checked) {
+          if (changed && upd.checked) {
             const next = { ...routine, exercises: d.exercises.filter((ex) => ex.sets.some((x) => x.done)).map((ex) => ({ name: ex.name, sets: ex.sets.filter((x) => x.t !== 'W').length, reps: Math.max(...ex.sets.filter((x) => x.t !== 'W').map((x) => +x.r || +x.ph || 0)) || 8, rest: ex.rest, group: ex.group || null })) };
             const all = (C.training.routines && C.training.routines.length ? C.training.routines : C.routines).map((r) => (r.id === routine.id ? next : r));
             if (!all.some((r) => r.id === next.id)) all.push(next);
@@ -8918,7 +8992,7 @@ const Train = (() => {
       const key = args.key || 'cardio', date = args.date || App.date;
       const color = key === 'cardio' ? 'var(--strain)' : 'var(--hrv)';
       setTint(key === 'cardio' ? '#3b8deb' : '#1aa394', '#8f7bf0');
-      const ld = C.load(date), x = ld?.[key];
+      const ld = C.load(date), x = ld?.[key]?.ratio != null ? ld[key] : null, building = ld?.[key]?.building;
       const items = [], avg7 = [];
       for (let k = 27; k >= 0; k--) {
         const d = addDays(date, -k), st = C.strain(d);
@@ -8930,8 +9004,8 @@ const Train = (() => {
       return view(pageHead(null, { center: h('nav', { class: 'pager', 'aria-label': 'Load type' }, [['cardio', 'Cardio'], ['muscular', 'Muscular']].map(([k, n]) => h('button', { 'aria-current': k === key ? 'page' : null, onclick: () => App.open('load', { key: k, date }, { replace: true }) }, n))) }),
         h('section', { class: 'card', style: { display: 'grid', justifyItems: 'center' } }, h('span', { style: { fontSize: 'calc(22 * var(--fs))', fontWeight: 800, color: st ? st[1] : 'var(--muted)' } }, st ? st[0] : 'No data yet'),
           h('div', { style: { width: '220px', maxWidth: '100%' } }, Charts.segGauge({ value: x?.acute ?? null, max: x ? Math.max(10, Math.ceil(Math.max(x.chronic * 1.75, x.acute * 1.15))) : 10, optimal: x ? [x.chronic * 0.8, x.chronic * 1.3] : null, color, display: x ? String(Math.round(x.acute)) : '–', sub: '7-day avg', label: `${key} load`, animKey: `load-${key}-${date}` })),
-          x ? h('div', { class: 'grid3', style: { width: '100%', marginTop: '10px' } }, stat(Math.round(x.today), 'today'), stat(`${Math.round(x.chronic * 0.8)}–${Math.round(x.chronic * 1.3)}`, 'optimal'), stat(x.ratio.toFixed(2) + '×', '7 days vs 4 weeks'))
-            : h('p', { class: 'small muted', style: { textAlign: 'center' } }, key === 'muscular' ? 'Log strength workouts with sets to build muscular load.' : 'Needs two weeks of heart-rate data.')),
+          x ? h('div', { class: 'grid3', style: { width: '100%', marginTop: '10px' } }, stat(Math.round(x.today || 0), 'today'), stat(`${Math.round(x.chronic * 0.8)}–${Math.round(x.chronic * 1.3)}`, 'optimal'), stat(x.ratio.toFixed(2) + '×', '7 days vs 4 weeks'))
+            : h('p', { class: 'small muted', style: { textAlign: 'center' } }, key === 'muscular' ? (building ? `Your normal lifting load takes three weeks of logged sets (day ${ld.muscular.days} of 21).` : 'Log strength workouts with sets to build muscular load.') : 'Needs two weeks of heart-rate data.')),
         cardT('Daily load, last 28 days', null, Charts.bars({ items, height: 130, fmt: (v) => String(Math.round(v)), caption: 'Daily load', xEvery: 7 })),
         cardT('7-day average', 'shaded: optimal range', Charts.line({ points: avg7, color, band: x ? [x.chronic * 0.8, x.chronic * 1.3] : null, fmt: (v) => String(Math.round(v)), caption: '7-day average load', xEvery: 7 })),
         cardT('What the labels mean', null, kv('Below 0.8×', 'Detraining'), kv('0.8–1.0×', 'Maintaining'), kv('1.0–1.3×', 'Building'), kv('Above 1.3×', 'Overreaching'),
@@ -8979,7 +9053,7 @@ const Train = (() => {
       };
       const mealSel = h('select', { 'aria-label': 'Meal', onchange: (e) => { meal = e.target.value; drawHead(); drawPlate(); } }, MEALS.map(([k, n]) => h('option', { value: k, selected: k === meal }, n)));
       const mealBtn = h('span', { class: 'meal-pick' });
-      const drawHead = () => { put(mealBtn, mealName(meal), h('span', { class: 'num' }, date === C.todayStr ? U.isoLocal(new Date()).slice(11, 16) : U.fmtShort(date)), icon('chevD'), mealSel); mealSel.value = meal; };
+      const drawHead = () => { put(mealBtn, mealName(meal), h('span', { class: 'num' }, date === C.todayStr ? mealAt(date, meal).slice(11, 16) : U.fmtShort(date)), icon('chevD'), mealSel); mealSel.value = meal; };
       drawHead();
       if (mode === 'scan' && !HealthSync.native()) mode = 'search';
       // the camera scan lives in the iPhone app; describing a meal needs Claude in the artifact runtime
@@ -9007,12 +9081,12 @@ const Train = (() => {
         const qq = q.trim().toLowerCase();
         if (!qq) {
           put(results, recents.length ? [h('div', { class: 'row', style: { justifyContent: 'space-between', margin: '6px 4px 0' } }, h('span', { class: 'eyebrow' }, 'Recent and frequent'), h('span', { class: 'xs muted' }, 'tap + to add your usual amount')),
-            recents.map((r) => resRow(r, `${r.qty && r.unit ? `${U.round(r.qty, 1)} ${r.unit}` : '1 serving'} · your usual`))] : h('p', { class: 'muted small', style: { padding: '8px 4px' } }, 'Search the food list, or create your own food.'));
+            recents.map((r) => resRow(r, `${r.qty && r.unit ? qtyText(r) : '1 serving'} · your usual`))] : h('p', { class: 'muted small', style: { padding: '8px 4px' } }, 'Search the food list, or create your own food.'));
           return;
         }
         const mine = (st.myFoods || []).map((f) => ({ ...f, custom: true }));
-        const res = FOODS.search(qq, mine).slice(0, 25);
         const rec = recents.filter((r) => r.name.toLowerCase().includes(qq));
+        const res = FOODS.search(qq, mine).filter((f) => !rec.some((r) => r.name.toLowerCase() === f.name.toLowerCase())).slice(0, 25);
         const foodRow = (f) => { const it = dbItem(f, f.custom ? null : f.servings[0]); return resRow(it, `${it.label}${f.custom ? ' · my food' : ''}`, () => Sheet.portion({ food: f, onAdd: (x) => addToPlate(x) })); };
         // packaged foods from Open Food Facts, looked up once the typing pauses
         const net = h('div', { class: 'col', style: { gap: '8px' } });
@@ -9024,7 +9098,7 @@ const Train = (() => {
             : none ? h('p', { class: 'muted small', style: { padding: '8px 4px' } }, `Nothing matches “${q}”. Check the spelling, or create it as your own food.`) : null);
         };
         const none = !res.length && !rec.length;
-        put(results, rec.map((r) => resRow(r, `${r.qty && r.unit ? `${U.round(r.qty, 1)} ${r.unit}` : '1 serving'} · your usual`)),
+        put(results, rec.map((r) => resRow(r, `${r.qty && r.unit ? qtyText(r) : '1 serving'} · your usual`)),
           res.map(foodRow), net,
           none && qq.length < 3 ? h('p', { class: 'muted small', style: { padding: '8px 4px' } }, `Nothing matches “${q}” yet. Keep typing.`) : null,
           h('button', { class: 'btn ghost block', onclick: () => Sheet.customFood({ name: q, onAdd: (x) => addToPlate(x) }) }, icon('plus'), 'Create a food'));
@@ -9153,7 +9227,7 @@ const Train = (() => {
               h('div', { class: 's ' + (after < 0 ? 'over' : 'ok') }, after < 0 ? `Puts you ${fmtInt(-after)} kcal over today` : `${fmtInt(after)} kcal left after this`)),
             h('button', { class: 'link', onclick: () => { expanded = !expanded; drawPlate(); } }, expanded ? 'Done' : 'Edit')),
           h('button', { class: 'btn primary block lg', onclick: () => {
-            const at = date === C.todayStr ? U.isoLocal(new Date()) : `${date}T${{ breakfast: '08:00', lunch: '12:30', snack: '16:00', dinner: '19:30' }[meal]}`;
+            const at = mealAt(date, meal);
             const items = App.plate.map((x) => ({ id: U.uid(), meal, name: x.name, kcal: Math.round(x.kcal * x.m), p: U.round(x.p * x.m, 1), c: U.round(x.c * x.m, 1), f: U.round(x.f * x.m, 1), fiber: U.round(x.fiber * x.m, 1),
               qty: x.qty != null ? U.round(x.qty * x.m, 2) : x.m, unit: x.unit, grams: x.grams ? Math.round(x.grams * x.m) : null, src: x.src, foodId: x.foodId, at }));
             Store.addFood(date, items);
@@ -9223,17 +9297,26 @@ const Sheet = (() => {
   // =============== + LOG ===============
   /** Understand a typed line like "45 min nap", "76.4 kg", "5 km run in 28 min" or "2 eggs and a coffee". */
   function parseSay(t) {
-    const x = t.toLowerCase();
-    const mins = (() => { const m = x.match(/(\d+(?:[.,]\d+)?)\s*(h|hr|hrs|hour|hours)\b/); const n = x.match(/(\d+)\s*(m|min|mins|minutes)\b/); return (m ? U.num(m[1]) * 60 : 0) + (n ? +n[1] : 0) || null; })();
-    if (/\bnap|napped|snooze/.test(x)) return { kind: 'nap', min: mins || 20 };
-    const w = x.match(/(\d{2,3}(?:[.,]\d)?)\s*(kg|kilo|lb|lbs|pounds)\b/);
-    if (w && (/weigh|weight|scale|^\s*\d/.test(x))) return { kind: 'weight', v: U.num(w[1]), unit: /lb|pound/.test(w[2]) ? 'lb' : 'kg' };
-    const types = [['run|ran|jog', 'Running'], ['ride|rode|cycl|bike', 'Cycling'], ['swim', 'Swimming'], ['walk', 'Walking'], ['row', 'Rowing'], ['hike|hiking', 'Hiking'], ['soccer|football', 'Soccer'], ['tennis', 'Tennis'], ['hiit|interval', 'HIIT']];
-    for (const [re, type] of types) if (new RegExp(`\\b(${re})`).test(x) && (mins || /km|mile|mi\b/.test(x))) {
-      const km = x.match(/(\d+(?:[.,]\d+)?)\s*(km|k\b|mi|mile)/);
-      return { kind: 'cardio', type, min: mins, km: km ? U.num(km[1]) * (/mi/.test(km[2]) ? 1.609344 : 1) : null };
+    const x = t.toLowerCase().replace(/\bhalf an hour\b/, '30 min').replace(/\b(an|a|one) hour\b/, '1 h');
+    const mins = (() => {
+      const m = x.match(/(\d+(?:[.,]\d+)?)\s*(h|hr|hrs|hour|hours)\b/), n = x.match(/(\d+)\s*(m|min|mins|minute|minutes)\b/);
+      const hm = x.match(/(\d+)\s*h\s*(\d{1,2})\b/); // "1h30"
+      if (hm) return +hm[1] * 60 + +hm[2];
+      return (m ? U.num(m[1]) * 60 : 0) + (n ? +n[1] : 0) || null;
+    })();
+    if (/\b(nap|napped|naps|snooze|power nap)\b/.test(x) || (/\bslept\b/.test(x) && /afternoon|after lunch|this (afternoon|evening)/.test(x))) {
+      const bare = x.match(/\b(\d{1,3})\b/);
+      return { kind: 'nap', min: mins || (bare && +bare[1] >= 5 && +bare[1] <= 240 ? +bare[1] : 20) };
     }
-    if (/\b(gym|lift|workout|push day|pull day|leg day|upper body|lower body)\b/.test(x)) return { kind: 'strength' };
+    const w = x.match(/(\d{2,3}(?:[.,]\d)?)\s*(kg|kilo|kilos|lb|lbs|pounds)\b/);
+    if (w && (/weigh|weight|scale|^\s*\d/.test(x))) return { kind: 'weight', v: U.num(w[1]), unit: /lb|pound/.test(w[2]) ? 'lb' : 'kg' };
+    const dist = x.match(/(\d+(?:[.,]\d+)?)\s*(km|k|mi|miles?)\b/);
+    const types = [['run|ran|jog', 'Running'], ['ride|rode|cycl|bike|biked|spin', 'Cycling'], ['swim|swam', 'Swimming'], ['walk', 'Walking'], ['row', 'Rowing'], ['hike|hiking|hiked', 'Hiking'],
+      ['soccer|football', 'Soccer'], ['tennis', 'Tennis'], ['hiit|interval', 'HIIT'], ['yoga|pilates|stretch', 'Yoga']];
+    for (const [re, type] of types) if (new RegExp(`\\b(${re})`).test(x) && (mins || dist)) {
+      return { kind: 'cardio', type, min: mins, km: dist ? U.num(dist[1]) * (/^mi/.test(dist[2]) ? 1.609344 : 1) : null };
+    }
+    if (/\b(gym|lift|lifted|lifting|weights|workout|push day|pull day|leg day|legs|upper body|lower body|full body)\b/.test(x)) return { kind: 'strength', text: x };
     return { kind: 'food', text: t };
   }
   function usualNow(c) {
@@ -9261,7 +9344,12 @@ const Sheet = (() => {
       if (p.kind === 'nap') S.nap(date, { min: p.min });
       else if (p.kind === 'weight') S.bodyLog(date, { weight: p.unit === 'lb' ? p.v * U.KG_PER_LB : p.v });
       else if (p.kind === 'cardio') S.cardio(date, p);
-      else if (p.kind === 'strength') App.go('train');
+      else if (p.kind === 'strength') {
+        // "leg day", "push day": start the routine with that name if there is one
+        const words = p.text.replace(/\bday\b|\bworkout\b|\bsession\b/g, '').trim().split(/\s+/).filter((w) => w.length > 2);
+        const r = App.draft ? null : c.routines.find((r) => words.length && words.every((w) => r.name.toLowerCase().includes(w.replace(/s$/, ''))));
+        if (App.draft) App.open('workout'); else if (r) Tabs.startRoutine(c, r); else App.go('train');
+      }
       else App.open('foodlog', { date, meal, mode: App.sample ? 'describe' : 'search', text: t });
     };
     const tile = (ic, tone, label, fn) => h('button', { class: 'add-tile tap', onclick: () => { sh.close(); fn(); } }, h('span', { class: 'ic ' + tone }, icon(ic)), label);
@@ -9280,10 +9368,10 @@ const Sheet = (() => {
           tile('scale', '', 'Weigh-in', () => S.bodyLog(date)),
           tile('cap', 'stress', 'Activity', () => S.activity({ date })),
           tile('calendar', 'strain', 'Plan workout', () => S.planWorkout({ date })),
-          tile('clipboard', 'sleep', 'Check-in', () => App.open('checkin', { date: new Date().getHours() < 17 ? addDays(c.todayStr, -1) : c.todayStr })),
+          tile('clipboard', 'sleep', 'Check-in', () => App.open('checkin', { date: date !== c.todayStr ? date : new Date().getHours() < 17 ? addDays(c.todayStr, -1) : c.todayStr })),
           tile('wind', 'stress', 'Breathe', () => { App.ui.breathing = true; App.open('stress', { date: c.todayStr }); })),
         usual.length ? h('div', null, h('div', { class: 'eyebrow', style: { margin: '6px 0 4px' } }, 'Usually around now'),
-          h('div', { class: 'list' }, usual.map((it) => prow({ t: it.name, s: `${it.qty && it.unit ? `${U.round(it.qty, 1)} ${it.unit} · ` : ''}${fmtInt(it.kcal)} kcal · P ${Math.round(it.p)} g`,
+          h('div', { class: 'list' }, usual.map((it) => prow({ t: it.name, s: `${it.qty && it.unit ? qtyText(it) + ' · ' : ''}${fmtInt(it.kcal)} kcal · P ${Math.round(it.p)} g`,
             right: h('button', { class: 'btn sm primary', onclick: () => { sh.close(); Tabs.logItem(date, meal, it); } }, 'Log') })))) : null,
       ],
     });
@@ -9300,6 +9388,37 @@ const Sheet = (() => {
         h('button', { class: 'btn primary block lg', onclick: () => { Store.setDemo(false); sh.close(); App.open('import'); } }, icon('upload'), 'Import my Apple Health data'),
         h('button', { class: 'btn block', onclick: () => { Store.setDemo(false); sh.close(); App.open('settings', { focus: 'profile' }); } }, start ? 'Add my profile first' : 'Start with an empty log'),
         h('button', { class: 'btn quiet block', onclick: () => sh.close() }, start ? 'Not now' : 'Keep exploring the sample'))],
+    });
+  };
+
+  // =============== ABOUT YOU (first run) ===============
+  /** Five quick answers so calorie, protein and heart-rate targets fit the person instead of defaults. Prefilled from Apple Health. */
+  S.aboutYou = () => {
+    const c = C(), P = Store.state().profile || {}, imp = units() === 'imperial';
+    let sex = P.sex || null, goal = P.goal || 'maintain';
+    const w0 = c.trendWeight(c.todayStr) ?? c.latestBody(c.todayStr, 'weight')?.value ?? null;
+    const yearIn = h('input', { class: 'input', id: 'ay-year', inputmode: 'numeric', value: P.birthYear ?? '', placeholder: 'e.g. 1996' });
+    const hIn = h('input', { class: 'input', id: 'ay-height', inputmode: 'decimal', value: P.heightCm ? String(U.round(U.cmTo(P.heightCm, units()), 1)) : '', placeholder: imp ? 'in' : 'cm' });
+    const wIn = h('input', { class: 'input', id: 'ay-weight', inputmode: 'decimal', value: w0 ? String(U.round(U.kgTo(w0, units()), 1)) : '', placeholder: imp ? 'lb' : 'kg' });
+    const err = h('p', { class: 'error-text', hidden: true });
+    const sh = Sheets.open({
+      title: 'About you',
+      body: [h('p', { class: 'ink2' }, 'Five quick answers set your calorie and protein targets and your heart-rate zones. Anything Apple Health knew is filled in already.'),
+        field('Sex', seg([['male', 'Male'], ['female', 'Female']], sex, (v) => { sex = v; }), 'for calorie and fitness formulas'),
+        h('div', { class: 'grid2' }, field('Birth year', yearIn), field(`Height (${imp ? 'in' : 'cm'})`, hIn)),
+        field(`Weight (${imp ? 'lb' : 'kg'})`, wIn),
+        field('Goal', seg([['lose', 'Lose weight'], ['maintain', 'Maintain'], ['gain', 'Gain']], goal, (v) => { goal = v; })), err],
+      foot: [h('button', { class: 'btn', onclick: () => { Store.setProfile({ setupDone: true }); sh.close(); } }, 'Later'),
+        h('button', { class: 'btn primary', onclick: () => {
+          const y = Math.round(U.num(yearIn.value, NaN)), hv = U.num(hIn.value, NaN), wv = U.num(wIn.value, NaN);
+          const cm = hv > 0 ? U.toCm(hv, units()) : null, kg = wv > 0 ? U.toKg(wv, units()) : null;
+          if (yearIn.value && !(y > 1900 && y <= new Date().getFullYear() - 10)) { err.textContent = 'Check the birth year.'; err.hidden = false; return; }
+          if (cm != null && (cm < 100 || cm > 250)) { err.textContent = 'That height looks off. Check the number and unit.'; err.hidden = false; return; }
+          if (kg != null && (kg < 25 || kg > 350)) { err.textContent = 'That weight looks off. Check the number and unit.'; err.hidden = false; return; }
+          Store.setProfile({ setupDone: true, goal, ...(sex ? { sex } : {}), ...(y > 1900 ? { birthYear: y } : {}), ...(cm ? { heightCm: U.round(cm, 1) } : {}) });
+          if (kg && (!w0 || Math.abs(kg - w0) > 0.05)) Store.setBody(c.todayStr, { weight: U.round(kg, 2), src: 'app', at: U.isoLocal(new Date()) });
+          sh.close(); toast('Targets set. Change them any time in Settings.');
+        } }, 'Save')],
     });
   };
 
@@ -9366,7 +9485,8 @@ const Sheet = (() => {
   // =============== WEIGH-IN ===============
   S.bodyLog = (date, pre = {}) => {
     const st = Store.state(), cur = st.body[date] || {}, imp = units() === 'imperial';
-    const dateIn = h('input', { class: 'input', id: 'body-date', type: 'date', value: date, max: U.today() });
+    // Delete is for the entry this sheet opened on, so it goes away once another date is picked
+    const dateIn = h('input', { class: 'input', id: 'body-date', type: 'date', value: date, max: U.today(), onchange: () => { const b = document.getElementById('body-del'); if (b) b.hidden = dateIn.value !== date; } });
     const wv = pre.weight ?? cur.weight;
     const wIn = h('input', { class: 'input', id: 'body-w', inputmode: 'decimal', autofocus: true, value: wv != null ? String(U.round(U.kgTo(wv, units()), 1)) : '', placeholder: '0.0' });
     const bfIn = h('input', { class: 'input', id: 'body-bf', inputmode: 'decimal', value: cur.bodyFat ?? '', placeholder: 'optional' });
@@ -9380,7 +9500,7 @@ const Sheet = (() => {
         field(`Waist (${imp ? 'in' : 'cm'})`, h('div', { class: 'input-unit' }, waistIn, h('em', null, imp ? 'in' : 'cm')))),
         h('p', { class: 'note' }, 'Weigh in after waking, before eating. Daily ups and downs are mostly water; the trend line evens them out.'), err],
       foot: [
-        Object.keys(cur).some((k) => ['weight', 'bodyFat', 'waist'].includes(k)) ? h('button', { class: 'btn danger', onclick: () => { Store.setBody(date, { weight: null, bodyFat: null, waist: null, lean: null }); sh.close(); toast('Entry deleted'); } }, 'Delete') : null,
+        Object.keys(cur).some((k) => ['weight', 'bodyFat', 'waist'].includes(k)) ? h('button', { class: 'btn danger', id: 'body-del', onclick: () => { Store.setBody(date, { weight: null, bodyFat: null, waist: null, lean: null }); sh.close(); toast(`Entry for ${U.fmtShort(date)} deleted`); } }, 'Delete') : null,
         h('button', { class: 'btn primary', onclick: () => {
           const w = U.num(wIn.value, NaN), bf = U.num(bfIn.value, NaN), wa = U.num(waistIn.value, NaN);
           if (!(w > 0) && !(bf > 0) && !(wa > 0)) { err.textContent = 'Enter at least one measurement.'; err.hidden = false; return; }
@@ -9448,24 +9568,33 @@ const Sheet = (() => {
   };
   S.foodItem = (date, it) => {
     let m = 1, curMeal = it.meal;
+    // amounts in grams or ml are typed; anything else ("1 slice") goes up and down in quarters
+    const byGrams = it.grams > 0;
+    const gu = /ml/i.test(it.unit || '') ? 'ml' : 'g';
     const info = h('div', { class: 'card nutri' });
     const qtyEl = h('span');
+    const gIn = h('input', { class: 'input', id: 'fi-g', inputmode: 'decimal', value: String(Math.round(it.grams || 0)), 'aria-label': `Amount in ${gu}`, oninput: () => { const g = U.num(gIn.value, 0); if (g > 0) { m = g / it.grams; draw(); } } });
+    const timeIn = h('input', { class: 'input', id: 'fi-time', type: 'time', value: (it.at || mealAt(date, it.meal)).slice(11, 16), 'aria-label': 'Time' });
     const draw = () => {
-      qtyEl.textContent = `${m}×`;
+      qtyEl.textContent = `${U.round(m, 2)}×`;
       put(info, kv('Calories', fmtInt(it.kcal * m)), kv('Protein', `${fmt1(it.p * m)} g`), kv('Carbs', `${fmt1(it.c * m)} g`), kv('Fat', `${fmt1(it.f * m)} g`), it.fiber ? kv('Fiber', `${fmt1(it.fiber * m)} g`) : null,
-        h('p', { class: 'note' }, it.qty && it.unit ? `${U.round(it.qty * m, 1)} ${it.unit}` : ''));
+        byGrams ? null : h('p', { class: 'note' }, it.qty && it.unit ? qtyText({ qty: it.qty * m, unit: it.unit }) : ''));
     };
+    const amountRow = byGrams ? h('div', { class: 'input-unit' }, gIn, h('em', null, gu))
+      : h('div', { class: 'qty' }, h('button', { type: 'button', 'aria-label': 'Less', onclick: () => { m = Math.max(0.25, m - 0.25); draw(); } }, '−'), qtyEl,
+        h('button', { type: 'button', 'aria-label': 'More', onclick: () => { m = Math.min(10, m + 0.25); draw(); } }, '+'));
     const sh = Sheets.open({
       title: it.name,
-      body: [info, h('div', { class: 'row' }, h('span', { class: 'grow', style: { fontWeight: 700 } }, 'Amount'), h('div', { class: 'qty' },
-        h('button', { type: 'button', 'aria-label': 'Less', onclick: () => { m = Math.max(0.25, m - 0.25); draw(); } }, '−'), qtyEl,
-        h('button', { type: 'button', 'aria-label': 'More', onclick: () => { m = Math.min(5, m + 0.25); draw(); } }, '+'))),
-      field('Meal', seg(MEALS, curMeal, (v) => { curMeal = v; }, { label: 'Meal', cls: 'small' }))],
+      body: [info, byGrams ? field('Amount', amountRow) : h('div', { class: 'row' }, h('span', { class: 'grow', style: { fontWeight: 700 } }, 'Amount'), amountRow),
+        h('div', { class: 'grid2' }, field('Meal', h('select', { class: 'input', id: 'fi-meal', onchange: (e) => { curMeal = e.target.value; } }, MEALS.map(([k, n]) => h('option', { value: k, selected: k === curMeal }, n)))), field('Time', timeIn))],
       foot: [
         h('button', { class: 'btn danger', onclick: () => { const r = Store.removeFood(date, it.id); sh.close(); toast(`Removed ${it.name}`, { action: 'Undo', onAction: () => Store.addFood(date, [r]) }); } }, icon('trash'), 'Delete'),
         h('button', { class: 'btn primary', onclick: () => {
+          if (byGrams && !(U.num(gIn.value, 0) > 0)) { toast('Enter an amount first'); return; }
           const patch = { meal: curMeal };
-          if (m !== 1) Object.assign(patch, { kcal: Math.round(it.kcal * m), p: U.round(it.p * m, 1), c: U.round(it.c * m, 1), f: U.round(it.f * m, 1), fiber: U.round((it.fiber || 0) * m, 1), qty: it.qty ? U.round(it.qty * m, 2) : m, grams: it.grams ? Math.round(it.grams * m) : it.grams });
+          if (/^\d\d:\d\d$/.test(timeIn.value)) patch.at = `${date}T${timeIn.value}`;
+          if (Math.abs(m - 1) > 1e-6) Object.assign(patch, { kcal: Math.round(it.kcal * m), p: U.round(it.p * m, 1), c: U.round(it.c * m, 1), f: U.round(it.f * m, 1), fiber: U.round((it.fiber || 0) * m, 1),
+            qty: byGrams && /^(g|ml)$/.test(it.unit || '') ? Math.round(it.grams * m) : it.qty ? U.round(it.qty * m, 2) : U.round(m, 2), grams: it.grams ? Math.round(it.grams * m) : it.grams ?? null });
           Store.updateFood(date, it.id, patch);
           sh.close();
         } }, 'Save')],
@@ -9487,7 +9616,7 @@ const Sheet = (() => {
       body: rows.length ? [h('p', { class: 'small muted' }, `Copies to the same meal on ${date === c.todayStr ? 'today' : U.fmtDay(date)}.`),
         h('div', { class: 'list' }, rows.map((r) => prow({ t: `${r.name} · ${U.fmtDay(r.d)}`, s: r.mi.map((x) => x.name).join(', '), right: h('span', { class: 'val' }, fmtInt(r.mi.reduce((a, x) => a + (+x.kcal || 0), 0)), h('small', null, 'kcal')),
           onclick: () => {
-            const copy = r.mi.map((x) => ({ ...x, id: U.uid(), at: date === c.todayStr ? U.isoLocal(new Date()) : `${date}T12:00` }));
+            const copy = r.mi.map((x) => ({ ...x, id: U.uid(), at: mealAt(date, x.meal) }));
             Store.addFood(date, copy); sh.close();
             toast(`Copied ${r.name.toLowerCase()} from ${U.fmtShort(r.d)}`, { action: 'Undo', onAction: () => { for (const x of copy) Store.removeFood(date, x.id); } });
           }, chevron: false })))]
@@ -9941,15 +10070,18 @@ const App = (() => {
     if (!(sec > 0)) { A.rest = null; renderFloats(); return; }
     A.rest = { end: Date.now() + sec * 1000, total: sec, next: next || '' };
     if (A.draft) { A.draft.rest = A.rest; A.saveDraft(); }
+    restAlert();
     renderFloats();
   };
+  // with the phone locked, the iPhone app shows a notification when the rest is up
+  const restAlert = () => { if (A.rest) HealthSync.notify('rest', A.rest.end, 'Rest’s over', A.rest.next ? `Next: ${A.rest.next}` : 'Time for your next set'); };
   A.adjustRest = (d) => {
     if (!A.rest) return;
     A.rest.end += d * 1000;
     A.rest.total = Math.max(A.rest.total, Math.ceil((A.rest.end - Date.now()) / 1000));
-    if (A.rest.end <= Date.now()) A.stopRest(); else tick();
+    if (A.rest.end <= Date.now()) A.stopRest(); else { restAlert(); tick(); }
   };
-  A.stopRest = () => { A.rest = null; if (A.draft) { delete A.draft.rest; A.saveDraft(); } renderFloats(); };
+  A.stopRest = () => { if (A.rest && A.rest.end > Date.now()) HealthSync.unnotify('rest'); A.rest = null; if (A.draft) { delete A.draft.rest; A.saveDraft(); } renderFloats(); };
   A.elapsed = () => (A.draft ? Math.max(0, Math.floor((Date.now() - new Date(A.draft.startedAt)) / 1000)) : 0);
 
   // ---------- render ----------
@@ -10111,6 +10243,7 @@ const App = (() => {
     await Store.init();
     render();
     HealthSync.maybeSync();
+    HealthSync.planBedtime();
   }
 
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); HealthSync.maybeSync(); } });
