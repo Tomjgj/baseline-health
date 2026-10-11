@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Build Baseline, install it on a connected iPhone and open it. Run from the repo root or ios/:
 #
-#   TEAM=ABCDE12345 ./ios/run-on-iphone.sh
+#   ./ios/run-on-iphone.sh
 #
-# TEAM      your Apple developer team id (Xcode → Settings → Accounts → your Apple ID → the team's id;
-#           a free Apple ID's "Personal Team" works for running on your own phone)
+# TEAM      optional Apple developer team id; found automatically from the Apple Development certificate
+#           Xcode creates when you sign in (a free Apple ID's "Personal Team" works for your own phone)
 # BUNDLE    optional bundle id, default com.<your mac username>.baseline (must be unique to you)
 # DEVICE    optional iPhone UDID, if more than one is connected
 #
@@ -13,7 +13,15 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-: "${TEAM:?Set TEAM to your Apple developer team id, e.g. TEAM=ABCDE12345 ./ios/run-on-iphone.sh}"
+if [ -z "${TEAM:-}" ]; then
+  # the team id is the OU of the Apple Development certificate Xcode creates when you sign in
+  TEAM=$(security find-certificate -c "Apple Development" -p 2>/dev/null | openssl x509 -noout -subject -nameopt multiline 2>/dev/null | awk -F' = ' '/organizationalUnitName/ {print $2; exit}' || true)
+fi
+if [ -z "$TEAM" ]; then
+  echo "Couldn't find your Apple developer team. In Xcode: Settings → Accounts → + → Apple ID and sign in,"
+  echo "then select your team → Manage Certificates… → + → Apple Development → Done. Then run this again."
+  exit 1
+fi
 BUNDLE="${BUNDLE:-com.$(whoami | tr -cd 'a-zA-Z0-9').baseline}"
 
 command -v xcodegen >/dev/null || { echo "Installing XcodeGen…"; brew install xcodegen; }

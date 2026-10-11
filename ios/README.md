@@ -14,10 +14,10 @@ Not yet checked: the HealthKit permission sheet and real Health data, which need
 With the iPhone connected and unlocked, and Developer Mode on (Settings → Privacy & Security → Developer Mode):
 
 ```
-TEAM=ABCDE12345 ./ios/run-on-iphone.sh
+./ios/run-on-iphone.sh
 ```
 
-`TEAM` is your team id from Xcode → Settings → Accounts (a free Apple ID's Personal Team is fine). The script:
+Sign in to Xcode with your Apple ID first (Xcode → Settings → Accounts; a free Apple ID works). The script finds your team from that, or you can set `TEAM`. It:
 1. installs XcodeGen if needed and generates the project;
 2. finds the iPhone;
 3. builds and signs with your team, using `com.<your username>.baseline` unless you set `BUNDLE`;
