@@ -4867,12 +4867,18 @@ const Charts = (() => {
   return { scoreRing, segGauge, bars, line, trend, niceTicks, dayLine, hypnogram, windows, nightVitals, bodyMap, meter, stack, sparkline, miniDay, diverge, rangeBar, emptyChart, hideTip, STAGES, firstTime };
 })();
 
-/* ===== live.js — simulated live heart rate for the mock-up (the iPhone app will stream from the Watch) ===== */
+/* ===== live.js — heart rate, HRV and stress right now =====
+   In the iPhone app this is your watch's real readings: the app sends the last few hours of heart rate and HRV
+   (HealthSync.latest) and says when new ones arrive. The watch measures heart rate every few minutes in the
+   background, so "now" is the latest reading and how old it is. With the sample person it's a simulation. */
 const Live = (() => {
   const subs = new Set();
   const buf = [];
-  let timer = null, sim = null, forced = false, calm = false;
-  const enabled = () => Store.demo || forced;
+  let timer = null, sim = null, calm = false;
+  // real readings from the iPhone app
+  let hrS = [], hrvS = [], fetchedAt = 0, fetching = null;
+  const real = () => !Store.demo && HealthSync.native();
+  const enabled = () => Store.demo || HealthSync.native();
 
   function tick(at) {
     if (at == null && typeof document !== 'undefined' && document.hidden) return;
@@ -4890,19 +4896,54 @@ const Live = (() => {
     buf.push({ t: now, bpm });
     while (buf.length > 90) buf.shift();
     if (at != null) return;
-    const st = reading(bpm, C, p);
-    for (const fn of [...subs]) fn(st);
+    emit(reading(bpm, C, p));
   }
+  const emit = (st) => { for (const fn of [...subs]) fn(st); };
+
+  /** Ask the app for the latest readings, at most every 20 seconds unless forced. */
+  function refresh(force = false) {
+    if (!real() || fetching || (!force && Date.now() - fetchedAt < 20e3)) return fetching;
+    fetching = HealthSync.latest().then((r) => {
+      const toPts = (a) => (a || []).map(([t, v]) => ({ t: Date.parse(t), v: +v })).filter((x) => x.t && x.v > 0).sort((a, b) => a.t - b.t);
+      hrS = toPts(r.hr); hrvS = toPts(r.hrv); fetchedAt = Date.now();
+    }).catch(() => { fetchedAt = Date.now(); }).finally(() => { fetching = null; if (subs.size) emit(realReading()); });
+    return fetching;
+  }
+  /** The latest real reading: heart rate and how long ago, HRV if there's a recent one, and stress while sitting still. */
+  function realReading() {
+    const C = App.ctx(), p = C.hrParams(C.todayStr), now = Date.now();
+    const last = hrS[hrS.length - 1] || null;
+    const hb = C.hrvDayBase(C.todayStr);
+    const out = { real: true, bpm: last ? Math.round(last.v) : null, age: last ? Math.max(0, Math.round((now - last.t) / 60000)) : null, hrv: null, hrvAge: null, hrvBase: hb,
+      stress: null, level: null, active: false, rest: p.rest, buf: hrS.filter((x) => now - x.t < 90 * 60e3).map((x) => ({ t: x.t, bpm: x.v })), loading: !fetchedAt };
+    const hv = hrvS[hrvS.length - 1];
+    if (hv && now - hv.t < 3 * 3600e3) { out.hrv = Math.round(hv.v); out.hrvAge = Math.round((now - hv.t) / 60000); }
+    if (!last || out.age > 60) return out;
+    // stress from the last 20 minutes of readings, like the day's half-hour scores; moving heart rate isn't stress
+    const recent = hrS.filter((x) => last.t - x.t <= 20 * 60e3).map((x) => x.v);
+    const sm = U.mean(recent);
+    if (sm > p.rest + 0.45 * (p.max - p.rest)) { out.active = true; out.level = 'Active'; return out; }
+    let v = U.clamp01((sm - (p.rest + 4)) / (0.28 * Math.max(40, p.max - p.rest))) * 100;
+    if (out.hrv && hb && out.hrvAge <= 60) v = 0.55 * v + 0.45 * U.clamp01(0.35 + ((hb.mean - Math.log(out.hrv)) / hb.sd) * 0.22) * 100;
+    out.stress = Math.round(v); out.level = E.stressLevel(out.stress);
+    return out;
+  }
+
   function subscribe(fn) {
     subs.add(fn);
     if (!timer) {
-      if (!buf.length) for (let k = 89; k > 0; k--) tick(Date.now() - k * 1000); // start with the last 90 seconds filled in
-      tick(); timer = setInterval(() => tick(), 1000);
+      if (real()) { refresh(); timer = setInterval(() => { if (document.hidden) return; refresh(); emit(realReading()); }, 30e3); }
+      else {
+        if (!buf.length) for (let k = 89; k > 0; k--) tick(Date.now() - k * 1000); // start with the last 90 seconds filled in
+        tick(); timer = setInterval(() => tick(), 1000);
+      }
     }
-    else if (buf.length) fn(last());
-    return () => { subs.delete(fn); if (!subs.size) { clearInterval(timer); timer = null; } };
+    else fn(last());
+    const off = () => { subs.delete(fn); if (!subs.size) { clearInterval(timer); timer = null; } };
+    off.fn = fn;
+    return off;
   }
-  /** Heart rate plus a matching HRV reading (Series 12 samples it every few minutes) and the stress they add up to. */
+  /** The sample person's heart rate plus a matching HRV reading and the stress they add up to. */
   function reading(bpm, C, p) {
     const hb = C.hrvDayBase(C.todayStr);
     const base = hb ? hb.mid : (C.days[C.todayStr]?.hrv || 55) * 0.8;
@@ -4913,25 +4954,34 @@ const Live = (() => {
     let stress = U.clamp01((sm - (p.rest + 4)) / (0.28 * Math.max(40, p.max - p.rest))) * 100;
     if (hb) stress = 0.55 * stress + 0.45 * U.clamp01(0.35 + ((hb.mean - Math.log(hrv)) / hb.sd) * 0.22) * 100;
     stress = Math.round(stress);
-    return { bpm, hrv, hrvBase: hb, stress, level: E.stressLevel(stress), buf: buf.slice(), rest: p.rest };
+    return { bpm, hrv, hrvBase: hb, stress, level: E.stressLevel(stress), buf: buf.slice(), rest: p.rest, age: 0 };
   }
   function last() {
+    if (real()) return realReading();
     const b = buf[buf.length - 1];
     const C = App.ctx();
     return reading(b.bpm, C, C.hrParams(C.todayStr));
   }
   /** Feed an element while it stays on screen; stops by itself once the element is gone. */
   function bind(el, fn) {
-    let seen = false, misses = 0;
+    let seen = false;
+    const born = Date.now();
     const off = subscribe((st) => {
       if (el.isConnected) { seen = true; fn(st); return; }
-      if (seen || ++misses > 3) off();
+      if (seen || Date.now() - born > 10 * 60e3) off();
     });
-    // the element is attached right after this call; fill it straight away instead of showing dashes until the next tick
-    requestAnimationFrame(() => { if (el.isConnected && buf.length) { seen = true; fn(last()); } });
+    // fill it as soon as it's on the page (straight away, or when a folded card opens) instead of showing dashes until the next tick
+    const fill = () => {
+      if (seen || !subs.has(off.fn)) return;
+      if (el.isConnected && (real() || buf.length)) { seen = true; fn(last()); return; }
+      if (Date.now() - born < 10 * 60e3) setTimeout(fill, el.isConnected ? 150 : 500);
+    };
+    requestAnimationFrame(fill);
     return off;
   }
-  return { enabled, bind, subscribe, setForced: (v) => { forced = !!v; }, get forced() { return forced; }, setCalm: (v) => { calm = !!v; } };
+  /** "now", "4 min ago", "1 h 10 min ago" */
+  const ago = (min) => (min == null ? '' : min < 2 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60 ? (min % 60) + ' min ' : ''}ago`);
+  return { enabled, real, bind, subscribe, refresh, ago, setCalm: (v) => { calm = !!v; } };
 })();
 
 /* ===== ui-core.js — DOM helpers, icons, sheets, toast, shared building blocks ===== */
@@ -5488,12 +5538,14 @@ const Tabs = (() => {
     const lEl = h('span', { class: 'l', style: { color: stressInk(sx?.avg) } }, sx?.level || 'No data yet');
     const sEl = h('span', { class: 's' }, sx?.avg != null ? (isToday ? (sx.highMin ? `avg today · ${U.fmtHrs(sx.highMin)} high` : 'average today') : 'daytime average') : 'right now');
     const row = h('button', { class: 'card stress-row tap', onclick: () => App.open('stress', { date }), 'aria-label': `Stress ${sx?.avg != null ? sx.avg + ', ' + sx.level : 'no data'}. Open stress and HRV` },
-      h('span', { class: 'tx' }, h('span', { class: 'nm' }, 'Stress', live ? h('span', { class: 'live-tag' }, h('i'), 'LIVE') : null), lEl, sEl),
+      h('span', { class: 'tx' }, h('span', { class: 'nm' }, 'Stress', live && !Live.real() ? h('span', { class: 'live-tag' }, h('i'), 'LIVE') : null), lEl, sEl),
       sx ? Charts.miniDay(vals, { color: 'var(--stress)', nowIdx, shades, h: 44 }) : h('span'),
       vEl, icon('chevR'));
     if (live) Live.bind(row, (st) => {
+      const avgTxt = sx?.avg != null ? ` · avg ${sx.avg} today` : '';
+      if (st.stress == null) { if (st.active) sEl.textContent = `moving${st.age != null ? ' ' + Live.ago(st.age) : ''}${avgTxt}`; return; }
       vEl.textContent = st.stress; vEl.style.color = stressInk(st.stress); lEl.textContent = st.level; lEl.style.color = stressInk(st.stress);
-      sEl.textContent = sx?.avg != null ? `now · avg ${sx.avg} today` : 'right now';
+      sEl.textContent = (st.real ? (st.age < 2 ? 'now' : Live.ago(st.age)) : 'now') + avgTxt;
     });
     return row;
   }
@@ -5677,11 +5729,16 @@ const Tabs = (() => {
       h('span', { class: 'tm' }, e.tm), h('span', { class: 'rail' }, h('i', { class: e.hollow ? 'hollow' : '' })),
       h('span', null, h('span', { class: 't', style: { display: 'block' } }, e.t), h('span', { class: 's', style: { display: 'block' } }, e.s)), e.v || h('span')));
     if (date === C.todayStr && Live.enabled()) {
-      const sub = h('span', { class: 's', style: { display: 'block' } }, 'Connecting to your watch…');
+      const sub = h('span', { class: 's', style: { display: 'block' } }, 'Checking your watch’s latest readings…');
       const row = h('button', { class: 'tl-row now tap', onclick: () => App.open('stress', { date }), style: { '--c': 'var(--hr)' } },
         h('span', { class: 'tm' }, U.isoLocal(new Date()).slice(11, 16)), h('span', { class: 'rail' }, h('i')),
-        h('span', null, h('span', { class: 't', style: { display: 'block' } }, 'Now'), sub), h('span', { class: 'live-tag' }, h('i'), 'LIVE'));
-      Live.bind(row, (st) => { sub.textContent = `${st.bpm} bpm · HRV ${st.hrv} ms · stress ${st.stress}, ${st.level.toLowerCase()}`; row.querySelector('.tm').textContent = U.isoLocal(new Date()).slice(11, 16); });
+        h('span', null, h('span', { class: 't', style: { display: 'block' } }, 'Now'), sub), Live.real() ? h('span') : h('span', { class: 'live-tag' }, h('i'), 'LIVE'));
+      Live.bind(row, (st) => {
+        row.querySelector('.tm').textContent = U.isoLocal(new Date()).slice(11, 16);
+        if (st.bpm == null) { sub.textContent = st.loading ? 'Checking your watch’s latest readings…' : 'No heart rate from your watch in the last few hours'; return; }
+        sub.textContent = [`${st.bpm} bpm${st.real ? ' ' + Live.ago(st.age) : ''}`, st.hrv != null ? `HRV ${st.hrv} ms` : null,
+          st.stress != null ? `stress ${st.stress}, ${st.level.toLowerCase()}` : st.active ? 'moving' : null].filter(Boolean).join(' · ');
+      });
       // "now" sits between what has happened and what's still planned
       const at = ev.findIndex((e) => e.m > nowMinutes());
       rows.splice(at < 0 ? rows.length : at, 0, row);
@@ -6733,8 +6790,7 @@ const Pages = {};
       h('p', { class: 'small ink2' }, 'Feeling wound up? A couple of minutes of slow breathing brings heart rate down for most people.'), btn, box);
   }
   function liveCard(C, date) {
-    const live = Live.enabled();
-    if (!live) return breatheCard();
+    if (!Live.enabled()) return breatheCard();
     const hb = C.hrvDayBase(date);
     const val = (k) => h('span', { class: 'num', style: { fontSize: 'calc(38 * var(--fs))', fontWeight: 750, lineHeight: 1.05 } }, '–');
     const hrV = val(), hrvV = val(), stV = val();
@@ -6743,7 +6799,9 @@ const Pages = {};
     let breathing = App.ui.breathing === true;
     const breathBox = h('div', { hidden: !breathing, style: { display: 'grid', justifyItems: 'center', gap: '10px', padding: '6px 0 2px' } },
       h('div', { style: { width: '150px', height: '150px', display: 'grid', placeItems: 'center' } }, h('div', { class: 'breath' })),
-      h('p', { style: { fontWeight: 800 } }, 'In for 4 · hold 1 · out for 5'), h('p', { class: 'small muted', style: { textAlign: 'center' } }, 'Follow the circle. Your heart rate is watched while you breathe.'));
+      h('p', { style: { fontWeight: 800 } }, 'In for 4 · hold 1 · out for 5'), h('p', { class: 'small muted', style: { textAlign: 'center' } }, Live.real() ? 'Follow the circle for two minutes. Slow breathing out is what calms the body.' : 'Follow the circle. Your heart rate is watched while you breathe.'));
+    const real = Live.real();
+    const tag = real ? h('span', { class: 'xs muted', style: { fontWeight: 750 } }, 'Checking…') : h('span', { class: 'live-tag' }, h('i'), 'LIVE');
     const btn = h('button', { class: 'btn block ' + (breathing ? 'tint' : 'primary'), onclick: () => {
       breathing = !breathing; App.ui.breathing = breathing; Live.setCalm(breathing);
       breathBox.hidden = !breathing; btn.className = 'btn block ' + (breathing ? 'tint' : 'primary');
@@ -6751,16 +6809,21 @@ const Pages = {};
     } }, icon('wind'), h('span', null, breathing ? 'Stop breathing session' : 'Breathe for 2 minutes'));
     Live.setCalm(breathing);
     const el = h('section', { class: 'card', 'aria-label': 'Right now' },
-      h('div', { class: 'card-title' }, h('h2', null, 'Right now'), h('span', { class: 'live-tag' }, h('i'), 'LIVE')),
+      h('div', { class: 'card-title' }, h('h2', null, 'Right now'), tag),
       h('div', { class: 'grid3', style: { gap: '10px' } },
         h('div', null, h('div', { class: 'small muted', style: { fontWeight: 700 } }, 'Heart rate'), h('div', null, hrV, h('span', { class: 'small muted' }, ' bpm')), h('div', { class: 'xs muted', style: { fontWeight: 750 } }, `resting ${Math.round(C.hrParams(date).rest)}`)),
         h('div', null, h('div', { class: 'small muted', style: { fontWeight: 700 } }, 'HRV'), h('div', null, hrvV, h('span', { class: 'small muted' }, ' ms')), h('div', { class: 'xs', style: { fontWeight: 800, color: 'var(--hrv-ink)' } }, hb ? `normal ${Math.round(hb.lo)}–${Math.round(hb.hi)}` : 'learning')),
         h('div', null, h('div', { class: 'small muted', style: { fontWeight: 700 } }, 'Stress'), h('div', null, stV, h('span', { class: 'small muted' }, ' /100')), stLbl)),
-      spark, h('div', { class: 'xlabels' }, h('span', null, '90 s ago'), h('span', null, 'now')), h('div', { style: { marginTop: '10px' } }, btn), breathBox);
+      spark, h('div', { class: 'xlabels' }, h('span', null, real ? '90 min ago' : '90 s ago'), h('span', null, 'now')),
+      real ? h('p', { class: 'note', style: { marginTop: '8px' } }, 'Your Apple Watch measures heart rate every few minutes (all the time during a workout) and passes it to your iPhone in batches, so the latest reading is usually a few minutes old. HRV shows when the watch has taken one in the last 3 hours.') : null,
+      h('div', { style: { marginTop: '10px' } }, btn), breathBox);
     Live.bind(el, (st) => {
-      hrV.textContent = st.bpm; hrvV.textContent = st.hrv; stV.textContent = st.stress;
-      stLbl.textContent = st.level; stLbl.style.color = st.stress >= 50 ? 'var(--stress-ink)' : st.stress >= 25 ? 'var(--warn-ink)' : 'var(--good-ink)';
-      put(spark, Charts.sparkline(st.buf.map((b) => b.bpm), { color: 'var(--hr)', w: 320, h: 64, range: [st.rest - 4, st.rest + 40] }));
+      hrV.textContent = st.bpm ?? '–'; hrvV.textContent = st.hrv ?? '–'; stV.textContent = st.stress ?? '–';
+      stLbl.textContent = st.level || (st.bpm == null ? '' : 'needs a still moment'); stLbl.style.color = st.active ? 'var(--strain-ink)' : st.stress == null ? 'var(--muted)' : st.stress >= 50 ? 'var(--stress-ink)' : st.stress >= 25 ? 'var(--warn-ink)' : 'var(--good-ink)';
+      if (st.real) tag.textContent = st.loading ? 'Checking…' : st.bpm == null ? 'No reading in 3 h' : `Latest · ${Live.ago(st.age)}`;
+      const pts = st.buf.map((b) => b.bpm);
+      put(spark, pts.length > 1 ? Charts.sparkline(pts, { color: 'var(--hr)', w: 320, h: 64, range: [Math.min(st.rest - 4, ...pts), Math.max(st.rest + 40, ...pts)] })
+        : h('p', { class: 'small muted', style: { paddingTop: '18px' } }, st.loading ? '' : 'No heart-rate readings from your watch in the last 90 minutes.'));
       const sv = spark.querySelector('svg'); if (sv) { sv.style.width = '100%'; sv.style.height = '64px'; }
     });
     return el;
@@ -8190,7 +8253,9 @@ const HealthSync = (() => {
       else p.reject(Object.assign(new Error(msg?.error || 'sync-failed'), { code: msg?.error || 'sync-failed' }));
     },
     /** The app calls this when it comes back to the foreground. */
-    foreground() { S.maybeSync(); },
+    foreground() { S.maybeSync(); Live.refresh(true); },
+    /** The app calls this when the watch has written new heart-rate or HRV readings to Health. */
+    changed() { if (document.hidden) return; Live.refresh(true); S.maybeSync(); },
   };
   const ask = (msg, ms = 120000) => new Promise((resolve, reject) => {
     const id = 's' + U.uid();
@@ -8202,6 +8267,8 @@ const HealthSync = (() => {
   S.scan = () => ask({ type: 'scan' }, 600000).then((p) => String(p?.code || ''));
   /** A GET to Open Food Facts made by the app (path starts with /): resolves to { status, text }. */
   S.food = (path) => ask({ type: 'food', path }, 30000);
+  /** The last few hours of heart rate and HRV, straight from Health: { at, hr: [[time, bpm]], hrv: [[time, ms]] }. */
+  S.latest = () => ask({ type: 'latest' }, 30000);
   const last = () => Store.state().meta?.lastSync || null;
   S.last = last;
   S.error = () => lastError;
@@ -8230,12 +8297,12 @@ const HealthSync = (() => {
     App.render();
     return busy;
   };
-  /** Quietly sync when the app opens or comes back, at most every 15 minutes. */
+  /** Quietly sync when the app opens, comes back, or the watch delivers new readings, at most every 5 minutes. */
   S.maybeSync = () => {
     if (!S.native() || busy) return;
     if (!Store.ready) { setTimeout(S.maybeSync, 1500); return; } // wait for stored data, or the first sync would look like a fresh start
     const at = last()?.at ? Date.parse(last().at) : 0;
-    if (Date.now() - at > 15 * 60e3) S.sync({ quiet: true }).catch(() => {});
+    if (Date.now() - at > 5 * 60e3) S.sync({ quiet: true }).catch(() => {});
   };
   S.errorText = (c) => ({
     not_authorized: 'Baseline doesn’t have access to Apple Health yet. Allow it in Settings → Health → Data Access & Devices → Baseline.',

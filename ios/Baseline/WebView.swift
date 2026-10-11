@@ -23,6 +23,11 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.allowsBackForwardNavigationGestures = false
         webView.navigationDelegate = self
+        health.onNewReadings = { [weak self] in
+            DispatchQueue.main.async {
+                self?.webView.evaluateJavaScript("window.BaselineBridge && window.BaselineBridge.changed && window.BaselineBridge.changed()", completionHandler: nil)
+            }
+        }
         if let url = URL(string: "baseline://app/index.html") { webView.load(URLRequest(url: url)) }
     }
 
@@ -53,6 +58,8 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "sync", id, from: "YYYY-MM-DD", to: "YYYY-MM-DD" }  → a baseline.health/1 payload
     ///   { type: "scan", id }                                        → { code } from the camera
     ///   { type: "food", id, path }                                  → { text } from Open Food Facts (path starts with /)
+    ///   { type: "latest", id }                                      → { at, hr: [[time, bpm]], hrv: [[time, ms]] }, the last few hours
+    /// and tells the page when the watch has delivered new readings by calling BaselineBridge.changed().
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let id = body["id"] as? String else { return }
         switch body["type"] as? String {
@@ -69,6 +76,18 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             return
         case "food":
             fetchFood(id: id, path: body["path"] as? String ?? "")
+            return
+        case "latest":
+            Task {
+                do {
+                    let payload = try await health.latest()
+                    await MainActor.run { self.reply(["id": id, "ok": true, "payload": payload]) }
+                } catch let error as HealthReader.Failure {
+                    await MainActor.run { self.reply(["id": id, "ok": false, "error": error.code]) }
+                } catch {
+                    await MainActor.run { self.reply(["id": id, "ok": false, "error": "sync-failed"]) }
+                }
+            }
             return
         default:
             break

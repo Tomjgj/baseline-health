@@ -9,6 +9,9 @@ final class HealthReader {
 
     private let store = HKHealthStore()
     private var authorized = false
+    private var observing = false
+    /// Called (on any thread) when the watch has written new heart-rate or HRV readings to Health.
+    var onNewReadings: (() -> Void)?
 
     // what the app reads, with the unit each value is sent in
     private let quantities: [(HKQuantityTypeIdentifier, String, HKUnit)] = [
@@ -63,14 +66,50 @@ final class HealthReader {
         return f
     }()
 
+    private func authorize() async throws {
+        guard HKHealthStore.isHealthDataAvailable() else { throw Failure(code: "unavailable") }
+        if authorized { return }
+        // iOS never says which types were refused; refused ones simply come back empty
+        try await store.requestAuthorization(toShare: [], read: readTypes)
+        authorized = true
+        observe()
+    }
+
+    /// Watch for new heart-rate and HRV readings while the app runs, so the page can refresh what it shows as "now".
+    /// The watch measures heart rate every few minutes in the background (continuously during a workout) and hands
+    /// the readings to the iPhone in batches, so they land here a little after they were taken.
+    private func observe() {
+        guard !observing else { return }
+        observing = true
+        for id in [HKQuantityTypeIdentifier.heartRate, .heartRateVariabilitySDNN] {
+            let q = HKObserverQuery(sampleType: HKQuantityType(id), predicate: nil) { [weak self] _, completion, error in
+                if error == nil { self?.onNewReadings?() }
+                completion()
+            }
+            store.execute(q)
+        }
+    }
+
+    /// The heart-rate readings of the last 3 hours and the HRV readings of the last 6, oldest first, as [[time, value]].
+    func latest() async throws -> [String: Any] {
+        try await authorize()
+        let now = Date()
+        var out: [String: Any] = ["at": local.string(from: now)]
+        let bpm = HKUnit.count().unitDivided(by: .minute())
+        let wanted: [(HKQuantityTypeIdentifier, String, HKUnit, Double)] = [(.heartRate, "hr", bpm, 3), (.heartRateVariabilitySDNN, "hrv", HKUnit.secondUnit(with: .milli), 6)]
+        for (id, key, unit, hours) in wanted {
+            let window = HKQuery.predicateForSamples(withStart: now.addingTimeInterval(-hours * 3600), end: nil, options: [])
+            out[key] = try await read(HKQuantityType(id), window).compactMap { s -> [Any]? in
+                guard let q = s as? HKQuantitySample else { return nil }
+                return [local.string(from: q.startDate), q.quantity.doubleValue(for: unit)]
+            }
+        }
+        return out
+    }
+
     /// Samples for the days `from`...`to` (YYYY-MM-DD), starting at noon the day before so that night is whole.
     func payload(from: String, to: String) async throws -> [String: Any] {
-        guard HKHealthStore.isHealthDataAvailable() else { throw Failure(code: "unavailable") }
-        if !authorized {
-            // iOS never says which types were refused; refused ones simply come back empty
-            try await store.requestAuthorization(toShare: [], read: readTypes)
-            authorized = true
-        }
+        try await authorize()
         guard let fromDay = day.date(from: from), let toDay = day.date(from: to) else { throw Failure(code: "sync-failed") }
         let cal = Calendar.current
         let start = cal.date(byAdding: .hour, value: -12, to: fromDay)!

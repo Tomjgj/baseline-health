@@ -40,9 +40,11 @@ To work in Xcode instead: `cd ios && xcodegen generate && open Baseline.xcodepro
 ## How it fits together
 
 - `WebView.swift` serves `index.html` from the app bundle at `baseline://app/`, a fixed origin so the page's `localStorage` persists. It also registers the `baseline` message handler.
-- The page (`HealthSync` in `index.html`) syncs on launch and when the app returns to the foreground, at most every 15 minutes. It asks for the days from the day before its last sync up to today; the first sync asks for 180 days. The request is `postMessage({ type: "sync", id, from, to })`.
+- The page (`HealthSync` in `index.html`) syncs on launch, when the app returns to the foreground and when new watch readings arrive, at most every 5 minutes. It asks for the days from the day before its last sync up to today; the first sync asks for 180 days. The request is `postMessage({ type: "sync", id, from, to })`.
 - `HealthReader.swift` reads the samples in that window (from noon the day before `from`, so the first night is whole) and replies with `BaselineBridge.receive({ id, ok, payload })`. The payload format is `baseline.health/1`, documented above `HI.fromJSON` in `index.html`.
 - The page runs the payload through the same aggregation as the export import and saves the daily summaries. Your phone keeps the data. Nothing goes to a server except what you send to your own coach server.
+- "Right now" (heart rate, HRV, stress) is the watch's real readings. The page asks for `{ type: "latest" }` and gets the last 3 hours of heart rate and 6 of HRV. An `HKObserverQuery` calls `BaselineBridge.changed()` when the watch delivers new ones, and the page then refreshes and syncs (at most every 5 minutes). The watch measures heart rate every few minutes in the background and hands readings to the iPhone in batches, so the latest one is usually a few minutes old. Second-by-second heart rate would need a Watch app running a workout session.
+- Food barcodes: `{ type: "scan" }` opens VisionKit's live scanner (`BarcodeScanner.swift`, iPhone XS or newer) and returns `{ code }`. `{ type: "food", path }` fetches that path from Open Food Facts in the app, so the page doesn't depend on the web view's cross-origin rules.
 
 ## Read, never written
 
@@ -52,4 +54,4 @@ Heart rate, resting heart rate, HRV, breathing rate, blood oxygen, wrist tempera
 
 - Lock-screen and home-screen widgets for the rings and habits, a Live Activity for workouts and the rest timer, and a Watch complication for stress.
 - Background delivery (`enableBackgroundDelivery`), so data is fresh before the app opens.
-- Live heart rate from the Watch during workouts. The page's `Live` module is the place to feed it.
+- A Watch app with a workout session for second-by-second heart rate. The page's `Live` module is the place to feed it.
