@@ -11,8 +11,15 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 ## Storage
 `Store.init()` uses `window.claude.use('db')` when running inside Claude and falls back to `localStorage` otherwise. Standalone, only the localStorage path runs.
 
+## Conventions added in phase 1
+- Type: write font sizes as `calc(N * var(--fs))`, never px, and N is at least 11. `--fs` follows the browser text size and, on iPhone, Dynamic Type. Only the tab bar labels and the Food add button stay fixed.
+- Touch targets: small controls get a 44 × 44 tap layer from the shared `::after` rule next to `.tap` in the CSS. Add new small control classes to that list.
+- Today: one focus card with "Next up" (`planRows` sorts by priority), a habits row, and `foldCard`s that remember open/closed in `App.ui.fold`.
+- Health: cards below the fold go through `lazy(key, build, guessHeight)`.
+- Streaks: `habitTrack` returns `streak`, `unit` ('day' or 'week'), `atRisk` and `forgiven`. Use `Tabs.streakText(tr)` to show one. Pauses live in `profile.habitPauses`; days answered "Felt sick" pause too.
+
 ## Next steps (in order)
-1. Polish: Today screen on about 1.5 screens, one add button on Food, 44 px touch targets and 11 px+ text, forgiving streaks, lazy-draw the Health screen.
+1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. Honest insights: ranges and Clear / Likely / Not clear yet labels on habit effects, corrections for weekday, strain and exams, two-week experiments.
 3. Claude coach with editable memory and confirm/undo actions (needs the backend).
 4. Data pipeline from Apple Health, then the iOS app.
