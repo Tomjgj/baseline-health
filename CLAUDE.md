@@ -18,8 +18,14 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Health: cards below the fold go through `lazy(key, build, guessHeight)`.
 - Streaks: `habitTrack` returns `streak`, `unit` ('day' or 'week'), `atRisk` and `forgiven`. Use `Tabs.streakText(tr)` to show one. Pauses live in `profile.habitPauses`; days answered "Felt sick" pause too.
 
+## Conventions added in phase 2
+- Habit effects: use `C.habitEffect(id, date, measure)`, never a plain yes-minus-no difference. It fits outcome ~ habit + weekend + training load + exam days (sleep is deliberately not adjusted for), with a 3-day block bootstrap. It returns `est`, `raw`, `lo80/hi80`, `lo90/hi90`, `label` ('clear' | 'likely' | 'unclear' | 'few'), `more` and `small`.
+- Labels: Clear means the 90% range excludes zero and the effect is at least the floor (3 points or a quarter of the person's SD). Likely means the 80% range does. Summaries (Health, tracker, the stress page, Claude's context) list only Clear and Likely; Not clear yet appears only on the habit's own page or as names.
+- UI helpers: `Tabs.eff` has `pill`, `range`, `bar`, `num`, `more` and `MEASURES`. Labels use shape as well as tone (filled, half or ring dot).
+- Experiments live in `profile.experiments` as `{id, habit, target, from, to, measure, ended?}`. `C.experiment(id)` compares the window with the 28 days before, intention-to-treat. One runs at a time.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
-2. Honest insights: ranges and Clear / Likely / Not clear yet labels on habit effects, corrections for weekday, strain and exams, two-week experiments.
+2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
 3. Claude coach with editable memory and confirm/undo actions (needs the backend).
 4. Data pipeline from Apple Health, then the iOS app.

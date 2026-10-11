@@ -924,6 +924,41 @@ input[type="range"].slider { height: 32px; }
 .hrow svg.spark { width: 72px; height: 30px; }
 .hrow .y { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(16 * var(--fs)); font-weight: 750; }
 .hrow > svg:last-child { width: 14px; height: 14px; color: var(--faint); }
+/* ---------- honest effects: label (shape as well as tone: filled, half, ring), range bar ---------- */
+.elab { display: inline-flex; align-items: center; gap: 5px; font-size: calc(12 * var(--fs)); font-weight: 800; color: var(--muted); white-space: nowrap; vertical-align: middle; }
+.elab i { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1.6px currentColor; }
+.elab.clear { color: var(--ink); } .elab.clear i { background: currentColor; }
+.elab.likely { color: var(--ink-2); } .elab.likely i { background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+.elab-s { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 4px; vertical-align: 1px; box-shadow: inset 0 0 0 1.4px var(--muted); }
+.elab-s.clear { background: var(--ink); box-shadow: none; }
+.elab-s.likely { background: linear-gradient(90deg, var(--ink-2) 50%, transparent 50%); box-shadow: inset 0 0 0 1.4px var(--ink-2); }
+.ebar { position: relative; display: block; height: 16px; min-width: 0; }
+.ebar::before { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; border-radius: 1px; background: var(--track); }
+.ebar .z { position: absolute; left: calc(50% - 0.75px); top: 1px; bottom: 1px; width: 1.5px; background: var(--axis); }
+.ebar .r { position: absolute; top: 4px; bottom: 4px; border-radius: 4px; background: var(--c); opacity: 0.38; }
+.ebar.clear .r { opacity: 0.55; }
+.ebar .d { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--surface); }
+.ebar.unclear .d, .ebar.few .d { background: var(--surface); box-shadow: inset 0 0 0 2px var(--c), 0 0 0 2px var(--surface); }
+.hrow.eff { grid-template-columns: minmax(0, 1fr) 88px 46px 14px; }
+.hrow.eff .s { display: flex; align-items: center; gap: 6px; }
+.eff-rest { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.legend i.half { border-radius: 50%; background: linear-gradient(90deg, var(--ink-2) 50%, transparent 50%) !important; box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.ic.hrv { background: var(--hrv-bg); color: var(--hrv-ink); }
+/* ---------- experiments ---------- */
+.card.exp-card { display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 4px 10px; align-items: center; }
+.exp-card > :not(svg) { grid-column: 1; }
+.exp-card > svg:last-child { grid-column: 2; grid-row: 1 / span 4; width: 18px; height: 18px; color: var(--faint); }
+.exp-card .t { font-size: calc(17 * var(--fs)); font-weight: 800; letter-spacing: -0.01em; }
+.exp-card .meter-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.exp-card .s { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: calc(13 * var(--fs)); color: var(--muted); }
+.exp-title { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--hrv-bg); color: var(--hrv-ink); font-size: calc(16 * var(--fs)); }
+.exp-title svg { width: 20px; height: 20px; flex: none; }
+.xdays { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 4px; margin-top: 14px; }
+.xd { aspect-ratio: 1; border-radius: 50%; background: var(--track); }
+.xd.kept { background: var(--good); }
+.xd.slip { background: var(--stress); border-radius: 3px; }
+.xd.none { background: transparent; box-shadow: inset 0 0 0 1.5px var(--axis); }
+.xd.future { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
 .factor.sub { grid-template-columns: minmax(0, 1fr) 84px 44px; padding-block: 8px; }
 
 /* ---------- food: meal sections ---------- */
@@ -1508,6 +1543,82 @@ const E = (() => {
   ];
 
   /** Build a memoized calculation context over one snapshot of the data. */
+  // ---------- honest effects: a small regression, a bootstrap range and a plain label ----------
+  /** A small seeded generator, so the same data always gives the same range. */
+  function rng(seedStr) {
+    let a = 2166136261; for (let i = 0; i < seedStr.length; i++) { a ^= seedStr.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  const quantile = (sorted, q) => { if (!sorted.length) return null; const i = (sorted.length - 1) * q, lo = Math.floor(i); return sorted[lo] + (sorted[Math.min(sorted.length - 1, lo + 1)] - sorted[lo]) * (i - lo); };
+  /**
+   * The effect of x (0/1) on y, holding the covariates fixed. rows: [{ x, y, c: [covariates] }] in date order.
+   * Returns the adjusted estimate, the raw yes-minus-no difference, and 80% and 90% ranges from a moving-block bootstrap
+   * (blocks of 3 days, so runs of similar days aren't counted as independent).
+   */
+  function effectFit(rows, { seed = 'x', boot = 300, names = [] } = {}) {
+    const n = rows.length, n1 = rows.filter((r) => r.x === 1).length, n0 = n - n1;
+    const ys = rows.map((r) => r.y), sd = U.sd(ys) || 0;
+    const raw = n1 && n0 ? mean(rows.filter((r) => r.x === 1).map((r) => r.y)) - mean(rows.filter((r) => r.x === 0).map((r) => r.y)) : null;
+    // keep covariates that vary and aren't nearly the same thing as the habit itself
+    const k = rows[0]?.c.length || 0, keep = [];
+    const xs = U.sd(rows.map((r) => r.x)) || 1, xm = n ? n1 / n : 0;
+    for (let j = 0; j < k; j++) {
+      const col = rows.map((r) => r.c[j]), cs = U.sd(col);
+      if (!(cs > 1e-9)) continue;
+      const cm = mean(col);
+      const corr = rows.reduce((a, r) => a + (r.x - xm) * (r.c[j] - cm), 0) / (n - 1) / (xs * cs);
+      if (Math.abs(corr) < 0.85) keep.push(j);
+    }
+    const Z = rows.map((r) => [1, r.x, ...keep.map((j) => r.c[j])]), p = 2 + keep.length;
+    // fit on a list of row indexes, accumulating X'X directly (the bootstrap runs this hundreds of times)
+    const A = Array.from({ length: p }, () => new Float64Array(p + 1));
+    const fit = (idx) => {
+      for (let i = 0; i < p; i++) A[i].fill(0);
+      for (const r of idx) { const z = Z[r], y = ys[r]; for (let i = 0; i < p; i++) { const zi = z[i]; A[i][p] += zi * y; for (let j = i; j < p; j++) A[i][j] += zi * z[j]; } }
+      for (let i = 0; i < p; i++) { for (let j = 0; j < i; j++) A[i][j] = A[j][i]; if (i) A[i][i] += 1e-6 * idx.length; }
+      for (let c = 0; c < p; c++) {
+        let piv = c; for (let r = c + 1; r < p; r++) if (Math.abs(A[r][c]) > Math.abs(A[piv][c])) piv = r;
+        if (Math.abs(A[piv][c]) < 1e-12) return null;
+        if (piv !== c) { const t = A[c]; A[c] = A[piv]; A[piv] = t; }
+        for (let r = 0; r < p; r++) { if (r === c) continue; const f = A[r][c] / A[c][c]; if (f) for (let q = c; q <= p; q++) A[r][q] -= f * A[c][q]; }
+      }
+      return A[1][p] / A[1][1];
+    };
+    const all = rows.map((_, i) => i);
+    const est = n1 >= 2 && n0 >= 2 ? fit(all) : null;
+    const base = { est, raw, n1, n0, sd, adjusted: keep.map((j) => names[j]).filter(Boolean) };
+    if (est == null || !boot) return base;
+    const rand = rng(seed), L = 3, nb = Math.ceil(n / L), bs = [], idx = [];
+    for (let b = 0; b < boot; b++) {
+      idx.length = 0; let m1 = 0;
+      for (let t = 0; t < nb; t++) { const st = Math.floor(rand() * Math.max(1, n - L + 1)); for (let u = 0; u < L && st + u < n; u++) { idx.push(st + u); m1 += rows[st + u].x; } }
+      if (m1 < 2 || idx.length - m1 < 2) continue;
+      const v = fit(idx); if (v != null && isFinite(v)) bs.push(v);
+    }
+    bs.sort((a, b) => a - b);
+    return { ...base, lo80: quantile(bs, 0.1), hi80: quantile(bs, 0.9), lo90: quantile(bs, 0.05), hi90: quantile(bs, 0.95) };
+  }
+  /** Clear: the 90% range is clear of zero and the effect is big enough to matter. Likely: the 80% range is clear of zero. */
+  const EFFECT_MIN = 5;
+  function effectLabel(f, floor) {
+    if (f.est == null || f.n1 < EFFECT_MIN || f.n0 < EFFECT_MIN || f.lo80 == null) return { label: 'few', more: null };
+    const away = (lo, hi) => lo > 0 || hi < 0;
+    const big = Math.abs(f.est) >= floor;
+    const label = away(f.lo90, f.hi90) && big ? 'clear' : away(f.lo80, f.hi80) && big ? 'likely' : 'unclear';
+    // how many more days of the rarer answer would narrow the range enough (the range shrinks with the square root of the days)
+    let more = null, small = false;
+    const hw80 = (f.hi80 - f.lo80) / 2;
+    if (label === 'unclear' && Math.abs(f.est) < floor / 2 && hw80 < floor) small = true; // the range already rules out anything big
+    else if (label !== 'clear') {
+      const hw = label === 'likely' ? (f.hi90 - f.lo90) / 2 : hw80;
+      const fac = hw / Math.max(Math.abs(f.est), floor);
+      const m = Math.ceil(Math.min(f.n1, f.n0) * (fac * fac - 1));
+      more = m > 60 ? Infinity : Math.max(3, m);
+    }
+    return { label, more, small, rarer: f.n1 <= f.n0 ? 'yes' : 'no' };
+  }
+  const EFFECT_LABELS = { clear: 'Clear', likely: 'Likely', unclear: 'Not clear yet', few: 'Not enough data' };
+
   function context(state, now = new Date()) {
     const days = state.days || {}, food = state.food || {}, body = state.body || {}, workouts = state.workouts || {};
     const naps = state.naps || {}, journal = state.journal || {};
@@ -2007,50 +2118,83 @@ const E = (() => {
       return out;
     });
 
-    // ---------- habit journal ----------
-    const habitStats = m('habit', (key) => {
-      const [id, d, w] = key.split('@');
-      const win = +w || 90;
-      const yes = { rec: [], sleep: [], hrv: [], stress: [] }, no = { rec: [], sleep: [], hrv: [], stress: [] };
-      const strip = [];
-      for (let i = 0; i < win; i++) {
-        const x = addDays(d, -i);
-        const a = journal[x]?.a?.[id];
-        if (i < 30) strip.unshift(a == null ? null : a ? 1 : 0);
-        if (a == null) continue;
-        const b = a ? yes : no;
-        // stress is the same day; the rest is the morning after
-        if (x < todayStr) { const sv = stress(x)?.avg; if (sv != null) b.stress.push(sv); }
-        const nx = addDays(x, 1);
-        if (nx > todayStr) continue;
-        const r = recovery(nx); if (r && !r.calibrating) b.rec.push(r.score);
-        const sc = sleepScore(nx); if (sc) b.sleep.push(sc.score);
-        const hv = days[nx]?.hrv; if (hv) b.hrv.push(hv);
+    // ---------- habit effects, honestly: adjusted for weekend, the day's strain and exam days, with a range ----------
+    // Sleep isn't adjusted for: alcohol and late meals act through sleep, and holding it fixed would hide their real effect.
+    const EFFECT_FLOOR = { recovery: 3, sleep: 3, hrv: 3, stress: 3 };
+    const examOn = (x) => activitiesOn(x).some((a) => a.type === 'exam');
+    /** The outcome for a day x: the next morning's recovery, sleep score or HRV (% from baseline), or that day's stress. */
+    const outcomeOf = (ms, x) => {
+      const nx = addDays(x, 1);
+      if (ms === 'stress') return x < todayStr ? stress(x)?.avg ?? null : null;
+      if (nx > todayStr) return null;
+      if (ms === 'recovery') { const r = recovery(nx); return r && !r.calibrating ? r.score : null; }
+      if (ms === 'sleep') return sleepScore(nx)?.score ?? null;
+      const hv = days[nx]?.hrv, hb = hrvBase(nx);
+      return hv && hb.n >= 4 ? (hv / Math.exp(hb.mean) - 1) * 100 : null;
+    };
+    /** Covariates for day x: weekend, the strain that bears on the outcome, an exam around it. */
+    const COV_NAMES = ['weekends', 'training load', 'exam days'];
+    const covOf = (ms, x) => {
+      const wd = U.parseYmd(x).getDay();
+      const morning = ms !== 'stress';
+      const weekend = morning ? (wd === 5 || wd === 6 ? 1 : 0) : (wd === 0 || wd === 6 ? 1 : 0); // Friday and Saturday nights lead into weekend mornings
+      const sv = strain(morning ? x : addDays(x, -1))?.value;
+      return [weekend, sv ?? null, examOn(x) || (morning && examOn(addDays(x, 1))) ? 1 : 0];
+    };
+    const effectRows = (pick, ms, from, to) => {
+      const rows = [];
+      for (let x = from; x <= to; x = addDays(x, 1)) {
+        const v = pick(x); if (v == null) continue;
+        const y = outcomeOf(ms, x); if (y == null) continue;
+        rows.push({ x: v, y, c: covOf(ms, x), d: x });
       }
-      let streak = 0;
-      for (let i = journal[d]?.a?.[id] == null ? 1 : 0; i < 365; i++) { if (journal[addDays(d, -i)]?.a?.[id] === 1) streak++; else break; }
-      const diff = (k, pct) => {
-        if (yes[k].length < 3 || no[k].length < 3) return null;
-        const y = mean(yes[k]), n = mean(no[k]);
-        return pct ? (y / n - 1) * 100 : y - n;
-      };
-      const done30 = strip.filter((x) => x === 1).length, answered30 = strip.filter((x) => x != null).length;
-      const avg = (k) => [yes[k].length >= 3 ? mean(yes[k]) : null, no[k].length >= 3 ? mean(no[k]) : null];
-      return { id, strip, streak, done30, answered30, nYes: yes.rec.length || yes.sleep.length, nNo: no.rec.length || no.sleep.length,
-        impact: { recovery: diff('rec'), sleep: diff('sleep'), hrv: diff('hrv', true), stress: diff('stress') }, means: { recovery: avg('rec'), sleep: avg('sleep'), hrv: avg('hrv'), stress: avg('stress') } };
+      const sv = rows.map((r) => r.c[1]).filter((v) => v != null), sm = sv.length ? mean(sv) : 0;
+      for (const r of rows) if (r.c[1] == null) r.c[1] = sm; // a missing strain counts as a typical day
+      return rows;
+    };
+    const ansPick = (id) => (x) => { const a = journal[x]?.a?.[id]; return a === 1 || a === 0 ? a : null; };
+    const habitEffectM = m('heff', (k) => {
+      const [id, d, ms, w, bt] = k.split('@');
+      const rows = effectRows(ansPick(id), ms, addDays(d, -(+w - 1)), d);
+      const f = effectFit(rows, { seed: k, boot: +bt, names: COV_NAMES });
+      const floor = Math.max(EFFECT_FLOOR[ms], 0.25 * (f.sd || 0));
+      return { id, measure: ms, ...f, floor, ...(+bt ? effectLabel(f, floor) : {}), yesMean: rows.some((r) => r.x === 1) ? mean(rows.filter((r) => r.x === 1).map((r) => r.y)) : null, noMean: rows.some((r) => r.x === 0) ? mean(rows.filter((r) => r.x === 0).map((r) => r.y)) : null };
     });
-    /** Next-morning effect of a habit over the `win` days up to d (90 by default; shorter windows show how the effect moves over time). */
-    const habitImpact = (id, d, win = 90) => habitStats(id + '@' + d + '@' + win);
-    /** How a habit's effect has moved: one point a week for `weeks` weeks, each from the `win` days of check-ins before it. */
-    const habitTrend = (id, d, weeks = 26, win = 56) => {
-      const out = [];
-      for (let k = weeks - 1; k >= 0; k--) {
-        const e = addDays(d, -7 * k), st = habitImpact(id, e, win);
-        // a point needs five mornings each way, or a couple of odd days swing it
-        out.push(st.nYes >= 5 && st.nNo >= 5 ? { date: e, ...st.impact } : { date: e, recovery: null, sleep: null, hrv: null, stress: null });
+    /** A habit's effect on one measure over the last `win` days: adjusted estimate, 80%/90% range, label, days still needed. */
+    const habitEffect = (id, d, ms = 'recovery', win = 90) => habitEffectM(`${id}@${d}@${ms}@${win}@300`);
+    /** The adjusted estimate only (no range), one point a week, for the 6-month lines. */
+    const habitEffectTrend = m('hefft', (k) => {
+      const [id, d, ms, w, wn] = k.split('@'), weeks = +w, win = +wn;
+      const rows = effectRows(ansPick(id), ms, addDays(d, -(7 * (weeks - 1) + win - 1)), d), out = [];
+      for (let i = weeks - 1; i >= 0; i--) {
+        const e = addDays(d, -7 * i), s0 = addDays(e, -(win - 1)), f = effectFit(rows.filter((r) => r.d >= s0 && r.d <= e), { boot: 0, names: COV_NAMES });
+        out.push({ date: e, v: f.n1 >= EFFECT_MIN && f.n0 >= EFFECT_MIN ? f.est : null });
       }
       return out;
-    };
+    });
+    const habitEffectTrendOf = (id, d, ms, weeks = 26, win = 63) => habitEffectTrend(`${id}@${d}@${ms}@${weeks}@${win}`);
+
+    // ---------- experiments: two weeks with or without a habit, against the four weeks before ----------
+    const EXPS = Array.isArray(P.experiments) ? P.experiments.filter((x) => x && x.habit && x.from) : [];
+    const experimentM = m('exp', (eid) => {
+      const ex = EXPS.find((x) => x.id === eid);
+      if (!ex) return null;
+      const end = ex.ended || ex.to, last = end < todayStr ? end : addDays(todayStr, -1);
+      const total = U.daysBetween(ex.from, ex.to) + 1, day = Math.min(total, Math.max(0, U.daysBetween(ex.from, todayStr) + 1));
+      const status = ex.cancelled ? 'cancelled' : todayStr < ex.from ? 'planned' : todayStr > end || ex.ended ? 'done' : 'running';
+      const before0 = addDays(ex.from, -28), ms = ex.measure || 'recovery';
+      // during = 1, the 28 days before = 0; every day counts, kept or not, so a slip doesn't flatter the result
+      const rows = effectRows((x) => (x >= ex.from && x <= last ? 1 : x < ex.from && x >= before0 ? 0 : null), ms, before0, last);
+      const f = effectFit(rows, { seed: 'exp' + eid + last, boot: 300, names: COV_NAMES });
+      const floor = Math.max(EFFECT_FLOOR[ms], 0.25 * (f.sd || 0));
+      let kept = 0, answered = 0;
+      for (let x = ex.from; x <= last; x = addDays(x, 1)) { const a = journal[x]?.a?.[ex.habit]; if (a == null) continue; answered++; if (a === ex.target) kept++; }
+      const lab = f.n1 >= 3 && f.lo80 != null ? effectLabel({ ...f, n1: Math.max(f.n1, EFFECT_MIN) }, floor) : { label: 'few', more: null };
+      return { ...ex, measure: ms, status, day, total, last, kept, answered, ...f, floor, ...lab };
+    });
+    const experiment = (eid) => experimentM(eid);
+    const experiments = () => EXPS.map((x) => experiment(x.id)).filter(Boolean);
+    const activeExperiment = () => experiments().find((x) => x.status === 'running' || x.status === 'planned') || null;
 
     // ---------- heart rate for one day ----------
     const hrDay = m('hrDay', (d) => {
@@ -2206,19 +2350,28 @@ const E = (() => {
     });
     const actSummaryM = m('actSum', (k) => {
       const [end, r] = k.split('@'), range = +r;
-      const by = {}, un = { vals: [], hrv: [], high: 0 };
+      const by = {}, un = { vals: [], hrv: [], high: 0, dayMeans: [] };
       for (let i = 0; i < range; i++) {
         const d = addDays(end, -i), as = actStress(d);
         un.vals.push(...as.untagged.vals); un.hrv.push(...as.untagged.hrv); un.high += as.untagged.high;
+        if (as.untagged.vals.length >= 2) un.dayMeans.push(mean(as.untagged.vals));
         for (const p of as.per) {
-          const o = (by[p.act.key] ||= { key: p.act.key, type: p.act.type, name: p.act.name, vals: [], hrv: [], high: 0, minutes: 0, sessions: 0, days: [] });
+          const o = (by[p.act.key] ||= { key: p.act.key, type: p.act.type, name: p.act.name, vals: [], hrv: [], high: 0, minutes: 0, sessions: 0, days: [], sessMeans: [] });
           o.vals.push(...p.vals); o.hrv.push(...p.hrv); o.high += p.high; o.minutes += p.act.b - p.act.a; o.sessions++;
+          if (p.vals.length) o.sessMeans.push(mean(p.vals));
           if (o.days[o.days.length - 1] !== d) o.days.push(d);
         }
       }
       const base = un.vals.length >= 4 ? mean(un.vals) : null;
-      const rows = Object.values(by).map((o) => ({ ...o, n: o.vals.length, avg: o.vals.length >= 2 ? mean(o.vals) : null, highShare: o.vals.length ? o.high / o.vals.length : null,
-        hrvAvg: o.hrv.length ? mean(o.hrv) : null, diff: base != null && o.vals.length >= 2 ? mean(o.vals) - base : null }));
+      // how sure the difference is: half hours inside one session move together, so the range counts sessions and days, not half hours
+      const sem = (a) => (a.length >= 2 ? sd(a) / Math.sqrt(a.length) : null);
+      const rows = Object.values(by).map((o) => {
+        const diff = base != null && o.vals.length >= 2 ? mean(o.vals) - base : null;
+        const se = diff == null ? null : Math.hypot(sem(o.sessMeans) ?? 0, sem(un.dayMeans) ?? 0) || null;
+        const f = { est: diff, n1: o.sessMeans.length, n0: un.dayMeans.length, lo80: se ? diff - 1.28 * se : null, hi80: se ? diff + 1.28 * se : null, lo90: se ? diff - 1.645 * se : null, hi90: se ? diff + 1.645 * se : null };
+        return { ...o, n: o.vals.length, avg: o.vals.length >= 2 ? mean(o.vals) : null, highShare: o.vals.length ? o.high / o.vals.length : null,
+          hrvAvg: o.hrv.length ? mean(o.hrv) : null, diff, eff: diff == null ? null : { ...f, ...effectLabel(f, 3) } };
+      });
       rows.sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1));
       return { rows, base, baseHrv: un.hrv.length ? mean(un.hrv) : null, baseN: un.vals.length, baseHigh: un.vals.length ? un.high / un.vals.length : null };
     });
@@ -2468,8 +2621,8 @@ const E = (() => {
       ageOn, hrParams, sessions, strain, strainTarget, sleepOf, sleepNeed, sleepScore, recovery, stress,
       intake, trendWeight, latestBody, energy, tdee, load, healthAge, insights,
       hrvBase, rhrBase, respBase, tempBase, activeMean,
-      naps, journal, habits, loggedNaps, napsOn, muscleSets, habitImpact, hrDay, muscleState,
-      plan: PLAN, planOn, planNext, baseline, dailyValue, habitTrend,
+      naps, journal, habits, loggedNaps, napsOn, muscleSets, habitEffect, habitEffectTrend: habitEffectTrendOf, experiment, experiments, activeExperiment, hrDay, muscleState,
+      plan: PLAN, planOn, planNext, baseline, dailyValue,
       schedule: SCHED, activitiesOn, actStress, activitySummary, activityTrend, stressProfile, habitTrack, habitMeta,
     };
   }
@@ -2494,7 +2647,7 @@ const E = (() => {
 
   return { context, strainFromTrimp, trimpFromHist, zonesFromHist, histMinutes, mifflin, stressLevel, e1rm, DEFAULT_PROFILE, srpeTrimp, defaultRpe,
     MUSCLES, exerciseInfo, liftStats, HABIT_CATALOG, DEFAULT_HABITS, DEFAULT_ROUTINES, HABIT_GROUPS, habitGroup, AGE_GROUPS,
-    ACTIVITY_TYPES, actType, actKey, habitMeta, habitShort, habitSuccess };
+    ACTIVITY_TYPES, actType, actKey, habitMeta, habitShort, habitSuccess, effectFit, effectLabel, EFFECT_LABELS, EFFECT_MIN };
 })();
 
 /* ===== importer.js — Apple Health export.zip / export.xml → daily summaries =====
@@ -4520,6 +4673,7 @@ function h(tag, attrs, ...kids) {
 const put = (el, ...kids) => el.replaceChildren(...kids.flat(4).filter((x) => x != null && x !== false));
 
 const ICONS = {
+  flask: '<path d="M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3"/><path d="M7.2 15h9.6"/>',
   today: '<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5l1.5 1.5M17 17l1.5 1.5M5.5 18.5L7 17M17 7l1.5-1.5"/>',
   food: '<path d="M7 3v7a2 2 0 0 0 2 2M5 3v5M9 3v5M7 12v9"/><path d="M17 21V3c-2.2 1.2-3.3 3.8-3.3 7 0 2.4 1.2 3.6 3.3 3.6"/>',
   train: '<path d="M6.5 7.5v9M3.5 10v4M17.5 7.5v9M20.5 10v4M6.5 12h11"/>',
@@ -4912,11 +5066,12 @@ const Tabs = (() => {
   /** One row of the by-activity list: name, time spent, a bar against untagged time, the average. */
   function actSumRow(r, base, onclick) {
     const sub = r.avg == null ? `${fmtTime(r.minutes)} · mostly on the move, so not scored` : `${fmtTime(r.minutes)} · ${plural(r.sessions, 'time')} · ${Math.round(r.highShare * 100)}% high`;
-    const dcol = r.diff == null || Math.abs(r.diff) < 3 ? 'var(--muted)' : r.diff > 0 ? 'var(--stress-ink)' : 'var(--good-ink)';
-    return h('button', { class: 'arow tap', onclick, 'aria-label': `${r.name}: ${r.avg == null ? 'not scored' : `stress ${Math.round(r.avg)}${r.diff != null ? `, ${fmtSigned(r.diff, 0)} compared with untagged time` : ''}`}. Open details` },
+    const sure = r.eff && (r.eff.label === 'clear' || r.eff.label === 'likely');
+    const dcol = r.diff == null || !sure ? 'var(--muted)' : r.diff > 0 ? 'var(--stress-ink)' : 'var(--good-ink)';
+    return h('button', { class: 'arow tap', onclick, 'aria-label': `${r.name}: ${r.avg == null ? 'not scored' : `stress ${Math.round(r.avg)}${r.diff != null ? `, ${fmtSigned(r.diff, 0)} compared with untagged time${r.eff ? ` (${E.EFFECT_LABELS[r.eff.label].toLowerCase()})` : ''}` : ''}`}. Open details` },
       h('span', { class: 'ic' }, icon(actIcon(r.type))),
       h('span', { style: { minWidth: 0, display: 'block' } }, h('b', null, r.name), h('span', { class: 's' }, sub), r.avg != null ? sbar(r.avg, base) : null),
-      h('span', { class: 'v', style: { color: r.avg == null ? 'var(--muted)' : stressInk(r.avg) } }, r.avg == null ? '–' : Math.round(r.avg), r.diff != null ? h('small', { style: { color: dcol } }, fmtSigned(r.diff, 0)) : null));
+      h('span', { class: 'v', style: { color: r.avg == null ? 'var(--muted)' : stressInk(r.avg) } }, r.avg == null ? '–' : Math.round(r.avg), r.diff != null ? h('small', { style: { color: dcol }, title: r.eff ? E.EFFECT_LABELS[r.eff.label] : null }, fmtSigned(r.diff, 0), r.eff ? h('span', { class: 'elab-s ' + r.eff.label, 'aria-label': E.EFFECT_LABELS[r.eff.label] }) : null) : null));
   }
   /** The by-activity summary used on Health and the Stress page. */
   function stressDriversCard(C, date, { title = 'What drives your stress', limit = 4 } = {}) {
@@ -5143,6 +5298,14 @@ const Tabs = (() => {
     if (tm) {
       const info = tm.info;
       rows.push([7, prow({ ic: 'train', t: `${slot.label}: ${tm.r.name}`, s: info.tired.length ? `${info.fresh.slice(0, 2).join(' and ') || 'Most muscles'} ${info.fresh.length === 1 ? 'is' : 'are'} fresh. ${info.tired.slice(0, 2).join(' and ')} still recovering.` : `${info.groups.slice(0, 3).join(', ')} are all fresh.`, onclick: () => App.go('train') })]);
+    }
+    // a running experiment, or one that just finished
+    const ex = T.currentExperiment(C);
+    if (ex && ex.status === 'running') {
+      const hb = C.habits.find((x) => x.id === ex.habit) || { id: ex.habit, name: 'habit' };
+      rows.push([1, prow({ ic: 'flask', tone: 'hrv', t: `Experiment day ${ex.day} of ${ex.total}`, s: `${T.expTitle(hb, ex.target)} · ${ex.answered ? `kept ${ex.kept} of ${ex.answered} so far` : 'answer it in your check-in'}`, onclick: () => App.open('experiment', { id: ex.id }) })]);
+    } else if (ex && ex.status === 'done' && !App.ui.expSeen?.[ex.id]) {
+      rows.push([0, prow({ ic: 'flask', tone: 'hrv', t: 'Your experiment is done', s: `See how your ${MEASURES[ex.measure].name} compared with the four weeks before`, onclick: () => App.open('experiment', { id: ex.id }) })]);
     }
     // what to do next comes first; things already done sink to the end
     return rows.map((r, i) => [r[0], i, r[1]]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map((r) => r[2]);
@@ -5725,44 +5888,100 @@ const Tabs = (() => {
     return el;
   }
 
-  // ---------- habits: grouped, with how each effect has moved ----------
-  const HABIT_MEASURES = { recovery: ['recovery', ''], sleep: ['sleep', ''], hrv: ['HRV', '%'], stress: ['stress', ''] };
+  // ---------- honest effects: a label, a range and a bar, shared by Health, the tracker and the habit page ----------
+  const MEASURES = {
+    recovery: { name: 'recovery', title: 'Recovery', unit: '', word: 'points', worse: false, when: 'Next-morning recovery', fmt: (v) => Math.round(v) + '%' },
+    sleep: { name: 'sleep', title: 'Sleep', unit: '', word: 'points', worse: false, when: 'Next-morning sleep score', fmt: (v) => String(Math.round(v)) },
+    hrv: { name: 'HRV', title: 'HRV', unit: '%', word: '', worse: false, when: 'Next-morning HRV, vs your baseline', fmt: (v) => fmtSigned(v, 0, '%') },
+    stress: { name: 'stress', title: 'Stress', unit: '', word: 'points', worse: true, when: 'Same-day stress', fmt: (v) => String(Math.round(v)) },
+  };
+  const shown = (f) => f.label === 'clear' || f.label === 'likely';
+  const effPill = (f) => h('span', { class: 'elab ' + f.label }, h('i', { 'aria-hidden': 'true' }), E.EFFECT_LABELS[f.label]);
+  const effRange = (f, unit = '') => `${fmtSigned(f.lo80, 0, unit)} to ${fmtSigned(f.hi80, 0, unit)}`.replace(/±/g, '');
+  const effNum = (v, unit = '') => fmtSigned(v, 0, unit).replace('±', '');
+  const effColor = (f, worse) => (!shown(f) ? 'var(--muted)' : (f.est > 0) === worse ? 'var(--stress-ink)' : 'var(--strain-ink)');
+  /** The 80% range as a bar around zero, with a dot at the estimate. scale is the largest value the bar has to fit. */
+  function effBar(f, scale, worse) {
+    const pos = (v) => 50 + (Math.max(-scale, Math.min(scale, v)) / scale) * 50;
+    const c = (f.est > 0) === worse ? 'var(--stress)' : 'var(--strain)';
+    return h('span', { class: 'ebar ' + f.label, style: { '--c': shown(f) ? c : 'var(--muted)' }, 'aria-hidden': 'true' }, h('i', { class: 'z' }),
+      f.lo80 != null ? h('i', { class: 'r', style: { left: pos(f.lo80) + '%', width: Math.max(2, pos(f.hi80) - pos(f.lo80)) + '%' } }) : null,
+      f.est != null ? h('i', { class: 'd', style: { left: pos(f.est) + '%' } }) : null);
+  }
+  /** What it would take to know: more days of the rarer answer, or nothing big so far. */
+  function effMore(f) {
+    const side = (r) => (r === 'yes' ? 'with it' : 'without it');
+    if (f.label === 'few') {
+      const y = Math.max(0, E.EFFECT_MIN - f.n1), n = Math.max(0, E.EFFECT_MIN - f.n0);
+      return `Needs ${E.EFFECT_MIN} days each way first: ${[y ? plural(y, 'more day') + ' with it' : null, n ? plural(n, 'more day') + ' without it' : null].filter(Boolean).join(' and ')}.`;
+    }
+    if (f.small) return 'If there is an effect, it’s small: even the ends of the range are modest.';
+    if (f.more === Infinity) return 'If there is an effect, it’s small: it could take months to pin down.';
+    if (f.more) return `About ${f.more} more days ${side(f.rarer)} would ${f.label === 'likely' ? 'make it clear' : 'settle it'}.`;
+    return '';
+  }
+  T.eff = { MEASURES, shown, pill: effPill, range: effRange, num: effNum, color: effColor, bar: effBar, more: effMore };
+
+  // ---------- habits: only what's clear or likely, each with its range ----------
   function habitsCard(C, date) {
     const el = h('section', { class: 'card', 'aria-label': 'Habit effects' });
     const checkins = Object.keys(C.journal).filter((d) => d >= addDays(date, -90)).length;
-    const imps = C.habits.map((hb) => ({ hb, st: C.habitImpact(hb.id, date), tr: C.habitTrend(hb.id, date, 26, 63) }));
     const draw = () => {
-      const ms = App.ui.habitMeasure || 'recovery';
-      const [mName, mUnit] = HABIT_MEASURES[ms];
-      const groups = [...E.HABIT_GROUPS, { id: 'yours', name: 'Your habits', ids: null }];
-      const any = imps.some((x) => x.st.impact[ms] != null);
-      const body = [];
-      for (const g of groups) {
-        const list = imps.filter((x) => (g.ids ? g.ids.includes(x.hb.id) : !E.HABIT_GROUPS.some((y) => y.ids.includes(x.hb.id))))
-          .sort((a, b) => Math.abs(b.st.impact[ms] ?? -1) - Math.abs(a.st.impact[ms] ?? -1));
-        if (!list.length) continue;
-        body.push(h('div', { class: 'grp-h' }, h('b', null, g.name)));
-        body.push(h('div', null, list.map(({ hb, st, tr }) => {
-          const v = st.impact[ms], series = tr.map((x) => x[ms]), worse = ms === 'stress';
-          const col = v == null || Math.abs(v) < 2 ? 'var(--muted)' : (v > 0) === worse ? 'var(--stress-ink)' : 'var(--strain-ink)';
-          return h('button', { class: 'hrow tap', onclick: () => App.open('habit', { id: hb.id, date }), 'aria-label': `${hb.name}: ${v == null ? 'not enough data yet' : fmtSigned(v, 0, mUnit) + ' ' + mName}. Open details` },
-            h('span', { style: { minWidth: 0 } }, h('b', null, hb.name), h('span', { class: 's' }, v == null ? `${st.nYes} yes, ${st.nNo} no so far` : `${st.nYes} days with, ${st.nNo} without`)),
-            series.filter((x) => x != null).length >= 2 ? Charts.sparkline(series, { zero: worse ? { pos: 'var(--stress)', neg: 'var(--strain)', min: 8 } : { pos: 'var(--strain)', neg: 'var(--stress)', min: ms === 'hrv' ? 10 : 8 }, w: 72, h: 30 }) : h('span'),
-            h('span', { class: 'y', style: { color: col } }, v == null ? '–' : fmtSigned(v, 0, mUnit)), icon('chevR'));
-        })));
-      }
+      const ms = App.ui.habitMeasure || 'recovery', M = MEASURES[ms];
+      const effs = C.habits.map((hb) => ({ hb, f: C.habitEffect(hb.id, date, ms) }));
+      const any = effs.some((x) => x.f.est != null && x.f.label !== 'few');
+      const rank = { clear: 0, likely: 1 };
+      const top = effs.filter((x) => shown(x.f)).sort((a, b) => rank[a.f.label] - rank[b.f.label] || Math.abs(b.f.est) - Math.abs(a.f.est));
+      const rest = effs.filter((x) => !shown(x.f) && x.f.label !== 'few');
+      const scale = Math.max(M.unit === '%' ? 10 : 8, ...top.map((x) => Math.max(Math.abs(x.f.lo80), Math.abs(x.f.hi80))));
+      const rows = top.map(({ hb, f }) => h('button', { class: 'hrow eff tap', onclick: () => App.open('habit', { id: hb.id, date }),
+        'aria-label': `${hb.name}: ${E.EFFECT_LABELS[f.label]}, ${fmtSigned(f.est, 0, M.unit)} ${M.name}, likely range ${effRange(f, M.unit)}. Open details` },
+        h('span', { style: { minWidth: 0 } }, h('b', null, hb.name), h('span', { class: 's' }, effPill(f), effRange(f, M.unit))),
+        effBar(f, scale, M.worse),
+        h('span', { class: 'y', style: { color: effColor(f, M.worse) } }, effNum(f.est, M.unit)), icon('chevR')));
       put(el,
-        h('div', { class: 'card-title' }, h('h2', null, `What moves your ${mName}`), h('button', { class: 'link', onclick: () => App.open('tracker', { date }) }, 'Tracker', icon('chevR'))),
+        h('div', { class: 'card-title' }, h('h2', null, `What goes with your ${M.name}`), h('button', { class: 'link', onclick: () => App.open('tracker', { date }) }, 'Tracker', icon('chevR'))),
         any ? seg([['recovery', 'Recovery'], ['sleep', 'Sleep'], ['hrv', 'HRV'], ['stress', 'Stress']], ms, (v) => { App.ui.habitMeasure = v; App.saveUi(); draw(); }, { label: 'Measure', cls: 'small' }) : null,
-        any ? h('p', { class: 'small muted', style: { marginTop: '10px' } }, `${ms === 'stress' ? 'Stress on days with each habit' : 'The morning after days with each habit'} vs days without, over the last 90 days${checkins ? ` (${plural(checkins, 'day')} logged)` : ''}. Lines show how each effect moved over 6 months.`) : null,
-        any ? h('div', null, body) : h('div', null, h('p', { class: 'small ink2', style: { lineHeight: 1.55 } }, checkins ? 'Each habit needs at least 3 yes and 3 no days before an effect shows. Keep doing the morning check-in.' : 'Answer the 20-second morning check-in for a couple of weeks. Then this shows which habits lift or drag your recovery, sleep and HRV, and how that changes over time.'),
+        any ? h('p', { class: 'small muted', style: { marginTop: '10px' } }, `${ms === 'stress' ? 'Stress on days with each habit' : 'The morning after days with each habit'} vs days without, last 90 days${checkins ? ` (${plural(checkins, 'day')} logged)` : ''}, allowing for weekends, training load and exam days. Bars show the likely range.`) : null,
+        any ? (rows.length ? h('div', null, rows) : h('p', { class: 'small ink2', style: { marginTop: '10px' } }, `Nothing stands out for ${M.name} yet. Every habit is still within the range of normal day-to-day swings.`)) : null,
+        any && rest.length ? h('div', { class: 'eff-rest' }, h('span', { class: 'xs muted', style: { fontWeight: 750 } }, 'Not clear yet'),
+          h('div', { class: 'chips wrap small' }, rest.map(({ hb }) => h('button', { class: 'chip', onclick: () => App.open('habit', { id: hb.id, date }) }, E.habitShort(hb))))) : null,
+        any ? null : h('div', null, h('p', { class: 'small ink2', style: { lineHeight: 1.55 } }, checkins ? `Each habit needs at least ${E.EFFECT_MIN} days with and ${E.EFFECT_MIN} without before it gets an estimate. Keep doing the morning check-in.` : 'Answer the 20-second morning check-in for a couple of weeks. Then this shows which habits go with better or worse recovery, sleep and HRV, and how sure that is.'),
           Store.canWrite ? h('button', { class: 'btn sm', style: { marginTop: '12px' }, onclick: () => App.open('checkin', { date: new Date().getHours() < 17 ? addDays(C.todayStr, -1) : C.todayStr }) }, icon('clipboard'), 'Start a check-in') : null),
-        any ? h('div', { style: { marginTop: '10px' } }, legend(['Helps', 'var(--strain)', 'ln'], ['Hurts', 'var(--stress)', 'ln'])) : null);
-      el.setAttribute('aria-label', `What moves your ${mName}`);
+        rows.length ? h('div', { style: { marginTop: '10px' } }, legend(['Clear', 'var(--ink)', 'dot'], ['Likely', 'var(--ink-2)', 'half'], ['Better', 'var(--strain)'], ['Worse', 'var(--stress)'])) : null);
+      el.setAttribute('aria-label', `What goes with your ${M.name}`);
     };
     draw();
     return el;
   }
+
+  // ---------- experiments: the running one, or the last result ----------
+  function expTitle(hb, target) {
+    const PH = { late_meal: ['No food within 2 h of bed', 'Eat within 2 h of bed'], late_study: ['No studying or work late', 'Study late'], caffeine_late: ['No caffeine after 2 pm', 'Caffeine after 2 pm'], screens_bed: ['No screens in bed', 'Screens in bed'] };
+    const n = (hb?.name || 'this habit');
+    if (PH[hb?.id]) return PH[hb.id][target ? 1 : 0];
+    return target ? `${n} every day` : `No ${n[0].toLowerCase() + n.slice(1)}`;
+  }
+  T.expTitle = expTitle;
+  function experimentCard(C, ex) {
+    const hb = C.habits.find((x) => x.id === ex.habit) || E.HABIT_CATALOG.find((x) => x.id === ex.habit) || { id: ex.habit, name: 'Habit' };
+    const M = MEASURES[ex.measure];
+    const head = ex.status === 'done' ? 'Experiment finished' : ex.status === 'planned' ? `Starts ${U.fmtShort(ex.from)}` : `Day ${ex.day} of ${ex.total}`;
+    const res = ex.est != null && ex.n1 >= 3 ? `${M.title} ${fmtSigned(ex.est, 0, M.unit)} vs the 4 weeks before` : ex.status === 'planned' ? 'Two weeks, compared with the four before' : 'A result shows after 3 days';
+    return h('button', { class: 'card exp-card tap', onclick: () => App.open('experiment', { id: ex.id }), 'aria-label': `Experiment: ${expTitle(hb, ex.target)}. ${head}. ${res}. Open` },
+      h('span', { class: 'eyebrow', style: { color: 'var(--hrv-ink)' } }, icon('flask'), head),
+      h('span', { class: 't' }, expTitle(hb, ex.target)),
+      h('span', { class: 'meter-row' }, h('span', { class: 'meter', style: { '--c': 'var(--hrv)', height: '6px', flex: 1 } }, h('span', { class: 'meter-fill', style: { display: 'block', width: (Math.min(ex.day, ex.total) / ex.total) * 100 + '%' } })),
+        h('span', { class: 'xs muted', style: { fontWeight: 750 } }, ex.answered ? `kept ${ex.kept} of ${ex.answered}` : 'not logged yet')),
+      h('span', { class: 's' }, res, ex.est != null && ex.n1 >= 3 ? [' · ', effPill(ex)] : null), icon('chevR'));
+  }
+  T.experimentCard = experimentCard;
+  /** The running experiment, or one that finished in the last two weeks. */
+  function currentExperiment(C) {
+    const all = C.experiments().filter((x) => x.status !== 'cancelled');
+    return all.find((x) => x.status === 'running' || x.status === 'planned') || all.filter((x) => x.status === 'done' && U.daysBetween(x.ended || x.to, C.todayStr) <= 14).pop() || null;
+  }
+  T.currentExperiment = currentExperiment;
 
   // ---------- health age: the number, how it moved, and what moves it, grouped ----------
   function healthAgeCard(C, date) {
@@ -5881,7 +6100,8 @@ const Tabs = (() => {
           h('div', { class: 'grow' }, h('b', { style: { display: 'block', fontSize: 'calc(15.5 * var(--fs))', fontWeight: 800 } }, `Your week ${isoWeek(date)} report is ready`),
             h('span', { style: { display: 'block', fontSize: 'calc(13 * var(--fs))', color: 'var(--claude)' } }, (bits.length ? bits.join(', ') + '. ' : '') + 'Read it with Claude.')), icon('chevR'))));
     }
-    out.push(healthAgeCard(C, date), baselinesCard(C, date), lazy('habits', () => habitsCard(C, date), 900), lazy('drivers', () => stressDriversCard(C, date), 420));
+    const ex = currentExperiment(C);
+    out.push(healthAgeCard(C, date), baselinesCard(C, date), ex ? experimentCard(C, ex) : null, lazy('habits', () => habitsCard(C, date), 700), lazy('drivers', () => stressDriversCard(C, date), 420));
     out.push(lazy('body', () => bodyCard(C, date), 420), lazy('sleepTiming', () => sleepTimingCard(C, date), 380));
     // data
     const st = Store.state();
@@ -6348,13 +6568,19 @@ const Pages = {};
       const wk = Tabs.DAYS3.map((dn, i) => ({ label: dn, full: DAYS_PL[i], v: prof.byWeekday[i], color: prof.byWeekday[i] != null ? Tabs.stressFill(prof.byWeekday[i]) : null, tip: prof.byWeekday[i] != null ? `<b>${DAYS_PL[i]}</b><br>Stress ${Math.round(prof.byWeekday[i])} on average, ${plural(prof.nWeekday[i], 'day')}` : null }));
       const wkVals = prof.byWeekday.filter((v) => v != null);
       out.push(cardT('By day of the week', null, Charts.bars({ items: wk, height: 140, yMax: 75, levels: [0, 25, 50, 75], fmt: (v) => String(Math.round(v)), ref: wkVals.length ? U.mean(wkVals) : null, refLabel: wkVals.length ? `avg ${Math.round(U.mean(wkVals))}` : '', caption: 'Average daytime stress by day of the week' })));
-      // habits that go with more or less stress the same day
-      const hs = C.habits.map((hb) => ({ hb, st: C.habitImpact(hb.id, date) })).filter((x) => x.st.impact.stress != null).sort((a, b) => Math.abs(b.st.impact.stress) - Math.abs(a.st.impact.stress)).slice(0, 5);
-      if (hs.length) out.push(cardT('Habits and stress', h('button', { class: 'link', onclick: () => App.open('tracker', { date }) }, 'Tracker', icon('chevR')),
-        h('p', { class: 'small muted', style: { marginTop: '-6px' } }, 'Average stress on days with each habit vs days without, last 90 days.'),
-        h('div', null, hs.map(({ hb, st }) => { const v = st.impact.stress; return h('button', { class: 'hrow tap', onclick: () => { App.ui.habitMeasure = 'stress'; App.saveUi(); App.open('habit', { id: hb.id, date }); } },
-          h('span', { style: { minWidth: 0 } }, h('b', null, hb.name), h('span', { class: 's' }, `${st.nYes} days with, ${st.nNo} without`)), h('span'),
-          h('span', { class: 'y', style: { color: Math.abs(v) < 2 ? 'var(--muted)' : v > 0 ? 'var(--stress-ink)' : 'var(--good-ink)' } }, fmtSigned(v, 0)), icon('chevR')); }))));
+      // habits that go with more or less stress the same day: clear and likely only
+      const hsAll = C.habits.map((hb) => ({ hb, f: C.habitEffect(hb.id, date, 'stress') })).filter((x) => x.f.label !== 'few');
+      const hs = hsAll.filter((x) => Tabs.eff.shown(x.f)).sort((a, b) => Math.abs(b.f.est) - Math.abs(a.f.est)).slice(0, 5);
+      if (hsAll.length) {
+        const scale = Math.max(8, ...hs.map((x) => Math.max(Math.abs(x.f.lo80), Math.abs(x.f.hi80))));
+        out.push(cardT('Habits and stress', h('button', { class: 'link', onclick: () => App.open('tracker', { date }) }, 'Tracker', icon('chevR')),
+          h('p', { class: 'small muted', style: { marginTop: '-6px' } }, 'Stress on days with each habit vs days without, last 90 days, allowing for weekends, training load and exams.'),
+          hs.length ? h('div', null, hs.map(({ hb, f }) => h('button', { class: 'hrow eff tap', onclick: () => { App.ui.habitMeasure = 'stress'; App.saveUi(); App.open('habit', { id: hb.id, date }); } },
+            h('span', { style: { minWidth: 0 } }, h('b', null, hb.name), h('span', { class: 's' }, Tabs.eff.pill(f), Tabs.eff.range(f))), Tabs.eff.bar(f, scale, true),
+            h('span', { class: 'y', style: { color: Tabs.eff.color(f, true) } }, fmtSigned(f.est, 0)), icon('chevR'))))
+            : h('p', { class: 'small ink2' }, 'No habit clearly goes with more or less stress yet.'),
+          hsAll.length > hs.length ? h('p', { class: 'note', style: { marginTop: '8px' } }, `Not clear yet: ${hsAll.filter((x) => !Tabs.eff.shown(x.f)).map((x) => E.habitShort(x.hb)).join(', ')}.`) : null));
+      }
       out.push(h('p', { class: 'note' }, 'These are patterns in your own data, not proof of cause. A busy week can raise stress during everything in it.'));
       return view(out);
     },
@@ -6375,7 +6601,8 @@ const Pages = {};
         h('div', { class: 'eyebrow' }, `Average stress during ${name.toLowerCase()}`),
         h('div', { class: 'row base', style: { gap: '10px', marginTop: '4px' } }, h('span', { class: 'huge-num', style: { color: r.avg != null ? Tabs.stressInk(r.avg) : 'var(--muted)' } }, r.avg != null ? Math.round(r.avg) : '–'),
           lvl ? h('span', { class: 'small', style: { fontWeight: 800, color: Tabs.stressInk(r.avg) } }, lvl) : null),
-        r.diff != null ? h('p', { class: 'small ink2', style: { marginTop: '4px' } }, `${Math.abs(r.diff) < 3 ? 'About the same as' : `${Math.round(Math.abs(r.diff))} ${r.diff > 0 ? 'above' : 'below'}`} the time you didn’t tag (${Math.round(sum.base)}).`)
+        r.diff != null ? h('p', { class: 'small ink2', style: { marginTop: '4px' } }, `${Math.abs(r.diff) < 3 ? 'About the same as' : `${Math.round(Math.abs(r.diff))} ${r.diff > 0 ? 'above' : 'below'}`} the time you didn’t tag (${Math.round(sum.base)}).`) : null,
+        r.eff && r.eff.label !== 'few' ? h('p', { class: 'small', style: { marginTop: '6px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } }, Tabs.eff.pill(r.eff), h('span', { class: 'muted' }, `likely ${Tabs.eff.range(r.eff)} · from ${plural(r.eff.n1, 'session')} and ${plural(r.eff.n0, 'day')} of untagged time`))
           : h('p', { class: 'small ink2', style: { marginTop: '4px' } }, 'You’re mostly moving during it, so there’s little still time to score.'),
         h('div', { class: 'grid3', style: { marginTop: '14px' } }, tile2('Time', Tabs.fmtTime(r.minutes), null, plural(r.sessions, 'time')),
           tile2('High stress', r.highShare != null ? Math.round(r.highShare * 100) : null, '%', `untagged ${sum.baseHigh != null ? Math.round(sum.baseHigh * 100) + '%' : '–'}`),
@@ -6543,7 +6770,7 @@ const Pages = {};
         cardT(jd === C.todayStr ? 'How do you feel today?' : 'How do you feel this morning?', null, feelWrap),
         h('section', { class: 'card', style: { paddingBlock: '4px' }, 'aria-label': 'Habits' }, qs),
         field('Anything else? (optional)', notes),
-        h('p', { class: 'note' }, 'After a few weeks of answers, Health shows which habits move your recovery and sleep.'),
+        h('p', { class: 'note' }, 'After a few weeks of answers, Health shows which habits go with better or worse recovery and sleep, and how sure that is.'),
         h('div', { class: 'stickyfoot' }, h('button', { class: 'btn primary block lg', onclick: () => {
           const out = {};
           for (const k in a) if (a[k] != null && (k === 'feel' || k === 'drinks' || C.habits.some((hb) => hb.id === k))) out[k] = a[k];
@@ -6594,16 +6821,27 @@ const Pages = {};
       if (parts.length) jl.push(`${x} (${parts.join(', ')}${C.journal[x].note ? `; note: ${C.journal[x].note}` : ''})`);
     }
     if (jl.length) L.push('Check-ins: ' + jl.join('; ') + '.');
-    const imps = C.habits.map((hb) => ({ hb, st: C.habitImpact(hb.id, d) })).filter((x) => x.st.impact.recovery != null);
-    if (imps.length) L.push('Habit effects on next-morning recovery (yes minus no, points): ' + imps.map((x) => `${x.hb.name} ${x.st.impact.recovery.toFixed(0)}`).join(', ') + '.');
-    const simp = C.habits.map((hb) => ({ hb, st: C.habitImpact(hb.id, d) })).filter((x) => x.st.impact.stress != null);
-    if (simp.length) L.push('Habit effects on same-day stress (yes minus no, points; positive = more stress): ' + simp.map((x) => `${x.hb.name} ${x.st.impact.stress.toFixed(0)}`).join(', ') + '.');
+    // habit effects: adjusted, with their 80% range and label; only clear and likely ones count as findings
+    const effLine = (ms, what) => {
+      const fs = C.habits.map((hb) => ({ hb, f: C.habitEffect(hb.id, d, ms) })).filter((x) => x.f.label !== 'few');
+      if (!fs.length) return;
+      const sh = fs.filter((x) => Tabs.eff.shown(x.f)).sort((a, b) => Math.abs(b.f.est) - Math.abs(a.f.est));
+      const un = fs.filter((x) => !Tabs.eff.shown(x.f));
+      L.push(`Habit effects on ${what} (adjusted for weekends, training load and exam days; 80% range in brackets): ` + (sh.length ? sh.map((x) => `${x.hb.name} ${fmtSigned(x.f.est, 0)} [${Tabs.eff.range(x.f)}] ${x.f.label}`).join(', ') : 'none clear yet') +
+        (un.length ? `. Not clear yet, so don't present these as findings: ${un.map((x) => x.hb.name).join(', ')}` : '') + '.');
+    };
+    effLine('recovery', 'next-morning recovery (points)');
+    effLine('stress', 'same-day stress (points; positive = more stress)');
+    for (const ex of C.experiments().filter((x) => x.status !== 'cancelled' && x.status !== 'planned')) {
+      const hb = C.habits.find((x) => x.id === ex.habit) || { name: ex.habit };
+      L.push(`Experiment "${Tabs.expTitle(hb, ex.target)}" ${ex.from} to ${ex.ended || ex.to} (${ex.status}, day ${ex.day} of ${ex.total}, kept ${ex.kept} of ${ex.answered} logged days): ${ex.measure} ${ex.est != null ? `${fmtSigned(ex.est, 0)} vs the 4 weeks before [${ex.lo80 != null ? Tabs.eff.range(ex) : 'no range yet'}], ${E.EFFECT_LABELS[ex.label] || 'too early'}` : 'no result yet'}.`);
+    }
     const trk = C.habits.map((hb) => { const m = C.habitMeta(hb), t = C.habitTrack(hb.id, C.todayStr); return `${hb.name} (${m.kind === 'track' ? 'tracked only' : `${m.kind === 'build' ? 'build, goal' : 'avoid, limit'} ${m.goal}/week`}; this week ${t.thisWeek.yes} yes${m.kind !== 'track' ? `, streak ${t.streak} ${t.unit}s, best ${t.best}` : ''}; last 30 days ${t.yes30} yes of ${t.ans30} logged)`; });
     if (trk.length && C.habits.some((hb) => C.habitTrack(hb.id, C.todayStr).ans30)) L.push('Habit tracker: ' + trk.join('; ') + '.');
     const acts = C.activitiesOn(d);
     if (acts.length) L.push(`Activities on the selected day: ` + acts.map((x) => `${x.name} ${x.start}-${x.end}${x.repeats ? ' (weekly)' : ''}`).join(', ') + '.');
     const asum = C.activitySummary(d, 30);
-    if (asum.rows.length) L.push(`Stress by activity over the last 30 days (average stress while awake and still; untagged time ${asum.base != null ? Math.round(asum.base) : '-'}): ` + asum.rows.map((r) => `${r.name} ${r.avg != null ? Math.round(r.avg) : 'not scored'}${r.diff != null ? ` (${r.diff > 0 ? '+' : ''}${Math.round(r.diff)} vs untagged)` : ''}, ${Math.round(r.minutes / 60)} h over ${r.sessions} sessions, ${r.highShare != null ? Math.round(r.highShare * 100) : '-'}% high`).join('; ') + '.');
+    if (asum.rows.length) L.push(`Stress by activity over the last 30 days (average stress while awake and still; untagged time ${asum.base != null ? Math.round(asum.base) : '-'}): ` + asum.rows.map((r) => `${r.name} ${r.avg != null ? Math.round(r.avg) : 'not scored'}${r.diff != null ? ` (${r.diff > 0 ? '+' : ''}${Math.round(r.diff)} vs untagged${r.eff && r.eff.label !== 'few' ? `, ${E.EFFECT_LABELS[r.eff.label].toLowerCase()}` : ''})` : ''}, ${Math.round(r.minutes / 60)} h over ${r.sessions} sessions, ${r.highShare != null ? Math.round(r.highShare * 100) : '-'}% high`).join('; ') + '.');
     const sched = (C.schedule || []).filter((x) => !x.until || x.until >= C.todayStr);
     if (sched.length) L.push('Weekly schedule: ' + sched.map((x) => `${x.type === 'other' ? x.label : E.actType(x.type).name} ${Tabs.repeatLower(x.days)} ${x.start}-${x.end}`).join('; ') + '.');
     const ld = C.load(d);
@@ -6870,6 +7108,67 @@ ${ctx}`;
     return out.sort((a, b) => b[0] - a[0]).slice(0, 4).map(([, ic, html]) => h('div', { class: 'insight' }, icon(ic), h('span', { html })));
   }
 
+  // =============== EXPERIMENT ===============
+  Pages.experiment = {
+    render(C, args) {
+      setTint('#1aa394', '#8f7bf0');
+      const ex = C.experiment(args.id);
+      if (!ex) return view(pageHead('Experiment'), card(emptyState('flask', 'Experiment not found', 'It may have been removed.')));
+      App.ui.expSeen = { ...(App.ui.expSeen || {}), [ex.id]: ex.status === 'done' }; App.saveUi();
+      const hb = C.habits.find((x) => x.id === ex.habit) || E.HABIT_CATALOG.find((x) => x.id === ex.habit) || { id: ex.habit, name: 'Habit' };
+      const M = Tabs.eff.MEASURES[ex.measure], today = C.todayStr, title = Tabs.expTitle(hb, ex.target);
+      const save = (list, msg, prev) => { Store.setProfile({ experiments: list }); if (msg) toast(msg, prev ? { action: 'Undo', onAction: () => Store.setProfile({ experiments: prev }) } : {}); };
+      const all = () => Store.state().profile?.experiments || [];
+      const out = [pageHead('Experiment', { sub: title })];
+      // progress: one mark a day
+      const end = ex.ended || ex.to, cells = [];
+      for (let x = ex.from; x <= ex.to; x = addDays(x, 1)) {
+        const a = C.journal[x]?.a?.[ex.habit], st = x > end || x > today ? 'future' : a == null ? 'none' : a === ex.target ? 'kept' : 'slip';
+        cells.push(h('i', { class: 'xd ' + st, title: `${U.fmtDay(x)}: ${{ future: 'to come', none: 'not logged', kept: 'kept', slip: 'slipped' }[st]}`, style: x === today ? { boxShadow: '0 0 0 2px var(--ink-2)' } : null }));
+      }
+      const head = ex.status === 'done' ? 'Finished' : ex.status === 'planned' ? `Starts ${U.fmtDayLong(ex.from)}` : ex.status === 'cancelled' ? 'Stopped' : `Day ${ex.day} of ${ex.total}`;
+      const a = C.journal[today]?.a?.[ex.habit];
+      const b = (label, v) => h('button', { type: 'button', 'aria-pressed': String(a === v), disabled: !Store.canWrite, onclick: () => Store.setJournal(today, ex.habit, a === v ? null : v) }, label);
+      out.push(h('section', { class: 'card', 'aria-label': 'Progress' },
+        h('div', { class: 'eyebrow', style: { color: 'var(--hrv-ink)' } }, icon('flask'), head),
+        h('h3', { style: { fontSize: 'calc(21 * var(--fs))', fontWeight: 800, marginTop: '6px' } }, title),
+        h('div', { class: 'xdays', role: 'img', 'aria-label': `${ex.kept} of ${ex.answered} logged days kept` }, cells),
+        h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '6px' } }, h('span', { class: 'xs muted', style: { fontWeight: 750 } }, `${U.fmtShort(ex.from)} – ${U.fmtShort(ex.to)}`), h('span', { class: 'xs ink2', style: { fontWeight: 750 } }, ex.answered ? `kept ${ex.kept} of ${plural(ex.answered, 'day')} logged` : 'nothing logged yet')),
+        h('div', { style: { marginTop: '10px' } }, legend(['Kept', 'var(--good)', 'dot'], ['Slipped', 'var(--stress)'], ['Not logged', 'var(--track)', 'dot'])),
+        ex.status === 'running' && Store.canWrite ? h('div', { class: 'hlog', style: { marginTop: '6px', paddingBottom: 0 } }, h('div', { class: 'tx' }, h('b', null, hb.name + ' today'), h('span', { class: 's' }, a == null ? 'Not logged yet' : a === ex.target ? 'Kept' : 'Slipped')),
+          h('div', { class: 'yn', role: 'group', 'aria-label': `${hb.name} today` }, b('No', 0), b('Yes', 1))) : null));
+      // the result so far
+      if (ex.status !== 'planned') {
+        const has = ex.est != null && ex.n1 >= 3;
+        const better = has && (ex.est > 0) !== M.worse;
+        const verdict = !has ? `A first number shows after 3 days with ${M.name} data.` : ex.status !== 'done' ? `Early days: with ${plural(ex.n1, 'day')} in, the range is still wide. The label firms up by the end.`
+          : ex.label === 'clear' ? (better ? `It helped: your ${M.name} was clearly better. Worth keeping.` : `Your ${M.name} was clearly worse. Not what you hoped, and still worth knowing.`)
+          : ex.label === 'likely' ? `Probably ${better ? 'helped' : 'made it worse'}. Two more weeks would make it clear.`
+          : `No clear difference in your ${M.name} over two weeks. ${ex.small ? 'Any effect is small.' : 'Another two weeks might show one.'}`;
+        const scale = has ? Math.max(Math.abs(ex.lo80 ?? ex.est), Math.abs(ex.hi80 ?? ex.est), ex.floor * 2) * 1.1 : 10;
+        out.push(h('section', { class: 'card', 'aria-label': 'Result' },
+          h('div', { class: 'eyebrow' }, `${M.when}, vs the 4 weeks before`),
+          h('div', { class: 'row base', style: { gap: '10px', marginTop: '4px', flexWrap: 'wrap' } }, h('span', { class: 'huge-num', style: { color: has ? Tabs.eff.color(ex, M.worse) : 'var(--ink)' } }, has ? Tabs.eff.num(ex.est, M.unit) : '–'),
+            has && ex.lo80 != null ? Tabs.eff.pill(ex) : null),
+          has && ex.lo80 != null ? h('div', { style: { marginTop: '10px' } }, Tabs.eff.bar(ex, scale, M.worse), h('p', { class: 'xs ink2', style: { textAlign: 'center', fontWeight: 750, marginTop: '4px' } }, `likely ${Tabs.eff.range(ex, M.unit)}${M.word ? ' ' + M.word : ''}`)) : null,
+          h('p', { class: 'small ink2', style: { marginTop: '10px', lineHeight: 1.5 } }, verdict),
+          has ? h('p', { class: 'note', style: { marginTop: '8px' } }, `${plural(ex.n1, 'day')} in the experiment against ${plural(ex.n0, 'day')} before it, allowing for ${ex.adjusted.length ? ex.adjusted.join(', ').replace(/, ([^,]*)$/, ' and $1') : 'nothing else yet'}. Every day counts, kept or not.`) : null));
+      }
+      const btns = [];
+      if (Store.canWrite && (ex.status === 'running' || ex.status === 'planned')) {
+        if (ex.status === 'running' && ex.day > 3) btns.push(h('button', { class: 'btn', onclick: () => { const prev = all(); save(prev.map((x) => (x.id === ex.id ? { ...x, ended: addDays(today, -1) } : x)), 'Experiment ended', prev); } }, 'End now'));
+        btns.push(h('button', { class: 'btn ghost', onclick: () => confirmSheet({ title: 'Stop this experiment?', text: 'It’s removed along with its result. Your habit answers stay.', confirm: 'Stop', danger: true,
+          onConfirm: () => { const prev = all(); save(prev.filter((x) => x.id !== ex.id), 'Experiment stopped', prev); App.back(); } }) }, 'Stop'));
+      } else if (Store.canWrite && ex.status === 'done') {
+        btns.push(h('button', { class: 'btn', onclick: () => Sheet.experiment(hb, ex.measure) }, icon('repeat'), 'Run it again'));
+        btns.push(h('button', { class: 'btn ghost', onclick: () => { const prev = all(); save(prev.filter((x) => x.id !== ex.id), 'Experiment removed', prev); App.back(); } }, 'Remove'));
+      }
+      if (btns.length) out.push(h('div', { class: 'btn-row' }, btns));
+      out.push(h('p', { class: 'note' }, 'An experiment compares you with you: the same weekdays, training and exam allowances as the habit effects, just with you changing one thing on purpose. It’s still not a lab trial, so a cold or a big week can sway it.'));
+      return view(out);
+    },
+  };
+
   // =============== HABIT TRACKER ===============
   Pages.tracker = {
     render(C, args, entry) {
@@ -6881,7 +7180,7 @@ ${ctx}`;
       const mon = addDays(sel, -wdOf(sel)), monNow = addDays(today, -wdOf(today));
       const habits = C.habits, canLog = Store.canWrite;
       const head = pageHead('Habits', { sub: 'Daily log, streaks and trends', right: canLog ? h('button', { class: 'link', onclick: () => App.open('habits') }, 'Edit') : null });
-      if (!habits.length) return view(head, card(emptyState('check', 'No habits yet', 'Pick a few to build or cut back on. Log them with a tap each day, and the tracker shows your streaks and what each one does to your stress and recovery.',
+      if (!habits.length) return view(head, card(emptyState('check', 'No habits yet', 'Pick a few to build or cut back on. Log them with a tap each day, and the tracker shows your streaks and what each one goes with in your stress and recovery.',
         canLog ? h('button', { class: 'btn primary', onclick: () => App.open('habits') }, icon('plus'), 'Choose habits') : null)));
       const go = (d) => { entry.sel = d > today ? today : d; App.render(); };
       const info = habits.map((hb) => { const meta = C.habitMeta(hb); const now = C.habitTrack(hb.id, today); const wk = C.habitTrack(hb.id, addDays(mon, 6) > today ? today : addDays(mon, 6)).thisWeek; return { hb, meta, now, wk }; });
@@ -6947,13 +7246,14 @@ ${ctx}`;
       out.push(cardT('Consistency', '12 weeks', heat, h('div', { style: { marginTop: '12px' } }, legend(['Goal met', 'var(--good)'], ['Part way', 'color-mix(in srgb, var(--good) 40%, transparent)'], ['Over limit', 'var(--stress)'], goals.length < info.length ? ['Tracked', 'var(--sleep)'] : null))));
       const ins = trackerInsights(C, today);
       if (ins.length) out.push(cardT('Trends', null, ins));
-      // effects on recovery and stress
-      const eff = info.map(({ hb }) => ({ hb, st: C.habitImpact(hb.id, today) })).map((x) => ({ ...x, r: x.st.impact.recovery, s: x.st.impact.stress }))
-        .filter((x) => x.r != null || x.s != null).sort((a, b) => Math.max(Math.abs(b.r ?? 0), Math.abs(b.s ?? 0)) - Math.max(Math.abs(a.r ?? 0), Math.abs(a.s ?? 0))).slice(0, 5);
+      // effects on recovery and stress: only the clear and likely ones
+      const eff = info.map(({ hb }) => ({ hb, r: C.habitEffect(hb.id, today, 'recovery'), s: C.habitEffect(hb.id, today, 'stress') }))
+        .filter((x) => Tabs.eff.shown(x.r) || Tabs.eff.shown(x.s))
+        .sort((a, b) => Math.max(Tabs.eff.shown(b.r) ? Math.abs(b.r.est) : 0, Tabs.eff.shown(b.s) ? Math.abs(b.s.est) : 0) - Math.max(Tabs.eff.shown(a.r) ? Math.abs(a.r.est) : 0, Tabs.eff.shown(a.s) ? Math.abs(a.s.est) : 0)).slice(0, 5);
       if (eff.length) {
-        const part = (label, v, worse) => (v == null ? null : h('span', { style: { color: Math.abs(v) < 2 ? 'var(--muted)' : (v > 0) === worse ? 'var(--stress-ink)' : 'var(--good-ink)', fontWeight: 750 } }, `${label} ${fmtSigned(v, 0)}`));
+        const part = (label, f, worse) => (!Tabs.eff.shown(f) ? null : h('span', { style: { color: Tabs.eff.color(f, worse), fontWeight: 750 } }, `${label} ${fmtSigned(f.est, 0)}${f.label === 'likely' ? ' (likely)' : ''}`));
         out.push(cardT('Biggest effects', 'last 90 days',
-          h('p', { class: 'small muted', style: { marginTop: '-6px' } }, 'Days with each habit vs days without: stress that day and recovery the next morning.'),
+          h('p', { class: 'small muted', style: { marginTop: '-6px' } }, 'Only what’s clear or likely: stress that day and recovery the next morning, allowing for weekends, training load and exams.'),
           h('div', null, eff.map(({ hb, r, s: sv }) => h('button', { class: 'arow tap', style: { gridTemplateColumns: 'minmax(0, 1fr) auto' }, onclick: () => App.open('habit', { id: hb.id, date: today }) },
             h('span', { style: { minWidth: 0, display: 'block' } }, h('b', null, hb.name), h('span', { class: 's', style: { display: 'flex', gap: '10px' } }, part('Recovery', r, false), part('Stress', sv, true))), icon('chevR'))))));
       }
@@ -7042,39 +7342,45 @@ ${ctx}`;
             refs: meta.goal != null ? [{ v: meta.goal, label: meta.kind === 'avoid' ? `limit ${meta.goal}` : `goal ${meta.goal}` }] : [], levels: [{ v: 0, label: '0' }, { v: 3.5, label: '' }, { v: 7, label: '7' }], yMin: 0, yMax: 7, gap: 2, xEvery: 8, height: 140, fmt: (v) => String(Math.round(v)), caption: `${hb.name}: days per week` }),
           story ? h('p', { class: 'small ink2', style: { marginTop: '10px', lineHeight: 1.55 } }, story) : null));
       }
-      // what it does
-      const st = C.habitImpact(hb.id, date), trn = C.habitTrend(hb.id, date, 26, 63);
-      const ms = App.ui.habitMeasure || 'recovery';
-      const MS = { recovery: ['Recovery', 'points', '', (v) => Math.round(v) + '%'], sleep: ['Sleep score', 'points', '', (v) => String(Math.round(v))], hrv: ['HRV', '%', '%', (v) => Math.round(v) + ' ms'], stress: ['Stress', 'points', '', (v) => String(Math.round(v))] };
-      const [mName, mWord, mUnit, mFmt] = MS[ms];
-      const worse = ms === 'stress'; // more stress is worse, so its colors flip
-      const v = st.impact[ms], [withV, withoutV] = st.means[ms];
-      const series = trn.map((x) => x[ms]);
+      // what it goes with: the adjusted estimate, its range and how sure it is
+      const ms = App.ui.habitMeasure || 'recovery', M = Tabs.eff.MEASURES[ms];
+      const f = C.habitEffect(hb.id, date, ms), trn = C.habitEffectTrend(hb.id, date, ms);
+      const series = trn.map((x) => x.v);
       let story = null;
       const have = series.filter((x) => x != null);
       if (have.length >= 10) {
         const early = U.mean(have.slice(0, 8)), late = U.mean(have.slice(-8));
-        const good0 = worse ? -early : early, good1 = worse ? -late : late, dl = good1 - good0, big = ms === 'hrv' ? 3 : 2.5;
-        const lead = Math.abs(dl) < big ? 'About the same all along' : dl < 0 ? (good1 < 0 ? 'Hurting more lately' : 'Helping less lately') : good1 > 0 ? 'Helping more lately' : 'Hurting less lately';
-        story = `${lead}: around ${fmtSigned(early, 0, mUnit)} earlier, ${fmtSigned(late, 0, mUnit)} over the last two months.`;
+        const good0 = M.worse ? -early : early, good1 = M.worse ? -late : late, dl = good1 - good0, big = ms === 'hrv' ? 3 : 2.5;
+        const lead = Math.abs(dl) < big ? 'About the same all along' : dl < 0 ? (good1 < 0 ? 'Going with worse lately' : 'Less of a lift lately') : good1 > 0 ? 'More of a lift lately' : 'Less of a drag lately';
+        story = `${lead}: around ${fmtSigned(early, 0, M.unit)} earlier, ${fmtSigned(late, 0, M.unit)} over the last two months.`;
       }
-      const col = v == null || Math.abs(v) < 2 ? 'var(--ink)' : (v > 0) === worse ? 'var(--stress-ink)' : 'var(--strain-ink)';
-      const yesLbl = ms === 'stress' ? 'On yes days' : 'After yes days', noLbl = ms === 'stress' ? 'On no days' : 'After no days', unitN = ms === 'stress' ? 'day' : 'morning';
-      out.push(h('div', { class: 'section-title' }, h('h2', null, 'What it does')),
+      const yesLbl = ms === 'stress' ? 'On days with it' : 'After days with it', noLbl = ms === 'stress' ? 'On days without' : 'After days without', unitN = ms === 'stress' ? 'day' : 'morning';
+      const sure = { clear: 'Clear: even the cautious end of the range is a real difference.', likely: 'Likely: the range sits on one side of zero, but a few more weeks could still move it.', unclear: 'Not clear yet: the range still covers no difference at all.', few: '' }[f.label];
+      const scale = f.lo80 != null ? Math.max(Math.abs(f.lo80), Math.abs(f.hi80), f.floor * 2) * 1.1 : 10;
+      const exNow = C.experiments().find((x) => x.habit === hb.id && (x.status === 'running' || x.status === 'planned' || (x.status === 'done' && U.daysBetween(x.ended || x.to, today) <= 30)));
+      const busy = C.activeExperiment();
+      out.push(h('div', { class: 'section-title' }, h('h2', null, 'What it goes with')),
         seg([['recovery', 'Recovery'], ['sleep', 'Sleep'], ['hrv', 'HRV'], ['stress', 'Stress']], ms, (x) => { App.ui.habitMeasure = x; App.saveUi(); App.render(); }, { label: 'Measure', cls: 'solid' }),
         h('section', { class: 'card' },
-          h('div', { class: 'eyebrow' }, `${ms === 'stress' ? 'Same-day stress' : `Next-morning ${mName.toLowerCase()}`}, last 90 days`),
-          h('div', { class: 'row base', style: { gap: '10px', marginTop: '4px' } }, h('span', { class: 'huge-num', style: { color: col } }, v == null ? '–' : fmtSigned(v, 0, mUnit)), v != null ? h('span', { class: 'small muted', style: { fontWeight: 700 } }, ms === 'hrv' ? 'vs days without' : `${mWord} vs days without`) : null),
-          withV != null && withoutV != null ? h('div', { class: 'grid2', style: { marginTop: '14px' } }, tile2(yesLbl, mFmt(withV), null, plural(st.nYes, unitN)), tile2(noLbl, mFmt(withoutV), null, plural(st.nNo, unitN)))
-            : h('p', { class: 'note', style: { marginTop: '8px' } }, `Needs at least 3 yes and 3 no days (${st.nYes} yes, ${st.nNo} no so far).`)),
-        cardT('How the effect has moved', '6 months',
-          series.some((x) => x != null) ? Charts.trend({ labels: trn.map((x) => ({ label: U.fmtShort(x.date), full: `9 weeks to ${U.fmtShort(x.date)}` })), series: [{ values: series, color: 'var(--strain)', width: 2.4, name: 'Effect', dots: 'all', r: 2.2, dotColor: (x) => ((x >= 0) === worse ? 'var(--stress)' : 'var(--strain)') }],
-            zero: worse ? { pos: 'var(--stress)', neg: 'var(--strain)' } : { pos: 'var(--strain)', neg: 'var(--stress)' }, height: 160, fmt: (x) => fmtSigned(x, 0, mUnit).replace('±', ''), caption: `${hb.name} effect on ${mName.toLowerCase()} over 6 months`, xEvery: 8 })
+          h('div', { class: 'eyebrow' }, `${M.when}, last 90 days`),
+          h('div', { class: 'row base', style: { gap: '10px', marginTop: '4px', flexWrap: 'wrap' } }, h('span', { class: 'huge-num', style: { color: f.label === 'few' ? 'var(--ink)' : Tabs.eff.color(f, M.worse) } }, f.est == null || f.label === 'few' ? '–' : Tabs.eff.num(f.est, M.unit)),
+            f.label !== 'few' ? Tabs.eff.pill(f) : null),
+          f.label !== 'few' ? h('div', { style: { marginTop: '10px' } }, Tabs.eff.bar(f, scale, M.worse),
+            h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '4px' } }, h('span', { class: 'xs muted' }, fmtSigned(-scale, 0, M.unit)), h('span', { class: 'xs ink2', style: { fontWeight: 750 } }, `likely ${Tabs.eff.range(f, M.unit)}${M.word ? ' ' + M.word : ''}`), h('span', { class: 'xs muted' }, fmtSigned(scale, 0, M.unit)))) : null,
+          h('p', { class: 'small ink2', style: { marginTop: '10px', lineHeight: 1.5 } }, [sure, Tabs.eff.more(f)].filter(Boolean).join(' ')),
+          f.yesMean != null && f.noMean != null ? h('div', { class: 'grid2', style: { marginTop: '12px' } }, tile2(yesLbl, M.fmt(f.yesMean), null, plural(f.n1, unitN)), tile2(noLbl, M.fmt(f.noMean), null, plural(f.n0, unitN))) : null,
+          f.raw != null && f.est != null && f.label !== 'few' ? h('p', { class: 'note', style: { marginTop: '10px' } }, `The plain difference is ${fmtSigned(f.raw, 0, M.unit)}. Allowing for ${f.adjusted.length ? f.adjusted.join(', ').replace(/, ([^,]*)$/, ' and $1') : 'nothing else (not enough variety yet)'} makes it ${Tabs.eff.num(f.est, M.unit)}. Sleep isn’t held fixed, because habits like alcohol and late meals act through it.`) : null),
+        exNow ? Tabs.experimentCard(C, C.experiment(exNow.id)) : Store.canWrite && C.habits.some((x) => x.id === hb.id) && meta.kind !== 'track' ? h('section', { class: 'card tight' }, prow({ ic: 'flask', tone: 'hrv',
+          t: `Try two weeks: ${Tabs.expTitle(hb, meta.kind === 'build' ? 1 : 0).replace(/^No /, 'no ')}`, s: busy ? 'One experiment at a time. Finish the current one first.' : 'See what it does to you, measured against the four weeks before.',
+          onclick: busy ? () => App.open('experiment', { id: busy.id }) : () => Sheet.experiment(hb, ms) })) : null,
+        cardT('How it has moved', '6 months',
+          series.some((x) => x != null) ? Charts.trend({ labels: trn.map((x) => ({ label: U.fmtShort(x.date), full: `9 weeks to ${U.fmtShort(x.date)}` })), series: [{ values: series, color: 'var(--strain)', width: 2.4, name: 'Difference', dots: 'all', r: 2.2, dotColor: (x) => ((x >= 0) === M.worse ? 'var(--stress)' : 'var(--strain)') }],
+            zero: M.worse ? { pos: 'var(--stress)', neg: 'var(--strain)' } : { pos: 'var(--strain)', neg: 'var(--stress)' }, height: 160, fmt: (x) => fmtSigned(x, 0, M.unit).replace('±', ''), caption: `${hb.name} and ${M.name} over 6 months`, xEvery: 8 })
             : Charts.emptyChart(140, 'Shows once there are a few weeks of answers'),
-          h('div', { style: { marginTop: '8px' } }, legend(['Helps', 'var(--strain)'], ['Hurts', 'var(--stress)'])),
+          h('div', { style: { marginTop: '8px' } }, legend(['Better', 'var(--strain)'], ['Worse', 'var(--stress)'])),
           story ? h('p', { class: 'small ink2', style: { marginTop: '10px', lineHeight: 1.55 } }, story) : null,
-          h('p', { class: 'note', style: { marginTop: '6px' } }, 'Each point compares the 9 weeks before it, so one odd week doesn’t swing the line.')),
-        h('p', { class: 'note' }, 'These are patterns in your own data, not proof of cause. Busy weeks, illness and training load can travel with a habit.'));
+          h('p', { class: 'note', style: { marginTop: '6px' } }, 'Each point uses the 9 weeks before it, with the same allowances, so one odd week doesn’t swing the line. Single points carry more noise than the range above.')),
+        h('p', { class: 'note' }, 'These are patterns in your own data, not proof of cause. An experiment is the closest you get to an answer: change one thing for two weeks and compare.'));
       return view(out);
     },
   };
@@ -8331,6 +8637,31 @@ const Sheet = (() => {
         sh.close();
         save([...(prof.habitPauses || []), { from, to, why: why.value.trim() || null }], `Streaks paused ${U.fmtShort(from)} – ${U.fmtShort(to)}`);
       } }, 'Pause streaks')],
+    });
+  };
+
+  /** Start a two-week experiment: with or without a habit, measured against the four weeks before. */
+  S.experiment = (hb, ms0 = 'recovery') => {
+    const meta = E.habitMeta(hb), target = meta.kind === 'build' ? 1 : 0, today = U.today();
+    let ms = ms0, from = today;
+    const title = Tabs.expTitle(hb, target);
+    const sh = Sheets.open({
+      title: 'Two-week experiment',
+      body: [
+        h('div', { class: 'exp-title' }, icon('flask'), h('b', null, title)),
+        h('p', { class: 'ink2 small', style: { lineHeight: 1.55 } }, `For 14 days, ${target ? 'do it every day' : 'skip it every day'}. Every day counts, kept or not, so a slip can’t flatter the result. At the end you see how your ${Tabs.eff.MEASURES[ms].name} compared with the four weeks before, allowing for weekends, training load and exams, and how sure that is.`),
+        field('Start', seg([['today', 'Today'], ['tomorrow', 'Tomorrow']], 'today', (v) => { from = v === 'today' ? today : addDays(today, 1); }, { label: 'Start' })),
+        field('Measure', seg([['recovery', 'Recovery'], ['sleep', 'Sleep'], ['hrv', 'HRV'], ['stress', 'Stress']], ms, (v) => { ms = v; }, { label: 'Measure' })),
+        h('p', { class: 'note' }, 'Your morning check-in asks about it each day, and Today shows how far along you are. Keep everything else as usual if you can.'),
+      ],
+      foot: [h('button', { class: 'btn primary block', onclick: () => {
+        const list = Store.state().profile?.experiments || [];
+        const ex = { id: 'x' + U.uid(), habit: hb.id, target, from, to: addDays(from, 13), measure: ms };
+        Store.setProfile({ experiments: [...list, ex] });
+        sh.close();
+        toast(`Experiment starts ${from === today ? 'today' : 'tomorrow'}`, { action: 'Undo', onAction: () => Store.setProfile({ experiments: list }) });
+        App.open('experiment', { id: ex.id });
+      } }, 'Start the experiment')],
     });
   };
 
