@@ -46,6 +46,13 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Claims need history: changes "vs N months ago" and health-age trends say the real span and wait for 3 weeks (a month for health age). Training load skips days without data; lifting load waits for 3 weeks of logged sets.
 - The check-in saves only the person's own answers; answers from data stay the data's (`C.answerOf`).
 
+## Conventions added in the lighter-feel pass
+- Weights: 400 body, 500 row titles and secondary labels, 600 card titles, buttons and small caps, 650–700 only for big numbers and page titles. `b`/`strong` are 600. Nothing above 700.
+- Every health number opens its history: `App.open('metric', { key, date })` (keys in `METRICS` in ui-pages: the baselines plus active, daylight, recovery, sleepScore, strain, weight). Week / month / 3 months / year, normal band, recent days that open that day.
+- Health starts with "Your numbers" (scores, then the baselines as rows); health age is one row that opens `Pages.healthAge`.
+- Motion is quick and quiet: tab change is a 0.16 s fade, push 0.26 s, pop 0.22 s; rows and cards dim when pressed instead of scaling.
+- Keep explanations to one short sentence; long ones go in an expander or go.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
