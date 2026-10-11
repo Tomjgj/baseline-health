@@ -9,6 +9,7 @@ let log = Logger(subsystem: "com.example.baseline", category: "app")
 final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, WKNavigationDelegate {
     let webView: WKWebView
     private let health = HealthReader()
+    private let scanner = BarcodeScanner()
 
     override init() {
         let config = WKWebViewConfiguration()
@@ -48,10 +49,30 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         webView.evaluateJavaScript("window.BaselineBridge && window.BaselineBridge.foreground()", completionHandler: nil)
     }
 
-    /// The page asks: { type: "sync", id, from: "YYYY-MM-DD", to: "YYYY-MM-DD" }.
-    /// The app answers by calling BaselineBridge.receive({ id, ok, payload | error }).
+    /// The page asks, and the app answers by calling BaselineBridge.receive({ id, ok, payload | error }):
+    ///   { type: "sync", id, from: "YYYY-MM-DD", to: "YYYY-MM-DD" }  → a baseline.health/1 payload
+    ///   { type: "scan", id }                                        → { code } from the camera
+    ///   { type: "food", id, path }                                  → { text } from Open Food Facts (path starts with /)
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let id = body["id"] as? String else { return }
+        switch body["type"] as? String {
+        case "scan":
+            log.notice("scan request")
+            scanner.scan(from: webView) { outcome in
+                switch outcome {
+                case .code(let code): self.reply(["id": id, "ok": true, "payload": ["code": code]])
+                case .cancelled: self.reply(["id": id, "ok": false, "error": "cancelled"])
+                case .denied: self.reply(["id": id, "ok": false, "error": "camera_denied"])
+                case .unavailable: self.reply(["id": id, "ok": false, "error": "scan_unavailable"])
+                }
+            }
+            return
+        case "food":
+            fetchFood(id: id, path: body["path"] as? String ?? "")
+            return
+        default:
+            break
+        }
         guard (body["type"] as? String) == "sync", let from = body["from"] as? String, let to = body["to"] as? String else {
             reply(["id": id, "ok": false, "error": "unknown_request"])
             return
@@ -67,6 +88,28 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
                 await MainActor.run { self.reply(["id": id, "ok": false, "error": "sync-failed"]) }
             }
         }
+    }
+
+    /// Food lookups go through the app rather than the page, so they don't depend on the web view's cross-origin rules.
+    /// Only Open Food Facts is reachable this way.
+    private func fetchFood(id: String, path: String) {
+        guard path.hasPrefix("/"), let url = URL(string: "https://world.openfoodfacts.org" + path) else {
+            reply(["id": id, "ok": false, "error": "bad_request"])
+            return
+        }
+        var req = URLRequest(url: url, timeoutInterval: 20)
+        req.setValue("Baseline/1.0 (iPhone; personal use)", forHTTPHeaderField: "User-Agent")
+        URLSession.shared.dataTask(with: req) { data, response, error in
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let text = data.flatMap { String(data: $0, encoding: .utf8) }
+            DispatchQueue.main.async {
+                if let text, error == nil, status == 200 || status == 404 {
+                    self.reply(["id": id, "ok": true, "payload": ["status": status, "text": text]])
+                } else {
+                    self.reply(["id": id, "ok": false, "error": "offline"])
+                }
+            }
+        }.resume()
     }
 
     private func reply(_ message: [String: Any]) {

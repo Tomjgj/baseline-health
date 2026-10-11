@@ -21,7 +21,8 @@ targets:
         CFBundleDisplayName: Baseline
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
-        NSHealthShareUsageDescription: Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine and body measurements to work out recovery, strain and stress against your own baselines. Nothing leaves your iPhone except what you choose to send to your own coach server.
+        NSHealthShareUsageDescription: Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone unless you connect your own coach server.
+        NSCameraUsageDescription: Baseline uses the camera to scan food barcodes. Nothing is recorded or stored.
         UILaunchScreen:
           UIColorName: ""
         UIApplicationSupportsIndirectInputEvents: true
