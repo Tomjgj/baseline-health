@@ -11,6 +11,7 @@
 		14FE980511237871E2644BEE /* BaselineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007A5A45919FF650EAB251AE /* BaselineApp.swift */; };
 		2A1AE957C1AD94F5458745D9 /* HealthReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37761B564D5DEA73B40A2B5 /* HealthReader.swift */; };
 		56DCE7BDAEC83399B2D62DA2 /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1759753A4215CA4DFCE94732 /* BarcodeScanner.swift */; };
+		BD8D8D1957B9B6E300369BD4 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60FBF9901968FD692CB45BD /* Notifier.swift */; };
 		E5D347444E82C197F5314FFE /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = EA573ECBA46052214E5DC85D /* index.html */; };
 /* End PBXBuildFile section */
 
@@ -21,6 +22,7 @@
 		88AF6FD6DF3173BDBDB33E58 /* Baseline.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Baseline.entitlements; sourceTree = "<group>"; };
 		917EC6C734FA7FDEF274FFAD /* Baseline.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Baseline.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C37761B564D5DEA73B40A2B5 /* HealthReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthReader.swift; sourceTree = "<group>"; };
+		D60FBF9901968FD692CB45BD /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		E0CCBEF6530C7B335B7C172E /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 		EA573ECBA46052214E5DC85D /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -51,6 +53,7 @@
 				007A5A45919FF650EAB251AE /* BaselineApp.swift */,
 				C37761B564D5DEA73B40A2B5 /* HealthReader.swift */,
 				6C0783D23B036F0A996BD1E7 /* Info.plist */,
+				D60FBF9901968FD692CB45BD /* Notifier.swift */,
 				E0CCBEF6530C7B335B7C172E /* WebView.swift */,
 			);
 			path = Baseline;
@@ -138,6 +141,7 @@
 				56DCE7BDAEC83399B2D62DA2 /* BarcodeScanner.swift in Sources */,
 				14FE980511237871E2644BEE /* BaselineApp.swift in Sources */,
 				2A1AE957C1AD94F5458745D9 /* HealthReader.swift in Sources */,
+				BD8D8D1957B9B6E300369BD4 /* Notifier.swift in Sources */,
 				07307E9BAEDC776079F671AD /* WebView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
