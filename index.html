@@ -1359,9 +1359,105 @@ const FOODS = (() => {
     ['Schnitzel, breaded', 230, 20, 11, 12, 0.5, '1 schnitzel (180 g):180', 'Meals'],
     ['Caesar salad with chicken', 130, 9, 5, 8, 1.5, '1 bowl (300 g):300', 'Meals'],
     ['Sushi', 150, 6, 25, 2.5, 0.8, '1 piece (30 g):30|8 pieces (240 g):240', 'Meals'],
+    // added later: keep new foods at the end, because a food's id is its place in this list
+    ['Scrambled eggs', 149, 10, 1.6, 11, 0, '2 eggs (120 g):120|3 eggs (180 g):180', 'Protein'],
+    ['Fried egg', 196, 13.6, 0.8, 15.3, 0, '1 egg (46 g):46', 'Protein'],
+    ['Omelette, plain', 154, 10.6, 0.6, 11.7, 0, '2-egg omelette (120 g):120', 'Protein'],
+    ['Porridge, made with milk', 105, 4.5, 14, 3.4, 1.4, '1 bowl (250 g):250', 'Grains'],
+    ['Sourdough bread', 260, 9, 51, 1.8, 2.5, '1 slice (50 g):50', 'Grains'],
+    ['English muffin', 227, 8.9, 44, 1.7, 3, '1 muffin (57 g):57', 'Grains'],
+    ['Egg noodles, cooked', 138, 4.5, 25, 2.1, 1.2, '1 cup (160 g):160', 'Grains'],
+    ['Instant ramen, prepared', 70, 1.6, 9.5, 2.9, 0.4, '1 bowl (400 g):400', 'Meals'],
+    ['Mashed potatoes', 113, 2, 15.5, 4.8, 1.5, '1 cup (210 g):210', 'Grains'],
+    ['Crackers', 440, 9, 70, 13, 3, '5 crackers (30 g):30', 'Snacks'],
+    ['Popcorn, salted', 470, 8, 58, 22, 9, '1 bowl (30 g):30', 'Snacks'],
+    ['Ground turkey, cooked', 203, 27, 0, 10, 0, '100 g:100', 'Protein'],
+    ['Pork chop, cooked', 231, 26, 0, 14, 0, '1 chop (150 g):150', 'Protein'],
+    ['Lamb, cooked', 258, 25.5, 0, 16.5, 0, '100 g:100', 'Protein'],
+    ['Sausage (Bratwurst)', 297, 12, 2, 26, 0, '1 sausage (100 g):100', 'Protein'],
+    ['Hot dog in a bun', 290, 10, 24, 17, 1, '1 hot dog (100 g):100', 'Meals'],
+    ['Meatballs', 220, 15, 7, 15, 0.5, '5 meatballs (100 g):100', 'Protein'],
+    ['Fish fingers', 220, 12, 19, 10, 1, '5 fingers (140 g):140', 'Protein'],
+    ['Smoked salmon', 117, 18, 0, 4.3, 0, '2 slices (50 g):50', 'Protein'],
+    ['Mackerel, smoked', 305, 19, 0, 25, 0, '1 fillet (100 g):100', 'Protein'],
+    ['Sardines, canned', 208, 24.6, 0, 11.5, 0, '1 can (90 g):90', 'Protein'],
+    ['Kidney beans, cooked', 127, 8.7, 22.8, 0.5, 6.4, '1/2 cup (90 g):90', 'Protein'],
+    ['Plain yogurt, whole milk', 61, 3.5, 4.7, 3.3, 0, '1 pot (150 g):150', 'Dairy'],
+    ['Fruit yogurt', 95, 3.5, 15, 2.5, 0, '1 pot (150 g):150', 'Dairy'],
+    ['Kefir', 55, 3.4, 4.5, 2.5, 0, '1 glass (250 ml):250', 'Dairy'],
+    ['Cream, whipping', 340, 2.1, 2.8, 36, 0, '1 tbsp (15 g):15', 'Dairy'],
+    ['Sour cream', 198, 2.4, 4.6, 19, 0, '1 tbsp (15 g):15', 'Dairy'],
+    ['Emmental / Swiss cheese', 380, 28, 0, 30, 0, '1 slice (25 g):25', 'Dairy'],
+    ['Brie', 334, 20.8, 0.5, 27.7, 0, '1 wedge (30 g):30', 'Dairy'],
+    ['Ricotta', 174, 11.3, 3, 13, 0, '1/4 cup (60 g):60', 'Dairy'],
+    ['Halloumi', 320, 21, 2, 25, 0, '3 slices (80 g):80', 'Dairy'],
+    ['Pear', 57, 0.4, 15.2, 0.1, 3.1, '1 pear (180 g):180', 'Fruit'],
+    ['Mango', 60, 0.8, 15, 0.4, 1.6, '1 cup (165 g):165', 'Fruit'],
+    ['Pineapple', 50, 0.5, 13.1, 0.1, 1.4, '1 cup (165 g):165', 'Fruit'],
+    ['Watermelon', 30, 0.6, 7.6, 0.2, 0.4, '1 slice (280 g):280', 'Fruit'],
+    ['Kiwi', 61, 1.1, 14.7, 0.5, 3, '1 kiwi (75 g):75', 'Fruit'],
+    ['Raspberries', 52, 1.2, 11.9, 0.7, 6.5, '1 cup (125 g):125', 'Fruit'],
+    ['Peach', 39, 0.9, 9.5, 0.3, 1.5, '1 peach (150 g):150', 'Fruit'],
+    ['Zucchini', 17, 1.2, 3.1, 0.3, 1, '1 zucchini (200 g):200', 'Vegetables'],
+    ['Green beans', 31, 1.8, 7, 0.2, 2.7, '1 cup (125 g):125', 'Vegetables'],
+    ['Peas', 81, 5.4, 14.5, 0.4, 5.1, '1/2 cup (80 g):80', 'Vegetables'],
+    ['Sweetcorn', 86, 3.3, 19, 1.4, 2, '1/2 cup (80 g):80', 'Vegetables'],
+    ['Cauliflower', 25, 1.9, 5, 0.3, 2, '1 cup (100 g):100', 'Vegetables'],
+    ['Asparagus', 20, 2.2, 3.9, 0.1, 2.1, '5 spears (100 g):100', 'Vegetables'],
+    ['Peanuts', 567, 25.8, 16.1, 49.2, 8.5, 'Handful (30 g):30', 'Nuts'],
+    ['Pistachios', 560, 20, 27.5, 45, 10.6, 'Handful (30 g):30', 'Nuts'],
+    ['Mixed nuts', 607, 20, 21, 54, 7, 'Handful (30 g):30', 'Nuts'],
+    ['Pumpkin seeds', 559, 30, 10.7, 49, 6, '2 tbsp (20 g):20', 'Nuts'],
+    ['Flaxseed, ground', 534, 18.3, 28.9, 42.2, 27.3, '1 tbsp (10 g):10', 'Nuts'],
+    ['Mayonnaise', 680, 1, 0.6, 75, 0, '1 tbsp (14 g):14', 'Fats'],
+    ['Ketchup', 101, 1, 27, 0.1, 0.3, '1 tbsp (17 g):17', 'Fats'],
+    ['Pesto', 430, 5, 6, 43, 2, '1 tbsp (16 g):16', 'Fats'],
+    ['Salad dressing (vinaigrette)', 300, 0.3, 9, 29, 0, '2 tbsp (30 g):30', 'Fats'],
+    ['Sugar', 400, 0, 100, 0, 0, '1 tsp (4 g):4', 'Sweets'],
+    ['Maple syrup', 260, 0, 67, 0.1, 0, '1 tbsp (20 g):20', 'Sweets'],
+    ['Muffin, blueberry', 377, 4.6, 53, 16, 1.4, '1 muffin (110 g):110', 'Sweets'],
+    ['Doughnut, glazed', 421, 5, 51, 22, 1.2, '1 doughnut (60 g):60', 'Sweets'],
+    ['Brownie', 466, 6, 56, 25, 2.4, '1 piece (60 g):60', 'Sweets'],
+    ['Cake, chocolate', 371, 5.3, 53, 15, 2.8, '1 slice (95 g):95', 'Sweets'],
+    ['Cereal bar', 410, 6, 66, 13, 4, '1 bar (25 g):25', 'Snacks'],
+    ['Water', 0, 0, 0, 0, 0, '1 glass (250 ml):250|1 bottle (500 ml):500', 'Drinks'],
+    ['Green tea', 1, 0.2, 0, 0, 0, '1 cup (240 ml):240', 'Drinks'],
+    ['Hot chocolate', 77, 3.5, 11, 2.3, 0.6, '1 mug (250 ml):250', 'Drinks'],
+    ['Fruit smoothie', 55, 0.7, 13, 0.3, 1, '1 bottle (250 ml):250', 'Drinks'],
+    ['Apple juice', 46, 0.1, 11.3, 0.1, 0.2, '1 glass (250 ml):250', 'Drinks'],
+    ['White wine', 82, 0.1, 2.6, 0, 0, '1 glass (150 ml):150', 'Drinks'],
+    ['Sparkling wine / prosecco', 75, 0.1, 1.5, 0, 0, '1 glass (125 ml):125', 'Drinks'],
+    ['Spirits (vodka, gin, whisky)', 231, 0, 0, 0, 0, '1 shot (40 ml):40', 'Drinks'],
+    ['Gin and tonic', 70, 0, 6, 0, 0, '1 glass (250 ml):250', 'Drinks'],
+    ['Beer, alcohol-free', 25, 0.3, 5.5, 0, 0, '1 bottle (330 ml):330|1 pint (500 ml):500', 'Drinks'],
+    ['Pizza, pepperoni', 270, 11.5, 30, 11.5, 2, '1 slice (110 g):110|Whole pizza (450 g):450', 'Meals'],
+    ['Hamburger', 254, 13, 28, 10, 1.5, '1 burger (200 g):200', 'Meals'],
+    ['Chicken nuggets', 296, 15.5, 16, 19, 1, '6 nuggets (100 g):100', 'Meals'],
+    ['Fried rice', 170, 5, 25, 5.5, 1, '1 plate (350 g):350', 'Meals'],
+    ['Pad thai', 175, 7, 24, 6, 1.5, '1 plate (350 g):350', 'Meals'],
+    ['Lasagne', 135, 7.5, 12.5, 6, 1, '1 portion (350 g):350', 'Meals'],
+    ['Mac and cheese', 164, 6.5, 19.5, 6.6, 1, '1 bowl (300 g):300', 'Meals'],
+    ['Burrito bowl', 140, 8, 16, 5, 3, '1 bowl (450 g):450', 'Meals'],
+    ['Poke bowl', 130, 8, 16, 3.5, 1.5, '1 bowl (450 g):450', 'Meals'],
+    ['Ham and cheese sandwich', 250, 13, 26, 10, 2, '1 sandwich (150 g):150', 'Meals'],
+    ['Chicken sandwich', 230, 14, 25, 8, 2, '1 sandwich (180 g):180', 'Meals'],
+    ['Falafel wrap', 220, 7, 28, 9, 4, '1 wrap (300 g):300', 'Meals'],
+    ['Tacos', 210, 10, 20, 10, 3, '1 taco (100 g):100', 'Meals'],
+    ['Chili con carne', 110, 8, 9, 4.5, 3, '1 bowl (350 g):350', 'Meals'],
+    ['Chicken stir-fry with vegetables', 105, 10, 6, 4.5, 1.5, '1 plate (350 g):350', 'Meals'],
+    ['Tomato soup', 40, 1, 7, 1, 1, '1 bowl (300 ml):300', 'Meals'],
+    ['Chicken noodle soup', 35, 2.5, 4, 1, 0.3, '1 bowl (350 ml):350', 'Meals'],
+    ['Fish and chips', 230, 10, 22, 12, 2, '1 portion (400 g):400', 'Meals'],
+    ['Currywurst with fries', 230, 7, 22, 13, 2, '1 portion (400 g):400', 'Meals'],
   ];
+  // other words people search with
+  const ALIAS = { 'Oat drink': 'oat milk', 'Soy drink, unsweetened': 'soy milk', Egg: 'eggs boiled', 'Low-fat quark (Magerquark)': 'quark', 'Coffee, black': 'americano filter',
+    'Latte / cappuccino': 'flat white coffee milk', Cola: 'coke soda', 'Cola zero / diet': 'coke diet soda', 'Ground beef 85% lean, cooked': 'mince minced burger',
+    'Whey protein powder': 'protein shake', 'French fries': 'chips fries', 'Potato chips': 'crisps', 'Tuna, canned in water': 'tin', 'Spirits (vodka, gin, whisky)': 'liquor alcohol shot rum',
+    'Whole wheat bread': 'toast wholemeal', 'Chocolate hazelnut spread': 'nutella', 'Edamame': 'soy beans', 'Mixed salad greens': 'lettuce salad', 'Bell pepper': 'paprika capsicum',
+    'Doughnut, glazed': 'donut', 'Zucchini': 'courgette', 'Sweetcorn': 'corn', 'Rolled oats (dry)': 'oatmeal porridge', 'Pizza Margherita': 'cheese pizza', 'Water': 'sparkling still' };
   const list = raw.map(([name, kcal, p, c, f, fiber, serv, group], i) => ({
-    id: 'f' + i, name, kcal, p, c, f, fiber, group,
+    id: 'f' + i, name, kcal, p, c, f, fiber, group, alias: ALIAS[name] || '',
     liquid: group === 'Drinks' || /milk|drink|juice|shake/i.test(name),
     servings: serv.split('|').map((s) => { const k = s.lastIndexOf(':'); return { label: s.slice(0, k), g: +s.slice(k + 1) }; }),
   }));
@@ -1385,11 +1481,13 @@ const FOODS = (() => {
     const all = [...extra, ...list];
     if (!q) return all.slice(0, 40);
     const words = q.split(/\s+/);
+    // "eggs" finds "Egg", "berries" finds "Blueberries"
+    const stem = (w) => (w.length > 3 && w.endsWith('ies') ? w.slice(0, -3) : w.length > 3 && w.endsWith('es') ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w);
     return all
       .map((f) => {
-        const n = f.name.toLowerCase();
-        if (!words.every((w) => n.includes(w))) return null;
-        return { f, s: (n.startsWith(q) ? 0 : 1) + n.length / 100 };
+        const n = f.name.toLowerCase(), hay = n + ' ' + (f.alias || '');
+        if (!words.every((w) => hay.includes(w) || hay.includes(stem(w)))) return null;
+        return { f, s: (n.startsWith(q) ? 0 : n.includes(q) ? 0.5 : 1) + n.length / 100 };
       })
       .filter(Boolean).sort((a, b) => a.s - b.s).map((x) => x.f).slice(0, 40);
   }
