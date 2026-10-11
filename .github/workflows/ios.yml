@@ -62,12 +62,16 @@ jobs:
           xcrun simctl bootstatus "$DEVICE" -b
           xcrun simctl install "$DEVICE" ios/build/Build/Products/Debug-iphonesimulator/Baseline.app
           xcrun simctl launch "$DEVICE" com.example.baseline
-          sleep 20
+          # the page must render and ask the native side for Health data; a slow simulator can take a while, so wait up to 2 minutes
+          for i in $(seq 1 24); do
+            sleep 5
+            xcrun simctl spawn "$DEVICE" log show --last 10m --style compact --predicate 'subsystem == "com.example.baseline"' > app.log 2>/dev/null || true
+            if grep -q "page: Baseline Health | rendered" app.log && grep -q "sync request" app.log; then break; fi
+          done
+          cat app.log
           xcrun simctl io "$DEVICE" screenshot launch.png
-          # the app must still be running after 20 seconds
+          # the app must still be running
           xcrun simctl spawn "$DEVICE" launchctl list | grep -i baseline
-          # and the page must have rendered and asked the native side for Health data
-          xcrun simctl spawn "$DEVICE" log show --last 5m --style compact --predicate 'subsystem == "com.example.baseline"' | tee app.log
           grep -q "page: Baseline Health | rendered" app.log
           grep -q "sync request" app.log
 
