@@ -1,9 +1,12 @@
 import SwiftUI
 import WebKit
+import os
+
+let log = Logger(subsystem: "com.example.baseline", category: "app")
 
 /// Hosts index.html. The page is served from baseline://app/ (a fixed origin, so its localStorage persists),
 /// and talks to the native side through the "baseline" message handler.
-final class WebController: NSObject, ObservableObject, WKScriptMessageHandler {
+final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, WKNavigationDelegate {
     let webView: WKWebView
     private let health = HealthReader()
 
@@ -18,7 +21,27 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler {
         webView.backgroundColor = UIColor(red: 7 / 255, green: 8 / 255, blue: 11 / 255, alpha: 1)
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.allowsBackForwardNavigationGestures = false
+        webView.navigationDelegate = self
         if let url = URL(string: "baseline://app/index.html") { webView.load(URLRequest(url: url)) }
+    }
+
+    // MARK: page loading, logged so a build check can tell the page really rendered
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        // the app draws its first screen a moment after load
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            webView.evaluateJavaScript("document.title + ' | ' + (document.querySelector('#view .view') ? 'rendered' : 'empty')") { result, _ in
+                log.notice("page: \(String(describing: result ?? "no result"), privacy: .public)")
+            }
+        }
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        log.error("page failed: \(error.localizedDescription, privacy: .public)")
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        log.error("page failed to load: \(error.localizedDescription, privacy: .public)")
     }
 
     func foreground() {
@@ -33,6 +56,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler {
             reply(["id": id, "ok": false, "error": "unknown_request"])
             return
         }
+        log.notice("sync request \(from, privacy: .public) to \(to, privacy: .public)")
         Task {
             do {
                 let payload = try await health.payload(from: from, to: to)

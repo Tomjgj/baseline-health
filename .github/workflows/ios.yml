@@ -45,6 +45,10 @@ jobs:
           xcrun simctl io "$DEVICE" screenshot launch.png
           # the app must still be running after 20 seconds
           xcrun simctl spawn "$DEVICE" launchctl list | grep -i baseline
+          # and the page must have rendered and asked the native side for Health data
+          xcrun simctl spawn "$DEVICE" log show --last 5m --style compact --predicate 'subsystem == "com.example.baseline"' | tee app.log
+          grep -q "page: Baseline Health | rendered" app.log
+          grep -q "sync request" app.log
 
       - name: Keep the build log and screenshot
         if: always()
@@ -54,4 +58,5 @@ jobs:
           path: |
             ios/xcodebuild.log
             launch.png
+            app.log
           if-no-files-found: ignore
