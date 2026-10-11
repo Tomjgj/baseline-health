@@ -2,7 +2,12 @@
 
 A thin native shell around `index.html`. The interface is the web app, unchanged. The native side reads HealthKit and hands the samples to the page, so the page computes recovery, sleep, strain and stress the same way it does from an Apple Health export.
 
-**Status: written but not yet built.** It was written in an environment without Xcode, so the Swift code has not been compiled or run. Expect a round of small compile fixes on the first build. The page side of the bridge is tested: a simulated native app answers sync requests in Chromium.
+**Status: builds and launches; not yet run on a real iPhone.** The `iOS build` GitHub Actions workflow (`.github/workflows/ios.yml`) checks this on every change to `ios/` or `index.html`:
+1. XcodeGen generates the project and Xcode 16.4 compiles it with no errors or warnings.
+2. The app launches in an iPhone simulator.
+3. The app log shows that the page rendered and that its first sync request reached the HealthKit reader.
+
+Not yet checked: the HealthKit permission sheet and real Health data, which need a device.
 
 ## Build
 

@@ -19,7 +19,7 @@ The coach needs a small server that holds your Anthropic API key, so the key nev
 ## Apple Health
 
 - **Web:** Settings → Data → Import. Choose the `export.zip` from the Health app, or a `baseline.health/1` JSON file.
-- **iPhone app (`ios/`):** reads HealthKit directly and syncs each time it opens. See `ios/README.md`; it still needs its first Xcode build.
+- **iPhone app (`ios/`):** reads HealthKit directly and syncs each time it opens. See `ios/README.md`. CI builds it and launches it in the simulator; it hasn't yet run on a real iPhone.
 
 ## Where things live in `index.html`
 
@@ -30,7 +30,7 @@ The coach needs a small server that holds your Anthropic API key, so the key nev
 
 ## Roadmap
 
-1. Build and test the iOS app on a device, with HealthKit background delivery.
+1. Run the iOS app on a device with real Health data, then add HealthKit background delivery.
 2. Widgets, a Live Activity for workouts, a Watch complication for stress, live Watch heart rate, and school/work blocks synced with Apple Calendar.
 
 See `CLAUDE.md` for the working notes used by Claude Code.
