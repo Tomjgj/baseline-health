@@ -31,8 +31,14 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Memory lives in `profile.coachMemory` (`profile.coachMemoryOn`), and check-in note frequency in `profile.coachNotes`. The server address and access code stay on the device (`baseline:coach`), never in the profile or the code.
 - Gate Claude entry points on `Coach.available()`, not `App.sample`. Food describe/photo still use the artifact runtime only.
 
+## Conventions added in phase 4 (Apple Health pipeline, iOS shell)
+- One pipeline, two sources: the export scanner (`HI.importFile`) and the JSON feed (`HI.fromJSON`, format `baseline.health/1`, documented above it) both fill the same raw-sample record (`emptyR`) and go through `aggregate`. A new Health type needs both readers plus an aggregate step; keep the XML-vs-JSON consistency check passing (zero differences on identical samples).
+- Day docs can carry `daylight {min, am}`, `caffeine {mg, late}`, `drinks`, `mindful` and `bp {sys, dia, n}`.
+- Habits answered from data: `C.autoAnswer(id, date)` returns `{v, why}`, and `C.answerOf(date, id)` (the person's answer, else the data's) is what streaks, effects and experiments read. Never infer a "no" the data can't show: alcohol and stretching are only ever filled in as yes. Your own answer always wins.
+- `HealthSync` is the page side of the iPhone bridge (`webkit.messageHandlers.baseline` / `BaselineBridge.receive`). It syncs incrementally from the day before `meta.lastSync.to`. `ios/` holds the SwiftUI shell (XcodeGen `project.yml`), not yet compiled; see `ios/README.md`.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
 3. ~~Claude coach~~ (done, Oct 2026): backend in `server/`, editable memory, six tools with confirm/undo, inline charts, rare check-in notes, day-specific starting points. Not done: Claude-written check-in notes (they're local rules today), and food describe/photo through the backend.
-4. Data pipeline from Apple Health, then the iOS app.
+4. ~~Data pipeline~~ (done, Oct 2026): one aggregation for export and JSON, new Health types, habits answered from data, the `HealthSync` bridge and an iOS shell in `ios/` that still needs its first Xcode build. Next: build and test the iOS app on a device, background delivery, widgets, a Live Activity for workouts and a Watch complication.

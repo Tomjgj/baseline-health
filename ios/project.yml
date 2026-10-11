@@ -1,0 +1,40 @@
+# XcodeGen spec for the Baseline iPhone app. Generate the Xcode project with:
+#   brew install xcodegen && cd ios && xcodegen generate && open Baseline.xcodeproj
+name: Baseline
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+targets:
+  Baseline:
+    type: application
+    platform: iOS
+    sources:
+      - path: Baseline
+      # the web app itself, bundled as-is and served to the web view from baseline://app/
+      - path: ../index.html
+        buildPhase: resources
+    info:
+      path: Baseline/Info.plist
+      properties:
+        CFBundleDisplayName: Baseline
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        NSHealthShareUsageDescription: Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine and body measurements to work out recovery, strain and stress against your own baselines. Nothing leaves your iPhone except what you choose to send to your own coach server.
+        UILaunchScreen:
+          UIColorName: ""
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIUserInterfaceStyle: Dark
+    entitlements:
+      path: Baseline/Baseline.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.baseline
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO

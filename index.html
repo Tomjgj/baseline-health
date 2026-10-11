@@ -1031,6 +1031,10 @@ input[type="range"].slider { height: 32px; }
 .hchip.yes { background: var(--sleep-bg); box-shadow: none; }
 .hchip.yes .mk { background: var(--sleep); color: #fff; box-shadow: none; }
 .hchip.yes .st { color: var(--sleep-ink); }
+.hchip.auto { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 18%, transparent); }
+.hchip.auto .st { color: var(--ink-2); }
+.auto-tag { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; color: var(--ink-2); font-weight: 700; }
+.auto-tag svg { width: 12px; height: 12px; }
 .flame { color: var(--stress-ink); }
 .tday { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .tday button { border: 0; background: transparent; border-radius: 16px; padding: 6px 0 8px; display: grid; justify-items: center; gap: 3px; color: var(--ink); }
@@ -1339,6 +1343,9 @@ const FOODS = (() => {
     ['Orange juice', 45, 0.7, 10.4, 0.2, 0.2, '1 glass (250 ml):250', 'Drinks'],
     ['Cola', 42, 0, 10.6, 0, 0, '1 can (330 ml):330|1 bottle (500 ml):500', 'Drinks'],
     ['Cola zero / diet', 0.3, 0, 0, 0, 0, '1 can (330 ml):330', 'Drinks'],
+    ['Espresso', 9, 0.1, 1.7, 0.2, 0, '1 shot (30 ml):30|Double (60 ml):60', 'Drinks'],
+    ['Black tea', 1, 0, 0.3, 0, 0, '1 cup (240 ml):240', 'Drinks'],
+    ['Energy drink', 45, 0, 11, 0, 0, '1 can (250 ml):250', 'Drinks'],
     ['Beer', 43, 0.5, 3.6, 0, 0, '0.5 l (500 ml):500|0.33 l (330 ml):330', 'Drinks'],
     ['Red wine', 85, 0.1, 2.6, 0, 0, '1 glass (150 ml):150', 'Drinks'],
     ['Sports drink', 24, 0, 6, 0, 0, '1 bottle (500 ml):500', 'Drinks'],
@@ -1359,6 +1366,10 @@ const FOODS = (() => {
     servings: serv.split('|').map((s) => { const k = s.lastIndexOf(':'); return { label: s.slice(0, k), g: +s.slice(k + 1) }; }),
   }));
   const byName = Object.fromEntries(list.map((f) => [f.name, f]));
+  // caffeine, mg per 100 ml, so a logged drink can answer "caffeine after 2 pm"
+  const CAFFEINE = { 'Coffee, black': 40, 'Latte / cappuccino': 25, Espresso: 212, 'Black tea': 20, Cola: 10, 'Cola zero / diet': 12, 'Energy drink': 32 };
+  /** Caffeine in a logged item, in mg, or 0. */
+  const caffeineOf = (it) => { const c = CAFFEINE[it?.name]; const ml = it?.grams ?? (/^(ml|g)$/.test(it?.unit || '') ? it.qty : null); return c && ml ? (c * ml) / 100 : 0; };
 
   /** Nutrition for `grams` of a per-100 g food. */
   function portion(food, grams) {
@@ -1404,7 +1415,7 @@ const FOODS = (() => {
     ['Russian twist', 'Core', 'Core', ''], ['Plank (seconds)', 'Core', 'Core', '', 1],
   ].map(([name, muscle, p, sec, bw]) => ({ name, muscle, p: p.split(' ').filter(Boolean), s: sec.split(' ').filter(Boolean), bodyweight: !!bw }));
 
-  return { list, byName, portion, search, EXERCISES };
+  return { list, byName, portion, search, EXERCISES, caffeineOf };
 })();
 
 /* ===== engine.js — every score in the app, as pure functions over the stored data =====
@@ -2140,6 +2151,45 @@ const E = (() => {
       return out;
     });
 
+    // ---------- habits answered from data: the Watch, workouts and the food log fill in what they can ----------
+    // Only answers the data can actually show: no logged drink isn't proof of none, so alcohol and stretching are only ever filled in as yes.
+    const STRETCH = /yoga|mobility|stretch|flexib|pilates|cooldown|mind and body|tai chi|barre/i;
+    const DRINK = /\b(beer|wine|prosecco|champagne|cider|cocktail|spritz|aperol|vodka|gin|whisk|rum|tequila|sake)\b/i;
+    const nowH = now.getHours();
+    const autoAnswerM = m('auto', (k) => {
+      const [id, d] = k.split('@');
+      const day = days[d] || {}, items = food[d]?.items || [], over = d < todayStr;
+      const at = (it) => (it.at ? U.minOfDay(it.at) : null);
+      if (id === 'sunlight' && day.daylight) {
+        if (day.daylight.am >= 10) return { v: 1, why: `${day.daylight.am} min of daylight before noon` };
+        if (over || nowH >= 12) return { v: 0, why: `${day.daylight.am} min of daylight before noon` };
+      }
+      if (id === 'stretching') { const s = sessions(d).find((x) => STRETCH.test(`${x.type || ''} ${x.name || ''}`)); if (s) return { v: 1, why: `${s.name || s.type} logged` }; }
+      if (id === 'alcohol') {
+        if (day.drinks > 0) return { v: 1, why: `${day.drinks} ${day.drinks === 1 ? 'drink' : 'drinks'} in Apple Health` };
+        const dr = items.find((it) => DRINK.test(it.name)); if (dr) return { v: 1, why: `${dr.name} in your food log` };
+      }
+      if (id === 'caffeine_late') {
+        const late = items.find((it) => at(it) >= 840 && FOODS.caffeineOf(it) > 0);
+        if (late) return { v: 1, why: `${late.name} at ${U.fmtClock(late.at)}` };
+        if (day.caffeine?.late > 0) return { v: 1, why: `${day.caffeine.late} mg of caffeine after 2 pm` };
+        if (day.caffeine && (over || nowH >= 21)) return { v: 0, why: 'no caffeine logged after 2 pm' };
+      }
+      if (id === 'late_meal') {
+        const times = items.map(at).filter((x) => x != null), sl = sleepOf(addDays(d, 1));
+        if (times.length && sl) {
+          const gap = (sl.start.slice(0, 10) > d ? 1440 : 0) + U.minOfDay(sl.start) - Math.max(...times);
+          if (gap >= 0 && gap < 120) return { v: 1, why: `last food ${Math.round(gap)} min before sleep` };
+          if (gap >= 120 && items.length >= 3) return { v: 0, why: `last food ${U.fmtHrs(gap)} before sleep` };
+        }
+      }
+      return null;
+    });
+    /** A habit answer filled in from data, with the reason, or null. */
+    const autoAnswer = (id, d) => autoAnswerM(id + '@' + d);
+    /** The answer that counts: the person's own, else one filled in from data. */
+    const answerOf = (d, id) => { const v = journal[d]?.a?.[id]; return v === 1 || v === 0 ? v : autoAnswer(id, d)?.v ?? null; };
+
     // ---------- habit effects, honestly: adjusted for weekend, the day's strain and exam days, with a range ----------
     // Sleep isn't adjusted for: alcohol and late meals act through sleep, and holding it fixed would hide their real effect.
     const EFFECT_FLOOR = { recovery: 3, sleep: 3, hrv: 3, stress: 3 };
@@ -2174,7 +2224,7 @@ const E = (() => {
       for (const r of rows) if (r.c[1] == null) r.c[1] = sm; // a missing strain counts as a typical day
       return rows;
     };
-    const ansPick = (id) => (x) => { const a = journal[x]?.a?.[id]; return a === 1 || a === 0 ? a : null; };
+    const ansPick = (id) => (x) => answerOf(x, id);
     const habitEffectM = m('heff', (k) => {
       const [id, d, ms, w, bt] = k.split('@');
       const rows = effectRows(ansPick(id), ms, addDays(d, -(+w - 1)), d);
@@ -2210,7 +2260,7 @@ const E = (() => {
       const f = effectFit(rows, { seed: 'exp' + eid + last, boot: 300, names: COV_NAMES });
       const floor = Math.max(EFFECT_FLOOR[ms], 0.25 * (f.sd || 0));
       let kept = 0, answered = 0;
-      for (let x = ex.from; x <= last; x = addDays(x, 1)) { const a = journal[x]?.a?.[ex.habit]; if (a == null) continue; answered++; if (a === ex.target) kept++; }
+      for (let x = ex.from; x <= last; x = addDays(x, 1)) { const a = answerOf(x, ex.habit); if (a == null) continue; answered++; if (a === ex.target) kept++; }
       const lab = f.n1 >= 3 && f.lo80 != null ? effectLabel({ ...f, n1: Math.max(f.n1, EFFECT_MIN) }, floor) : { label: 'few', more: null };
       return { ...ex, measure: ms, status, day, total, last, kept, answered, ...f, floor, ...lab };
     });
@@ -2435,7 +2485,7 @@ const E = (() => {
       const [id, d] = k.split('@');
       const hb = habits.find((x) => x.id === id) || HABIT_CATALOG.find((x) => x.id === id) || { id };
       const meta = habitMeta(hb);
-      const ans = (x) => { const v = journal[x]?.a?.[id]; return v === 1 || v === 0 ? v : null; };
+      const ans = (x) => answerOf(x, id);
       const ok = (x) => habitSuccess(meta.kind, ans(x));
       const paused = (x) => id !== 'sick' && pausedOn(x);
       const mon0 = addDays(d, -((U.parseYmd(d).getDay() + 6) % 7));
@@ -2643,7 +2693,7 @@ const E = (() => {
       ageOn, hrParams, sessions, strain, strainTarget, sleepOf, sleepNeed, sleepScore, recovery, stress,
       intake, trendWeight, latestBody, energy, tdee, load, healthAge, insights,
       hrvBase, rhrBase, respBase, tempBase, activeMean,
-      naps, journal, habits, loggedNaps, napsOn, muscleSets, habitEffect, habitEffectTrend: habitEffectTrendOf, experiment, experiments, activeExperiment, hrDay, muscleState,
+      naps, journal, habits, loggedNaps, napsOn, muscleSets, habitEffect, autoAnswer, answerOf, habitEffectTrend: habitEffectTrendOf, experiment, experiments, activeExperiment, hrDay, muscleState,
       plan: PLAN, planOn, planNext, baseline, dailyValue,
       schedule: SCHED, activitiesOn, actStress, activitySummary, activityTrend, stressProfile, habitTrack, habitMeta,
     };
@@ -2700,6 +2750,12 @@ const HI = (() => {
     HKQuantityTypeIdentifierDietaryProtein: 'dP',
     HKQuantityTypeIdentifierDietaryCarbohydrates: 'dC',
     HKQuantityTypeIdentifierDietaryFatTotal: 'dF',
+    HKQuantityTypeIdentifierTimeInDaylight: 'daylight',
+    HKCategoryTypeIdentifierMindfulSession: 'mindful',
+    HKQuantityTypeIdentifierNumberOfAlcoholicBeverages: 'alc',
+    HKQuantityTypeIdentifierDietaryCaffeine: 'caf',
+    HKQuantityTypeIdentifierBloodPressureSystolic: 'bpS',
+    HKQuantityTypeIdentifierBloodPressureDiastolic: 'bpD',
   };
   const BODY_KEYS = new Set(['weight', 'bodyFat', 'lean', 'waist', 'height']);
   // sleep stage codes: 0 awake, 1 REM, 2 core, 3 deep, 4 asleep (unspecified), -1 in bed
@@ -2746,12 +2802,9 @@ const HI = (() => {
   function distKm(v, unit) { return unit === 'mi' ? v * 1.609344 : unit === 'm' ? v / 1000 : unit === 'yd' ? v * 0.0009144 : unit === 'ft' ? v * 0.0003048 : v; }
 
   function createScanner({ cutoff, bodyCutoff }) {
-    const cutLm = dateToLm(cutoff), bodyCutLm = dateToLm(bodyCutoff);
-    const R = {
-      hrT: [], hrV: [], rhr: [], hrv: [], resp: [], spo2: [], temp: [], vo2: [],
-      steps: [], active: [], basal: [], body: [], height: null, sleep: [], diet: [], workouts: [], me: {},
-      counts: {}, records: 0,
-    };
+    // one day before the cutoff too, so the first day's night (which starts the evening before) is whole
+    const cutLm = dateToLm(cutoff) - 1440, bodyCutLm = dateToLm(bodyCutoff);
+    const R = emptyR();
     let buf = '';
     const re = /<(Record|Workout|Me)[\s>/]/g;
 
@@ -2775,6 +2828,7 @@ const HI = (() => {
       if (!(lm0 >= (BODY_KEYS.has(key) ? bodyCutLm : cutLm))) { if (key !== 'height') return; }
       const raw = attr(s, a, b, 'value');
       R.counts[key] = (R.counts[key] || 0) + 1;
+      if (key === 'mindful') { R.mindful.push({ lm0, lm1: lmin(attr(s, a, b, 'endDate')) }); return; }
       if (key === 'sleep') {
         const code = SLEEP[raw];
         if (code == null) return;
@@ -2799,6 +2853,10 @@ const HI = (() => {
         case 'height': { const cm = lengthCm(v, unit); if (!R.height || lm0 > R.height.lm0) R.height = { lm0, cm }; break; }
         case 'dKcal': R.diet.push({ lm0, k: 'kcal', v: energyKcal(v, unit), src: attr(s, a, b, 'sourceName') || '' }); break;
         case 'dP': case 'dC': case 'dF': R.diet.push({ lm0, k: key[1].toLowerCase(), v: unit === 'mg' ? v / 1000 : v, src: attr(s, a, b, 'sourceName') || '' }); break;
+        case 'daylight': R.daylight.push({ lm0, v: unit === 's' ? v / 60 : unit === 'hr' ? v * 60 : v, src: attr(s, a, b, 'sourceName') || '' }); break;
+        case 'alc': R.alc.push([lm0, v]); break;
+        case 'caf': R.caf.push({ lm0, v: unit === 'g' ? v * 1000 : v, src: attr(s, a, b, 'sourceName') || '' }); break;
+        case 'bpS': case 'bpD': R.bp.push({ lm0, k: key === 'bpS' ? 'sys' : 'dia', v }); break;
       }
     }
 
@@ -2869,6 +2927,16 @@ const HI = (() => {
     }
 
     return { feed, result: () => R };
+  }
+
+  /** The raw samples both sources fill: the export scanner and the JSON feed from the iOS app. Times are local minutes. */
+  function emptyR() {
+    return {
+      hrT: [], hrV: [], rhr: [], hrv: [], resp: [], spo2: [], temp: [], vo2: [],
+      steps: [], active: [], basal: [], body: [], height: null, sleep: [], diet: [], workouts: [], me: {},
+      daylight: [], mindful: [], alc: [], caf: [], bp: [],
+      counts: {}, records: 0,
+    };
   }
 
   // ---------- aggregation ----------
@@ -3093,6 +3161,28 @@ const HI = (() => {
       if (d.vo2 != null) d.vo2 = r1(d.vo2);
     }
 
+    // --- time in daylight, caffeine: per day, from the source with the most (phone and watch can both record) ---
+    const perSource = (arr, fn) => {
+      const per = {};
+      for (const r of arr) { const date = lmDate(r.lm0); if (!inRange(date)) continue; fn((per[date] ||= {})[r.src] ||= {}, r, r.lm0 - dateToLm(date)); }
+      return per;
+    };
+    const daylight = perSource(R.daylight, (o, r, m) => { o.min = (o.min || 0) + r.v; if (m < 720) o.am = (o.am || 0) + r.v; });
+    for (const date in daylight) { const b = Object.values(daylight[date]).sort((x, y) => y.min - x.min)[0]; D(date).daylight = { min: Math.round(b.min), am: Math.round(b.am || 0) }; }
+    const caf = perSource(R.caf, (o, r, m) => { o.mg = (o.mg || 0) + r.v; if (m >= 840) o.late = (o.late || 0) + r.v; });
+    for (const date in caf) { const b = Object.values(caf[date]).sort((x, y) => y.mg - x.mg)[0]; D(date).caffeine = { mg: Math.round(b.mg), late: Math.round(b.late || 0) }; }
+    // --- mindful minutes, drinks, blood pressure ---
+    for (const x of R.mindful) { const date = lmDate(x.lm0); if (inRange(date) && x.lm1 > x.lm0) D(date).mindful = Math.round((days[date].mindful || 0) + Math.min(240, x.lm1 - x.lm0)); }
+    for (const [lm, v] of R.alc) { const date = lmDate(lm); if (inRange(date) && v > 0) D(date).drinks = r1((days[date].drinks || 0) + v); }
+    {
+      // a reading is a systolic and a diastolic sample at the same moment
+      const at = {};
+      for (const x of R.bp) (at[Math.round(x.lm0)] ||= {})[x.k] = x.v;
+      const per = {};
+      for (const lm in at) { const r = at[lm]; const date = lmDate(+lm); if (!inRange(date) || !(r.sys > 60 && r.dia > 30)) continue; (per[date] ||= []).push(r); }
+      for (const date in per) D(date).bp = { sys: Math.round(avg(per[date].map((r) => r.sys))), dia: Math.round(avg(per[date].map((r) => r.dia))), n: per[date].length };
+    }
+
     // --- food logged in other apps ---
     const diet = {};
     for (const r of R.diet) {
@@ -3142,6 +3232,13 @@ const HI = (() => {
     const scanner = createScanner({ cutoff, bodyCutoff });
     const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
     const isZip = head[0] === 0x50 && head[1] === 0x4b;
+    if (!isZip && String.fromCharCode(...head).trimStart().startsWith('{')) {
+      let p; try { p = JSON.parse(await file.text()); } catch { throw new Error('not-health-json'); }
+      onProgress?.(1);
+      const res = fromJSON(p, { todayStr });
+      if (!res.stats.records) throw new Error('not-health-export');
+      return res;
+    }
     const decoder = new TextDecoder('utf-8');
     const total = file.size || 1;
     let done = 0, lastYield = Date.now();
@@ -3191,7 +3288,56 @@ const HI = (() => {
     return res;
   }
 
-  return { importFile, createScanner, aggregate, lmin, workoutName };
+  // ---------- the JSON feed: what the iOS app (or anything else that reads HealthKit) sends ----------
+  /*
+   * { "format": "baseline.health/1", "from": "YYYY-MM-DD", "to": "YYYY-MM-DD",   // days the samples fully cover
+   *   "me": { "birthDate": "YYYY-MM-DD", "sex": "male" | "female", "heightCm": 180 },
+   *   "samples": {                                     // times are local wall-clock "YYYY-MM-DDTHH:MM[:SS]"
+   *     "hr" | "rhr" | "hrv" | "resp" | "vo2": [[time, value]],   bpm, ms (SDNN), breaths/min, ml/kg/min
+   *     "spo2": [[time, percent]],  "temp": [[endTime, °C]],  "alcohol": [[time, drinks]],
+   *     "steps" | "active" | "basal": [[time, value, source]],  kcal for energy
+   *     "daylight": [[time, minutes, source]],  "caffeine": [[time, mg, source]],  "mindful": [[start, end]],
+   *     "bp": [[time, systolic, diastolic]],  "body": [[time, "weight" | "bodyFat" | "lean" | "waist", value]],  kg, %, kg, cm
+   *     "sleep": [[start, end, "inBed" | "awake" | "rem" | "core" | "deep" | "asleep", source]],
+   *     "diet": [[time, "kcal" | "p" | "c" | "f", value, source]] },
+   *   "workouts": [{ "start", "end", "type", "min", "kcal", "km", "avgHr", "maxHr", "source" }] }
+   * Samples should start the evening before "from", so that night is whole.
+   */
+  const STAGE = { inBed: -1, awake: 0, rem: 1, core: 2, deep: 3, asleep: 4 };
+  const jt = (t) => (typeof t === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(t) ? lmin((t + ':00').slice(0, 19).replace('T', ' ')) : NaN);
+  function fromJSON(p, { todayStr = U.today() } = {}) {
+    if (!p || p.format !== 'baseline.health/1' || !/^\d{4}-\d{2}-\d{2}$/.test(p.from || '') || !/^\d{4}-\d{2}-\d{2}$/.test(p.to || '') || p.to < p.from) throw new Error('not-health-json');
+    const R = emptyR(), S = p.samples || {}, list = (k) => (Array.isArray(S[k]) ? S[k] : []);
+    const fin = (v) => typeof v === 'number' && isFinite(v);
+    const pairs = (k, fn) => { for (const x of list(k)) { const lm = jt(x?.[0]); if (fin(lm) && fin(x[1])) { fn(lm, x[1], x[2] || ''); R.records++; R.counts[k] = (R.counts[k] || 0) + 1; } } };
+    pairs('hr', (lm, v) => { if (v > 25 && v < 240) { R.hrT.push(lm); R.hrV.push(v); } });
+    for (const k of ['rhr', 'hrv', 'resp', 'vo2', 'spo2', 'temp']) pairs(k, (lm, v) => R[k].push([lm, v]));
+    pairs('alcohol', (lm, v) => R.alc.push([lm, v]));
+    for (const k of ['steps', 'active', 'basal']) pairs(k, (lm, v, src) => R[k].push({ lm0: lm, v, src }));
+    pairs('daylight', (lm, v, src) => R.daylight.push({ lm0: lm, v, src }));
+    pairs('caffeine', (lm, v, src) => R.caf.push({ lm0: lm, v, src }));
+    for (const x of list('mindful')) { const a = jt(x?.[0]), b = jt(x?.[1]); if (fin(a) && fin(b)) { R.mindful.push({ lm0: a, lm1: b }); R.records++; } }
+    for (const x of list('bp')) { const lm = jt(x?.[0]); if (fin(lm) && fin(x[1]) && fin(x[2])) { R.bp.push({ lm0: lm, k: 'sys', v: x[1] }, { lm0: lm, k: 'dia', v: x[2] }); R.records++; } }
+    for (const x of list('body')) { const lm = jt(x?.[0]); if (fin(lm) && ['weight', 'bodyFat', 'lean', 'waist'].includes(x[1]) && fin(x[2])) { R.body.push({ lm0: lm, key: x[1], v: x[2] }); R.records++; } }
+    for (const x of list('sleep')) { const a = jt(x?.[0]), b = jt(x?.[1]), code = STAGE[x?.[2]]; if (fin(a) && fin(b) && code != null) { R.sleep.push({ lm0: a, lm1: b, code, src: x[3] || '' }); R.records++; } }
+    for (const x of list('diet')) { const lm = jt(x?.[0]); if (fin(lm) && ['kcal', 'p', 'c', 'f'].includes(x[1]) && fin(x[2])) { R.diet.push({ lm0: lm, k: x[1], v: x[2], src: x[3] || '' }); R.records++; } }
+    for (const w of Array.isArray(p.workouts) ? p.workouts : []) {
+      const a = jt(w?.start), b = jt(w?.end);
+      if (!fin(a) || !fin(b) || b <= a) continue;
+      R.workouts.push({ lm0: a, lm1: b, type: workoutName(w.type), min: fin(w.min) ? w.min : b - a, src: w.source || '', ...(fin(w.kcal) ? { kcal: w.kcal } : {}), ...(fin(w.km) ? { km: w.km } : {}), ...(fin(w.avgHr) ? { avgHr: w.avgHr } : {}), ...(fin(w.maxHr) ? { maxHr: w.maxHr } : {}) });
+      R.records++;
+    }
+    const me = p.me || {};
+    if (/^\d{4}-\d{2}-\d{2}$/.test(me.birthDate || '')) R.me.birthDate = me.birthDate;
+    if (me.sex === 'male' || me.sex === 'female') R.me.sex = me.sex;
+    if (fin(me.heightCm)) R.height = { lm0: 0, cm: me.heightCm };
+    const to = p.to < todayStr ? p.to : todayStr;
+    const res = aggregate(R, { cutoff: p.from, today: to });
+    res.range = { from: p.from, to };
+    return res;
+  }
+
+  return { importFile, createScanner, aggregate, fromJSON, lmin, workoutName };
 })();
 
 /* ===== demo.js — a realistic sample person, generated minute by minute =====
@@ -3205,6 +3351,7 @@ const DEMO = (() => {
     const r = makeRng(20261010);
     const rh = makeRng(4242); // separate stream for HRV and set effort, so the rest of the sample stays the same
     const ra = makeRng(9090); // and one for school, studying and evenings out
+    const rx = makeRng(5151); // and one for daylight, caffeine, drinks and blood pressure, so adding them changed nothing else
     const g = (s = 1) => gauss(r) * s;
     const todayStr = U.ymd(now);
     const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -3439,6 +3586,17 @@ const DEMO = (() => {
             }), src: 'app' };
         }
       }
+      // what the Watch and other apps add: time in daylight, caffeine, drinks, mindful minutes, a weekly blood pressure reading
+      {
+        const hb = tonight.hb, part = (m) => (isToday ? Math.max(0, Math.min(1, (nowMin - m) / 240)) : 1);
+        const am = Math.round((hb.sunlight ? 12 + rx() * 30 : rx() * 7) * part(7 * 60));
+        day.daylight = { am, min: am + Math.round((15 + rx() * 70) * part(13 * 60)) };
+        const lateCaf = hb.caffeine_late && (!isToday || nowMin > 15 * 60) ? Math.round(60 + rx() * 60) : 0;
+        day.caffeine = { mg: Math.round(70 + rx() * 140) + lateCaf, late: lateCaf };
+        if (hb.alcohol && (!isToday || nowMin > 21 * 60)) day.drinks = 1 + Math.floor(rx() * 4);
+        if (rx() < 0.2) day.mindful = 10;
+        if (wd === 0) day.bp = { sys: Math.round(118 + gauss(rx) * 5), dia: Math.round(76 + gauss(rx) * 4), n: 1 };
+      }
       days[date] = day;
       // effort proxy for the next morning
       prevStrainish = wk ? { run: wk.min > 50 ? 15 : 11, soccer: 16, strength: 11, walk: 7 }[wk.kind] : 6;
@@ -3455,6 +3613,8 @@ const DEMO = (() => {
       // ---- food log ----
       if (r() < 0.92 || isToday) {
         const items = buildMeals(date, r, isToday ? nowMin : 24 * 60, wk, i < cutStart ? 2640 : 2280);
+        // on late-meal days dinner really is late, so the food log agrees with the check-in
+        if (tonight.hb.late_meal && !isToday) { const at = iso(date, tonight.bed - 45 - Math.round(rx() * 50)); for (const it of items) if (it.meal === 'dinner') it.at = at; }
         if (items.length) food[date] = { date, items };
       }
     }
@@ -3767,7 +3927,7 @@ const Store = (() => {
   }
 
   /** Merge an Apple Health import. Only changed day documents are written. */
-  async function applyImport(res, onProgress) {
+  async function applyImport(res, onProgress, { kind = 'import' } = {}) {
     const st = real;
     const jobs = [];
     for (const date in res.days) {
@@ -3808,7 +3968,7 @@ const Store = (() => {
     try {
       await Promise.all([worker(), worker(), worker()]);
       if (Object.keys(p).length) await setProfile(p);
-      await setMeta({ lastImport: { at: new Date().toISOString(), ...res.stats } });
+      await setMeta(kind === 'sync' ? { lastSync: { at: U.isoLocal(new Date()), from: res.range?.from || res.stats.from, to: res.range?.to || res.stats.to, days: res.stats.days } } : { lastImport: { at: new Date().toISOString(), ...res.stats } });
     } finally {
       demoOn = wasDemo;
       if (wasDemo) setDemo(false);
@@ -5138,7 +5298,7 @@ const Tabs = (() => {
   function habitsRow(C, date) {
     if (!C.habits.length || (!Store.canWrite && Store.mode === 'db')) return null;
     const isToday = date === C.todayStr, hour = new Date().getHours();
-    const ansOf = (d, id) => { const v = C.journal[d]?.a?.[id]; return v === 1 || v === 0 ? v : null; };
+    const ansOf = (d, id) => C.answerOf(d, id);
     const answered = (d) => C.habits.filter((hb) => ansOf(d, hb.id) != null).length;
     // the check-in asks about yesterday in the morning and about today from 5 pm
     const jd = isToday && hour < 17 ? addDays(C.todayStr, -1) : date;
@@ -5156,8 +5316,11 @@ const Tabs = (() => {
     const draw = () => put(body,
       h('div', { class: 'hgrid' }, C.habits.map((hb) => {
         const meta = C.habitMeta(hb), tr = C.habitTrack(hb.id, date), a = ansOf(date, hb.id), lk = habitLook(meta, a, tr);
-        return h('button', { class: 'hchip tap ' + lk.cls, 'aria-label': `${hb.name}: ${a == null ? 'not logged' : a ? 'yes' : 'no'}. Tap to change`, onclick: () => Store.setJournal(date, hb.id, a == null ? 1 : a === 1 ? 0 : null) },
-          h('span', { class: 'tx' }, h('b', null, E.habitShort(hb)), h('span', { class: 'st' }, lk.st)), h('span', { class: 'mk' }, icon(lk.mk)));
+        const own = C.journal[date]?.a?.[hb.id], auto = own !== 0 && own !== 1 && a != null ? C.autoAnswer(hb.id, date) : null;
+        // from-data answers flip like any other; an answer of your own goes yes → no → cleared
+        const next = auto ? 1 - a : a == null ? 1 : a === 1 ? 0 : null;
+        return h('button', { class: 'hchip tap ' + lk.cls + (auto ? ' auto' : ''), 'aria-label': `${hb.name}: ${a == null ? 'not logged' : a ? 'yes' : 'no'}${auto ? `, from your data (${auto.why})` : ''}. Tap to change`, onclick: () => Store.setJournal(date, hb.id, next) },
+          h('span', { class: 'tx' }, h('b', null, E.habitShort(hb)), h('span', { class: 'st' }, auto ? [icon('watch'), 'From your data'] : lk.st)), h('span', { class: 'mk' }, icon(lk.mk)));
       })),
       h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '4px' } },
         h('span', { class: 'note' }, `${isToday ? 'Today' : U.fmtShort(date)}: tap for yes, again for no.`),
@@ -5418,6 +5581,12 @@ const Tabs = (() => {
       mtile({ k: 'Active energy', v: day.active != null ? fmtInt(day.active) : null, unit: 'kcal', d: (() => { const am = C.activeMean(date); return day.active == null || am == null ? 'Move, workouts included' : date === C.todayStr ? `usual day ${fmtInt(am)}` : `${fmtSigned((day.active / am - 1) * 100, 0, '%')} vs usual`; })(),
         spark: Charts.sparkline(series(14, (d) => (d === C.todayStr ? null : C.days[d]?.active ?? null)), { color: 'var(--strain)', w: 58, h: 24 }), onclick: () => App.open('strain', { date }) }),
     ];
+    // from the Watch and other apps, when they're there
+    if (day.daylight) tiles.push(mtile({ k: 'Daylight', v: day.daylight.min, unit: 'min', d: `${day.daylight.am} min before noon`, dCls: day.daylight.am >= 10 ? 'up' : '',
+      spark: Charts.sparkline(series(14, (d) => C.days[d]?.daylight?.min ?? null), { color: 'var(--warn)', w: 58, h: 24 }), onclick: () => App.open('habit', { id: 'sunlight', date }) }));
+    if (day.caffeine) tiles.push(mtile({ k: 'Caffeine', v: day.caffeine.mg, unit: 'mg', d: day.caffeine.late ? `${day.caffeine.late} mg after 2 pm` : 'none after 2 pm', dCls: day.caffeine.late ? 'warnc' : 'up',
+      spark: Charts.sparkline(series(14, (d) => C.days[d]?.caffeine?.mg ?? null), { color: 'var(--carbs)', w: 58, h: 24 }), onclick: () => App.open('habit', { id: 'caffeine_late', date }) }));
+    if (tiles.length % 2) tiles.pop(); // keep the grid even
     const meter = tiles[3].querySelector('.meter');
     if (meter) { meter.style.position = 'absolute'; meter.style.right = '14px'; meter.style.bottom = '18px'; meter.style.width = '56px'; }
     return h('div', { class: 'tiles' }, tiles);
@@ -6069,7 +6238,18 @@ const Tabs = (() => {
         h('div', { style: { marginTop: '8px' } }, weightChart(C, date, 90))) : h('p', { class: 'muted small' }, 'No weigh-ins yet. Weigh in a few mornings a week; the trend line smooths out water swings.'),
       h('div', { class: 'grid3', style: { marginTop: '12px' } }, tile2('Body fat', bf ? fmt1(bf.value) : null, '%', bf ? U.fmtShort(bf.date) : null),
         tile2('Waist', waist ? fmt1(U.cmTo(waist.value, units())) : null, U.lUnit(units()), waist ? U.fmtShort(waist.date) : null),
-        tile2('Lean mass', lean ? fmtW(lean.value) : null, wU(), lean ? U.fmtShort(lean.date) : 'from a smart scale')));
+        tile2('Lean mass', lean ? fmtW(lean.value) : null, wU(), lean ? U.fmtShort(lean.date) : 'from a smart scale')),
+      bloodPressure(C, date));
+  }
+  /** The latest blood pressure and its 90-day average, when a cuff or the Watch has sent some. */
+  function bloodPressure(C, date) {
+    const rs = [];
+    for (let k = 0; k < 90; k++) { const d = addDays(date, -k), bp = C.days[d]?.bp; if (bp) rs.push({ d, ...bp }); }
+    if (!rs.length) return null;
+    const last = rs[0], ms = Math.round(U.mean(rs.map((r) => r.sys))), md = Math.round(U.mean(rs.map((r) => r.dia)));
+    return h('div', { class: 'row', style: { marginTop: '10px', gap: '12px' } }, h('span', { class: 'ic hr', style: { width: '36px', height: '36px', borderRadius: '11px', display: 'grid', placeItems: 'center', flex: 'none' } }, icon('heart')),
+      h('div', { class: 'grow' }, h('b', { style: { display: 'block', fontSize: 'calc(15 * var(--fs))' } }, 'Blood pressure'), h('span', { class: 'xs muted' }, `${plural(rs.length, 'day')} with readings · 90-day average ${ms}/${md}`)),
+      h('div', { style: { textAlign: 'right' } }, h('b', { class: 'num', style: { fontSize: 'calc(19 * var(--fs))' } }, `${last.sys}/${last.dia}`), h('span', { class: 'xs muted', style: { display: 'block' } }, `mmHg · ${U.fmtShort(last.d)}`)));
   }
   function sleepTimingCard(C, date) {
     const nights = [];
@@ -6753,9 +6933,12 @@ const Pages = {};
       const jd = args.date || addDays(C.todayStr, -1);
       const cur = C.journal[jd] || { a: {} };
       const a = { ...cur.a };
-      const auto = new Set();
+      const auto = new Set(), fromData = {};
       for (const hb of C.habits) {
         if (a[hb.id] != null) continue;
+        const da = hb.id === 'stressful' ? null : C.autoAnswer(hb.id, jd);
+        if (da) { a[hb.id] = da.v; fromData[hb.id] = da.why; continue; }
+        if (hb.id === 'stressful') { const sx = C.stress(jd), exam = C.activitiesOn(jd).some((x) => x.type === 'exam'); if (exam || (sx?.highMin || 0) >= 120) { a[hb.id] = 1; fromData[hb.id] = exam ? 'suggested, an exam that day' : `suggested, ${U.fmtHrs(sx.highMin)} of high stress`; continue; } }
         const past = []; for (let k = 1; k <= 14 && past.length < 7; k++) { const v = C.journal[addDays(jd, -k)]?.a?.[hb.id]; if (v != null) past.push(v); }
         if (past.length >= 5 && past.every((v) => v === past[0])) { a[hb.id] = past[0]; auto.add(hb.id); }
       }
@@ -6775,8 +6958,8 @@ const Pages = {};
       const qs = h('div');
       const drawQs = () => put(qs, C.habits.map((hb) => {
         const v = a[hb.id];
-        const b = (label, val) => h('button', { type: 'button', 'aria-pressed': String(v === val), onclick: () => { a[hb.id] = v === val ? undefined : val; if (a[hb.id] === undefined) delete a[hb.id]; auto.delete(hb.id); drawQs(); update(); } }, label);
-        const rows = [h('div', { class: 'habit-q' }, h('div', { class: 'tx' }, h('b', null, hb.name), h('span', null, auto.has(hb.id) ? `Usually ${v ? 'yes' : 'no'}, filled in for you` : HABIT_SUB[hb.id] || 'Your habit')),
+        const b = (label, val) => h('button', { type: 'button', 'aria-pressed': String(v === val), onclick: () => { a[hb.id] = v === val ? undefined : val; if (a[hb.id] === undefined) delete a[hb.id]; auto.delete(hb.id); delete fromData[hb.id]; drawQs(); update(); } }, label);
+        const rows = [h('div', { class: 'habit-q' }, h('div', { class: 'tx' }, h('b', null, hb.name), h('span', null, fromData[hb.id] && v != null ? `From your data: ${fromData[hb.id]}` : auto.has(hb.id) ? `Usually ${v ? 'yes' : 'no'}, filled in for you` : HABIT_SUB[hb.id] || 'Your habit')),
           h('div', { class: 'yn', role: 'group', 'aria-label': hb.name }, b('No', 0), b('Yes', 1)))];
         if (hb.id === 'alcohol' && v === 1) {
           const n = a.drinks || 2;
@@ -6791,7 +6974,7 @@ const Pages = {};
       notes.value = note;
       return view(
         pageHead('Check-in', { sub: `About ${jd === C.todayStr ? 'today' : 'yesterday'}, ${U.fmtDayLong(jd)}`, right: h('button', { class: 'link', onclick: () => App.open('habits') }, 'Edit') }),
-        h('div', null, h('div', { class: 'row', style: { justifyContent: 'space-between', fontSize: 'calc(13 * var(--fs))', fontWeight: 700, color: 'var(--muted)', marginBottom: '6px' } }, count, h('span', null, 'usual answers are filled in')), progress),
+        h('div', null, h('div', { class: 'row', style: { justifyContent: 'space-between', fontSize: 'calc(13 * var(--fs))', fontWeight: 700, color: 'var(--muted)', marginBottom: '6px' } }, count, h('span', null, 'filled in where your data can tell')), progress),
         cardT(jd === C.todayStr ? 'How do you feel today?' : 'How do you feel this morning?', null, feelWrap),
         h('section', { class: 'card', style: { paddingBlock: '4px' }, 'aria-label': 'Habits' }, qs),
         field('Anything else? (optional)', notes),
@@ -6883,6 +7066,11 @@ const Pages = {};
     L.push(`Energy: estimated expenditure ${en.tdee} kcal/day (confidence ${Math.round(en.confidence * 100)}%), target ${en.target} kcal, macros P${en.protein} C${en.carbs} F${en.fat} g. Trend weight ${en.trendWeight ? U.round(en.trendWeight, 1) + ' kg' : 'unknown'}${en.weekChange != null ? `, ${U.round(en.weekChange, 2)} kg over the last week` : ''}.`);
     const need = C.sleepNeed(addDays(d, 1)), lo = Tabs.lightsOut(C, d);
     L.push(`Sleep need for the coming night: ${fmtDur(need.total)} (baseline ${fmtDur(need.base)}, +${need.strainAdd} min for strain, +${need.debtAdd} min for recent short nights, −${need.napCredit} for naps)${lo.time ? `, lights out by ${lo.time}` : ''}.`);
+    const xs = [];
+    for (let k = 6; k >= 0; k--) { const x = addDays(d, -k), dd = C.days[x]; if (!dd) continue; const bits = [dd.daylight ? `daylight ${dd.daylight.min} min (${dd.daylight.am} before noon)` : null, dd.caffeine ? `caffeine ${dd.caffeine.mg} mg (${dd.caffeine.late} after 2 pm)` : null, dd.drinks ? `${dd.drinks} drinks` : null, dd.mindful ? `${dd.mindful} mindful min` : null, dd.bp ? `BP ${dd.bp.sys}/${dd.bp.dia}` : null].filter(Boolean); if (bits.length) xs.push(`${x}: ${bits.join(', ')}`); }
+    if (xs.length) L.push('From Apple Health, last 7 days: ' + xs.join('; ') + '.');
+    const autos = C.habits.map((hb) => { const a = C.journal[d]?.a?.[hb.id] == null ? C.autoAnswer(hb.id, d) : null; return a ? `${hb.name} ${a.v ? 'yes' : 'no'} (${a.why})` : null; }).filter(Boolean);
+    if (autos.length) L.push(`Habits filled in from data for ${d}, not yet confirmed by the person: ${autos.join('; ')}.`);
     const ha = C.healthAge(d);
     if (ha.healthAge != null) L.push(`Health age ${ha.healthAge.toFixed(1)} vs actual ${ha.age.toFixed(1)}. Factors (years): ` + ha.factors.map((f) => `${f.label} ${f.years.toFixed(1)}`).join(', ') + '.');
     const ex = [...new Set(C.workoutsSorted.flatMap((w) => w.exercises.map((e) => e.name)))].slice(0, 8);
@@ -7063,7 +7251,8 @@ ${ctx}`;
             prow({ ic: 'watch', t: 'This web version reads your Health export', s: 'The iPhone app will read HealthKit directly and stream live data' }))),
         sec('coach', 'Claude coach', ...Coach.settings()),
         sec('data', 'Data',
-          h('button', { class: 'btn block', onclick: () => App.open('import') }, icon('upload'), 'Import Apple Health data'),
+          HealthSync.native() ? HealthSync.row() : null,
+          h('button', { class: 'btn block', onclick: () => App.open('import') }, icon('upload'), HealthSync.native() ? 'Import older history from an export' : 'Import Apple Health data'),
           st.meta?.lastImport ? h('p', { class: 'note' }, `Last import ${U.fmtDay(st.meta.lastImport.at.slice(0, 10))}: ${st.meta.lastImport.days} days${st.meta.lastImport.from ? `, ${U.fmtShort(st.meta.lastImport.from)}–${U.fmtShort(st.meta.lastImport.to)}` : ''}.`) : null,
           h('label', { class: 'switch', for: 'set-demo' }, h('span', null, 'Show sample data'), h('input', { type: 'checkbox', id: 'set-demo', checked: Store.demo, onchange: (e) => { Store.setDemo(e.target.checked); toast(e.target.checked ? 'Showing sample data' : 'Showing your data'); App.render(); } })),
           App.downloads ? h('button', { class: 'btn block ghost', onclick: async () => {
@@ -7098,7 +7287,7 @@ ${ctx}`;
       const prog = h('div', { class: 'progress', hidden: true }, h('div', { style: { width: '0%' } }));
       const status = h('p', { class: 'small', hidden: true });
       const body = h('div', { class: 'col', style: { gap: '14px' } });
-      const fileIn = h('input', { type: 'file', id: 'import-file', accept: '.zip,.xml,application/zip,text/xml,application/xml', hidden: true, onchange: (e) => { const f = e.target.files[0]; if (f) run(f); e.target.value = ''; } });
+      const fileIn = h('input', { type: 'file', id: 'import-file', accept: '.zip,.xml,.json,application/zip,text/xml,application/xml,application/json', hidden: true, onchange: (e) => { const f = e.target.files[0]; if (f) run(f); e.target.value = ''; } });
       const choose = h('button', { class: 'btn primary block lg', onclick: () => fileIn.click() }, icon('upload'), 'Choose export file');
       const setP = (p, text) => { prog.hidden = false; prog.firstChild.style.width = Math.round(p * 100) + '%'; status.hidden = false; status.className = 'small'; status.textContent = text; };
       async function run(file) {
@@ -7122,6 +7311,7 @@ ${ctx}`;
             : m === 'no-export-xml' ? 'This zip doesn’t contain export.xml. Choose the export.zip file the Health app created.'
               : m === 'zip-lib' ? 'The unzip tool couldn’t load. Unzip the file in the Files app, then choose export.xml.'
                 : m === 'not-health-export' || m === 'empty' ? 'No Health records found in this file for that period. Check that it’s the Health app export.'
+                  : m === 'not-health-json' ? 'This JSON file isn’t a Baseline Health sync file (format baseline.health/1).'
                   : e?.code === 'quota_exceeded' ? 'Storage for this app is full. Try importing a shorter period.' : 'The import stopped before finishing. Check your connection and try again.';
           console.warn('import', e);
         } finally { choose.disabled = false; }
@@ -7132,7 +7322,8 @@ ${ctx}`;
           field('Bring in', seg([[90, '90 days'], [180, '6 months'], [365, '1 year']], days, (v) => { days = v; }), 'weight goes back 2 years'),
           fileIn, choose, prog, status),
         h('p', { class: 'note' }, 'The file is read on this device. Only daily summaries are saved (sleep, heart rate, HRV through the day, activity, workouts, weight), not the raw export.'));
-      return view(pageHead('Import Apple Health', { sub: 'From your iPhone and Apple Watch' }), body);
+      return view(pageHead('Import Apple Health', { sub: 'From your iPhone and Apple Watch' }),
+        HealthSync.native() ? [HealthSync.row(), h('p', { class: 'note' }, 'The app syncs on its own when you open it. A full export below is only needed to bring in older history.')] : null, body);
     },
   };
 
@@ -7140,7 +7331,7 @@ ${ctx}`;
   const goalText = (meta) => (meta.kind === 'track' ? 'Just tracking' : meta.kind === 'build' ? (meta.goal >= 7 ? 'Every day' : `Goal ${meta.goal} days a week`) : meta.goal === 0 ? 'Avoid it completely' : `At most ${plural(meta.goal, 'day')} a week`);
   /** One day's answer as a color: green for a good day, orange for an avoid habit you had, gray for a missed one, purple for a tracked yes. */
   const dayFill = (meta, a) => (a == null ? null : meta.kind === 'track' ? (a ? 'var(--sleep)' : 'var(--axis)') : E.habitSuccess(meta.kind, a) ? 'var(--good)' : meta.kind === 'avoid' ? 'var(--stress)' : 'var(--axis)');
-  const ansOn = (C, d, id) => { const v = C.journal[d]?.a?.[id]; return v === 1 || v === 0 ? v : null; };
+  const ansOn = (C, d, id) => C.answerOf(d, id);
   const groupsOf = (list) => {
     const groups = [...E.HABIT_GROUPS, { id: 'yours', name: 'Your habits', ids: null }], out = [];
     for (const g of groups) {
@@ -7195,7 +7386,7 @@ ${ctx}`;
       // progress: one mark a day
       const end = ex.ended || ex.to, cells = [];
       for (let x = ex.from; x <= ex.to; x = addDays(x, 1)) {
-        const a = C.journal[x]?.a?.[ex.habit], st = x > end || x > today ? 'future' : a == null ? 'none' : a === ex.target ? 'kept' : 'slip';
+        const a = C.answerOf(x, ex.habit), st = x > end || x > today ? 'future' : a == null ? 'none' : a === ex.target ? 'kept' : 'slip';
         cells.push(h('i', { class: 'xd ' + st, title: `${U.fmtDay(x)}: ${{ future: 'to come', none: 'not logged', kept: 'kept', slip: 'slipped' }[st]}`, style: x === today ? { boxShadow: '0 0 0 2px var(--ink-2)' } : null }));
       }
       const head = ex.status === 'done' ? 'Finished' : ex.status === 'planned' ? `Starts ${U.fmtDayLong(ex.from)}` : ex.status === 'cancelled' ? 'Stopped' : `Day ${ex.day} of ${ex.total}`;
@@ -7278,13 +7469,14 @@ ${ctx}`;
       const answered = habits.filter((hb) => ansOn(C, sel, hb.id) != null).length;
       const logRow = ({ hb, meta, now, wk }) => {
         const a = ansOn(C, sel, hb.id);
-        const b = (label, v) => h('button', { type: 'button', 'aria-pressed': String(a === v), disabled: !canLog, onclick: () => Store.setJournal(sel, hb.id, a === v ? null : v) }, label);
+        const own = C.journal[sel]?.a?.[hb.id] ?? null;
+        const b = (label, v) => h('button', { type: 'button', 'aria-pressed': String(a === v), disabled: !canLog, onclick: () => Store.setJournal(sel, hb.id, a === v && own != null ? null : v) }, label);
         const dots = h('span', { class: 'dots7', 'aria-hidden': 'true' }, wk.cells.map((x, i) => h('i', { style: { background: dayFill(meta, x), opacity: addDays(wk.mon, i) > today ? 0.35 : null, boxShadow: addDays(wk.mon, i) === sel ? '0 0 0 1.5px var(--ink-2)' : null } })));
         const cnt = meta.kind === 'track' ? `${wk.yes} yes` : meta.kind === 'build' ? `${wk.yes} of ${meta.goal}` : `${wk.yes} of max ${meta.goal}`;
         const stk = Tabs.hasStreak(now) ? [icon('flame', 'flame'), h('span', { style: { fontWeight: 800, color: 'var(--stress-ink)' }, 'aria-label': Tabs.streakText(now) }, Tabs.streakText(now, { short: true })), h('span', { style: { color: 'var(--faint)' } }, '·')] : [];
         return h('div', { class: 'hlog' },
           h('button', { class: 'tx', style: { border: 0, background: 'none', color: 'inherit', textAlign: 'left', padding: 0 }, onclick: () => App.open('habit', { id: hb.id, date: today }), 'aria-label': `${hb.name}. ${goalText(meta)}. Open details` },
-            h('b', null, hb.name), h('span', { class: 's' }, ...stk, dots, h('span', null, cnt))),
+            h('b', null, hb.name), h('span', { class: 's' }, ...stk, dots, h('span', null, cnt), a != null && C.journal[sel]?.a?.[hb.id] == null ? h('span', { class: 'auto-tag' }, icon('watch'), 'from data') : null)),
           h('div', { class: 'yn', role: 'group', 'aria-label': hb.name }, b('No', 0), b('Yes', 1)));
       };
       const body = [];
@@ -7373,11 +7565,12 @@ ${ctx}`;
       const out = [pageHead(hb.name, { sub: `${g.name} · ${goalText(meta)}`, right: Store.canWrite ? h('button', { class: 'link', onclick: () => Sheet.habitEdit({ id: hb.id }) }, 'Edit') : null })];
       // today and the streak
       const a = ansOn(C, today, hb.id);
-      const b = (label, v) => h('button', { type: 'button', 'aria-pressed': String(a === v), disabled: !Store.canWrite, onclick: () => Store.setJournal(today, hb.id, a === v ? null : v) }, label);
+      const own = C.journal[today]?.a?.[hb.id] ?? null;
+      const b = (label, v) => h('button', { type: 'button', 'aria-pressed': String(a === v), disabled: !Store.canWrite, onclick: () => Store.setJournal(today, hb.id, a === v && own != null ? null : v) }, label);
       const w = tr.thisWeek, ws = weekState(C, meta, w, today);
       const wsTxt = { met: ['Goal met this week', 'var(--good-ink)'], ok: [meta.kind === 'avoid' ? 'Under your limit' : 'On track this week', 'var(--good-ink)'], limit: ['At your limit for the week', 'var(--warn-ink)'], over: ['Over your limit this week', 'var(--stress-ink)'], behind: ['Behind this week', 'var(--warn-ink)'] }[ws];
       out.push(h('section', { class: 'card', 'aria-label': 'Tracking' },
-        tracked ? h('div', { class: 'hlog', style: { paddingTop: 0 } }, h('div', { class: 'tx' }, h('b', null, 'Today'), h('span', { class: 's' }, a == null ? 'Not logged yet' : meta.kind === 'avoid' ? (a ? 'Had it' : 'Skipped it') : a ? 'Done' : 'Not today')),
+        tracked ? h('div', { class: 'hlog', style: { paddingTop: 0 } }, h('div', { class: 'tx' }, h('b', null, 'Today'), h('span', { class: 's' }, a == null ? 'Not logged yet' : C.journal[today]?.a?.[hb.id] == null && C.autoAnswer(hb.id, today) ? `From your data: ${C.autoAnswer(hb.id, today).why}` : meta.kind === 'avoid' ? (a ? 'Had it' : 'Skipped it') : a ? 'Done' : 'Not today')),
           h('div', { class: 'yn', role: 'group', 'aria-label': `${hb.name} today` }, b('No', 0), b('Yes', 1))) : h('p', { class: 'small muted' }, 'Not in your habits right now. Its history is kept.'),
         h('div', { class: 'grid3', style: { marginTop: '12px' } },
           meta.kind === 'track' ? tile2('This week', w.yes, null, `of ${plural(w.answered, 'day')} logged`) : tile2('Streak', tr.streak, tr.unit === 'week' ? (tr.streak === 1 ? 'week' : 'weeks') : tr.streak === 1 ? 'day' : 'days', `best ${tr.best}`),
@@ -7839,6 +8032,82 @@ const Coach = (() => {
 
   K.describe = describe; K.check = check; K.AUTO = AUTO;
   return K;
+})();
+
+/* ===== healthsync.js — live Apple Health data inside the iPhone app =====
+   The iOS app (ios/) hosts this page in a web view and reads HealthKit. The page asks for samples
+   with  webkit.messageHandlers.baseline.postMessage({ type: 'sync', id, from, to }),  the app answers by calling
+   BaselineBridge.receive({ id, ok, payload, error }) with a baseline.health/1 payload (see HI.fromJSON), and the
+   same aggregation as the export import turns it into daily summaries. Outside the app none of this runs. */
+const HealthSync = (() => {
+  const S = {};
+  const handler = () => window.webkit?.messageHandlers?.baseline || null;
+  S.native = () => !!handler();
+  const pending = new Map();
+  let busy = null, lastError = null;
+  window.BaselineBridge = {
+    receive(msg) {
+      const p = pending.get(msg?.id);
+      if (!p) return;
+      pending.delete(msg.id);
+      if (msg.ok && msg.payload) p.resolve(typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload);
+      else p.reject(Object.assign(new Error(msg?.error || 'sync-failed'), { code: msg?.error || 'sync-failed' }));
+    },
+    /** The app calls this when it comes back to the foreground. */
+    foreground() { S.maybeSync(); },
+  };
+  const ask = (msg, ms = 120000) => new Promise((resolve, reject) => {
+    const id = 's' + U.uid();
+    pending.set(id, { resolve, reject });
+    setTimeout(() => { if (pending.delete(id)) reject(Object.assign(new Error('timeout'), { code: 'timeout' })); }, ms);
+    handler().postMessage({ ...msg, id });
+  });
+  const last = () => Store.state().meta?.lastSync || null;
+  S.last = last;
+  S.error = () => lastError;
+  S.busy = () => !!busy;
+  /** Sync from the day before the last sync (so a night that was still running gets finished), or 180 days back the first time. */
+  S.sync = async ({ quiet = false } = {}) => {
+    if (!S.native()) return null;
+    if (busy) return busy;
+    busy = (async () => {
+      const today = U.today(), prev = last();
+      const from = prev?.to ? U.addDays(prev.to, -1) : U.addDays(today, -180);
+      try {
+        const payload = await ask({ type: 'sync', from: from < U.addDays(today, -400) ? U.addDays(today, -400) : from, to: today });
+        const res = HI.fromJSON(payload, { todayStr: today });
+        await Store.applyImport(res, null, { kind: 'sync' });
+        lastError = null;
+        if (!quiet) toast(res.stats.days ? `Synced ${plural(res.stats.days, 'day')} from Apple Health` : 'Apple Health is up to date');
+        return res;
+      } catch (e) {
+        lastError = e?.code || e?.message || 'sync-failed';
+        if (!quiet) toast(S.errorText(lastError));
+        throw e;
+      } finally { busy = null; App.render(); }
+    })();
+    return busy;
+  };
+  /** Quietly sync when the app opens or comes back, at most every 15 minutes. */
+  S.maybeSync = () => {
+    if (!S.native() || busy) return;
+    if (!Store.ready) { setTimeout(S.maybeSync, 1500); return; } // wait for stored data, or the first sync would look like a fresh start
+    const at = last()?.at ? Date.parse(last().at) : 0;
+    if (Date.now() - at > 15 * 60e3) S.sync({ quiet: true }).catch(() => {});
+  };
+  S.errorText = (c) => ({
+    not_authorized: 'Baseline doesn’t have access to Apple Health yet. Allow it in Settings → Health → Data Access & Devices → Baseline.',
+    unavailable: 'Apple Health isn’t available on this device.', timeout: 'Apple Health took too long to answer. Try again.',
+    'not-health-json': 'Apple Health sent something the app couldn’t read.',
+  }[c] || 'Couldn’t sync with Apple Health. Try again.');
+  /** The Settings and import-page row: when it last synced, and a button. */
+  S.row = () => {
+    const l = last();
+    const sub = busy ? 'Syncing…' : lastError ? S.errorText(lastError) : l ? `Last synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)} · ${plural(l.days || 0, 'day')} updated` : 'Not synced yet';
+    return h('section', { class: 'card tight' }, prow({ ic: 'heart', tone: 'hr', t: 'Apple Health', s: sub,
+      right: h('button', { class: 'btn sm primary', disabled: !!busy, onclick: (e) => { e.stopPropagation(); S.sync().catch(() => {}); App.render(); } }, busy ? 'Syncing…' : 'Sync now') }));
+  };
+  return S;
 })();
 
 /* ===== ui-train.js — workout logger, finish summary, sessions, exercises, routines, muscles, load ===== */
@@ -9507,7 +9776,8 @@ const App = (() => {
       else toast('Couldn’t save that. Check your connection and try again.');
     });
     Store.subscribe(() => {
-      if (Store.firstRun) { Store.firstRun = false; setTimeout(() => Sheet.welcome(), 450); }
+      // in the iPhone app the first sync brings real data straight in, so there's no sample-data welcome
+      if (Store.firstRun) { Store.firstRun = false; if (!HealthSync.native()) setTimeout(() => Sheet.welcome(), 450); }
       render();
     });
     renderNow();
@@ -9523,9 +9793,10 @@ const App = (() => {
     setInterval(tick, 1000);
     await Store.init();
     render();
+    HealthSync.maybeSync();
   }
 
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); HealthSync.maybeSync(); } });
   // swipe in from the left edge to go back, like iOS
   let edge = null;
   window.addEventListener('touchstart', (e) => { const t = e.touches[0]; edge = A.stack.length && !Sheets.count && t.clientX < 24 ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });

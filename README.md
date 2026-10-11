@@ -16,6 +16,11 @@ Then visit http://localhost:8000. Outside Claude the app stores your logs in the
 
 The coach needs a small server that holds your Anthropic API key, so the key never sits in the page. It's in `server/`; see `server/README.md` (about five minutes on Cloudflare Workers, or `node dev.mjs` locally). Then open Settings → Claude coach in the app and enter the server's address and your access code.
 
+## Apple Health
+
+- **Web:** Settings → Data → Import. Choose the `export.zip` from the Health app, or a `baseline.health/1` JSON file.
+- **iPhone app (`ios/`):** reads HealthKit directly and syncs each time it opens. See `ios/README.md`; it still needs its first Xcode build.
+
 ## Where things live in `index.html`
 
 - Styles: the first ~800 lines (design tokens and light/dark themes).
@@ -25,7 +30,7 @@ The coach needs a small server that holds your Anthropic API key, so the key nev
 
 ## Roadmap
 
-1. Data pipeline: Apple Health export to app (deferred).
-2. iOS app with HealthKit sync, live Watch heart rate, workouts and school/work blocks synced with Apple Calendar.
+1. Build and test the iOS app on a device, with HealthKit background delivery.
+2. Widgets, a Live Activity for workouts, a Watch complication for stress, live Watch heart rate, and school/work blocks synced with Apple Calendar.
 
 See `CLAUDE.md` for the working notes used by Claude Code.
