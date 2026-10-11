@@ -10,11 +10,13 @@
 		07307E9BAEDC776079F671AD /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CCBEF6530C7B335B7C172E /* WebView.swift */; };
 		14FE980511237871E2644BEE /* BaselineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007A5A45919FF650EAB251AE /* BaselineApp.swift */; };
 		2A1AE957C1AD94F5458745D9 /* HealthReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37761B564D5DEA73B40A2B5 /* HealthReader.swift */; };
+		56DCE7BDAEC83399B2D62DA2 /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1759753A4215CA4DFCE94732 /* BarcodeScanner.swift */; };
 		E5D347444E82C197F5314FFE /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = EA573ECBA46052214E5DC85D /* index.html */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		007A5A45919FF650EAB251AE /* BaselineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineApp.swift; sourceTree = "<group>"; };
+		1759753A4215CA4DFCE94732 /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
 		6C0783D23B036F0A996BD1E7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		88AF6FD6DF3173BDBDB33E58 /* Baseline.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Baseline.entitlements; sourceTree = "<group>"; };
 		917EC6C734FA7FDEF274FFAD /* Baseline.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Baseline.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -44,6 +46,7 @@
 		70A4BA27E4935EDB662F4B7E /* Baseline */ = {
 			isa = PBXGroup;
 			children = (
+				1759753A4215CA4DFCE94732 /* BarcodeScanner.swift */,
 				88AF6FD6DF3173BDBDB33E58 /* Baseline.entitlements */,
 				007A5A45919FF650EAB251AE /* BaselineApp.swift */,
 				C37761B564D5DEA73B40A2B5 /* HealthReader.swift */,
@@ -132,6 +135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				56DCE7BDAEC83399B2D62DA2 /* BarcodeScanner.swift in Sources */,
 				14FE980511237871E2644BEE /* BaselineApp.swift in Sources */,
 				2A1AE957C1AD94F5458745D9 /* HealthReader.swift in Sources */,
 				07307E9BAEDC776079F671AD /* WebView.swift in Sources */,
