@@ -5,7 +5,7 @@
 #
 # TEAM      optional Apple developer team id; found automatically from the Apple Development certificate
 #           Xcode creates when you sign in (a free Apple ID's "Personal Team" works for your own phone)
-# BUNDLE    optional bundle id, default com.<your mac username>.baseline (must be unique to you)
+# BUNDLE    optional bundle id, default com.<your mac username>.baseline (must be unique to you); the watch app gets BUNDLE.watchkitapp
 # DEVICE    optional iPhone UDID, if more than one is connected
 #
 # The iPhone needs to be unlocked, connected (cable or same Wi-Fi after pairing in Xcode once),
@@ -48,7 +48,7 @@ rm -rf "$APP" # so an old build can't pass for a new one
 
 xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
   -destination "id=$DEVICE" -derivedDataPath build -allowProvisioningUpdates \
-  DEVELOPMENT_TEAM="$TEAM" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE" CODE_SIGN_STYLE=Automatic \
+  DEVELOPMENT_TEAM="$TEAM" BASE_BUNDLE_ID="$BUNDLE" CODE_SIGN_STYLE=Automatic \
   build | grep -E "error:|warning: .*\.swift|BUILD (SUCCEEDED|FAILED)" || true
 [ -d "$APP" ] || { echo "Build failed. Open ios/Baseline.xcodeproj in Xcode to see the full error."; exit 1; }
 
@@ -60,5 +60,6 @@ Baseline is open on your iPhone.
  - Allow the Health categories when asked; the first sync reads the last 180 days.
  - Today should then show your own recovery, sleep and strain instead of the sample person.
  - If iOS says the developer isn't trusted: Settings → General → VPN & Device Management → trust your Apple ID, then open the app again.
+ - The watch app installs with it if your Apple Watch is paired: open the Watch app on your iPhone → Baseline → Install, if it doesn't appear on its own.
  - App logs: Console.app → your iPhone → search "com.example.baseline" (look for "page:" and "sync request").
 EOF

@@ -8510,6 +8510,8 @@ const HealthSync = (() => {
     },
     /** The app calls this when it comes back to the foreground. */
     foreground() { S.maybeSync(); Live.refresh(true); },
+    /** A workout event from the watch app: start, set, finish, discard. */
+    fromWatch(msg) { Watch.receive(msg); },
     /** The app calls this when the watch has written new heart-rate or HRV readings to Health. */
     changed() { if (document.hidden) return; Live.refresh(true); S.maybeSync(); },
   };
@@ -8540,6 +8542,8 @@ const HealthSync = (() => {
     if (hh < 12) at.setDate(at.getDate() + 1); // lights out after midnight
     S.notify('bedtime', at.getTime() - 30 * 60e3, 'Wind down', `Lights out by ${lo.time} gets you ${U.fmtDur(lo.need.total)} of sleep before your usual ${lo.wake} wake.`);
   };
+  /** The context for the watch app, as JSON (the iPhone app forwards it). */
+  S.watch = (json) => { if (S.native()) ask({ type: 'watch', json }, 10000).catch(() => {}); };
   /** Offer a file through the iPhone share sheet (Save to Files, AirDrop, Mail). */
   S.share = (filename, text) => ask({ type: 'share', filename, text }, 30 * 60e3);
   const last = () => Store.state().meta?.lastSync || null;
@@ -8619,6 +8623,82 @@ const HealthSync = (() => {
       right: h('button', { class: 'btn sm primary', disabled: !!busy, onclick: (e) => { e.stopPropagation(); S.sync().catch(() => {}); App.render(); } }, busy ? 'Syncing…' : 'Sync now') }));
   };
   return S;
+})();
+
+/* ===== watch.js — the page side of the Apple Watch app (ios/Watch) =====
+   The watch gets a context: today's scores, the next workout and the routines with their sets pre-filled the way the
+   phone's logger fills them, and a workout in progress here. The watch sends workout events back: start, set (one
+   completed set), finish (the whole workout) and discard. A workout started on either side is the same App.draft. */
+const Watch = (() => {
+  const W = {};
+  let timer = null, last = '';
+  const num = (v) => (v === '' || v == null || v < 0 || !isFinite(+v) ? null : +v);
+  const exOut = (C, ex, id) => ({ id: String(id ?? ex.id), name: ex.name, rest: Math.round(+ex.rest || 90), bw: !!C.exSettings(ex.name).bodyweight,
+    sets: ex.sets.map((x) => ({ t: x.t || 'N', w: num(x.w), r: num(x.r) == null ? null : Math.round(num(x.r)), ph: num(x.ph) == null ? null : Math.round(num(x.ph)), done: !!x.done })) });
+  // a routine as the logger would start it, with stable ids so an unchanged context isn't sent again
+  const planOf = (C, r, why) => ({ id: 'r' + r.id, name: r.name, why, routineId: r.id, minutes: Tabs.planMin(C, { routine: r, on: C.todayStr }),
+    exercises: r.exercises.map((ex, i) => exOut(C, Train.draftExercise(C, ex.name, { sets: ex.sets, reps: ex.reps, rest: ex.rest, group: ex.group, warmup: i === 0 }), `${r.id}-${i}`)) });
+  W.context = () => {
+    const C = App.ctx(), d = C.todayStr, r = C.recovery(d), st = C.strain(d), tgt = C.strainTarget(d), ss = C.sleepScore(d), day = C.days[d] || {};
+    const planned = C.planOn(d).find((p) => p.status === 'today' && p.kind === 'routine' && p.routine);
+    const sug = planned ? null : C.suggestRoutine(d);
+    const next = planned ? planOf(C, planned.routine, `Planned${planned.time ? ' · ' + planned.time : ''}`) : sug ? planOf(C, sug.r, 'Suggested') : null;
+    const mp = C.muscleParts(d);
+    const draft = App.draft ? { id: App.draft.id, name: App.draft.name, why: 'In progress on iPhone', routineId: App.draft.routineId || null,
+      startedAt: Date.parse(App.draft.startedAt), exercises: App.draft.exercises.map((ex) => exOut(C, ex)) } : null;
+    return {
+      v: 1, at: U.isoLocal(new Date()), units: units() === 'imperial' ? 'lb' : 'kg',
+      day: { date: d, recovery: r && !r.calibrating ? r.score : null, band: r && !r.calibrating ? r.band : null, strain: st ? U.round(st.value, 1) : null,
+        lo: tgt[0], hi: tgt[1], sleep: ss?.score ?? null, asleep: ss ? Math.round(ss.s.asleep) : null, hrv: day.hrv != null ? Math.round(day.hrv) : null, rhr: day.rhr ?? null },
+      next, routines: C.routines.slice(0, 8).map((x) => planOf(C, x, null)), draft,
+      tired: E.PARTS.map((x) => mp[x.name]).filter((o) => o.last && o.fresh < 70).sort((a, b) => a.fresh - b.fresh).map((o) => o.name),
+    };
+  };
+  /** Send the context when something changed (debounced; identical contexts aren't sent again). */
+  W.push = () => {
+    if (!HealthSync.native() || Store.demo) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      let json;
+      try { json = JSON.stringify(W.context()); } catch { return; }
+      if (json === last) return;
+      last = json;
+      HealthSync.watch(json);
+    }, 800);
+  };
+  const exIn = (ex) => ({ id: String(ex.id || U.uid()), name: String(ex.name || 'Exercise'), rest: +ex.rest || 90, group: null,
+    sets: (ex.sets || []).map((x) => ({ t: x.t || 'N', w: x.w >= 0 ? +x.w : '', r: x.r >= 0 ? +x.r : '', ph: x.ph >= 0 ? +x.ph : '', rpe: '', done: !!x.done })) });
+  W.receive = (msg) => {
+    if (!msg || typeof msg !== 'object' || Store.demo) return;
+    const mine = App.draft && App.draft.id === msg.id;
+    if (msg.kind === 'start') {
+      if (App.draft && !mine) return; // one workout at a time; the phone's own keeps going
+      App.draft = { id: String(msg.id), date: U.today(), startedAt: new Date(msg.startedAt || Date.now()).toISOString(), name: String(msg.name || 'Workout'),
+        routineId: msg.routineId || null, notes: '', fromWatch: true, exercises: (msg.exercises || []).map(exIn) };
+      App.saveDraft(); App.render();
+      toast(`${App.draft.name} started on your watch`);
+    } else if (msg.kind === 'set' && mine) {
+      const x = App.draft.exercises[msg.ex]?.sets?.[msg.set];
+      if (!x) return;
+      Object.assign(x, { w: msg.w >= 0 ? +msg.w : x.w, r: msg.r >= 0 ? +msg.r : x.r, done: !!msg.done });
+      App.saveDraft(); App.render();
+    } else if (msg.kind === 'discard' && mine) {
+      App.draft = null; App.saveDraft(); App.stopRest(); App.render();
+    } else if (msg.kind === 'finish') {
+      const exs = (msg.exercises || []).map(exIn).map((ex) => ({ name: ex.name, sets: ex.sets.filter((x) => x.done && +x.r > 0)
+        .map((x) => ({ w: +x.w || 0, r: +x.r, t: x.t === 'N' ? undefined : x.t, done: true })) })).filter((ex) => ex.sets.length);
+      if (!exs.length) return;
+      const t0 = new Date(msg.startedAt || Date.now()), t1 = new Date(msg.endedAt || Date.now());
+      const start = U.isoLocal(t0).slice(0, 16), end = U.isoLocal(t1).slice(0, 16);
+      Store.saveWorkout({ id: String(msg.id), date: start.slice(0, 10), start, end, min: Math.max(1, Math.round((t1 - t0) / 60000)), type: 'Strength', name: String(msg.name || 'Strength'),
+        kind: 'strength', routineId: msg.routineId || null, exercises: exs, rpe: msg.rpe >= 1 && msg.rpe <= 10 ? +msg.rpe : 7, notes: null, src: 'watch',
+        ...(msg.avgHr > 0 ? { avgHr: +msg.avgHr } : {}), ...(msg.maxHr > 0 ? { maxHr: +msg.maxHr } : {}), ...(msg.kcal > 0 ? { kcal: +msg.kcal } : {}) });
+      if (mine) { App.draft = null; App.saveDraft(); App.stopRest(); if (App.top()?.page === 'workout') { App.stack = []; App.go('train'); } }
+      App.render();
+      toast(`${msg.name || 'Workout'} from your watch saved`);
+    }
+  };
+  return W;
 })();
 
 /* ===== foodnet.js — packaged foods from Open Food Facts (openfoodfacts.org, free, no key): barcode lookup and search =====
@@ -10338,7 +10418,7 @@ const App = (() => {
     Store.lsSet('theme', v === 'system' ? null : v);
   };
   A.saveUi = () => Store.lsSet('ui', JSON.stringify(A.ui));
-  A.saveDraft = () => Store.lsSet('workout-draft', A.draft ? JSON.stringify(A.draft) : null);
+  A.saveDraft = () => { Store.lsSet('workout-draft', A.draft ? JSON.stringify(A.draft) : null); Watch.push(); };
 
   // ---------- rest timer ----------
   A.startRest = (sec, next) => {
@@ -10504,6 +10584,7 @@ const App = (() => {
       // in the iPhone app the first sync brings real data straight in, so there's no sample-data welcome
       if (Store.firstRun) { Store.firstRun = false; if (!HealthSync.native()) setTimeout(() => Sheet.welcome(), 450); }
       render();
+      Watch.push();
     });
     renderNow();
     const cl = window.claude;
@@ -10520,6 +10601,7 @@ const App = (() => {
     render();
     HealthSync.maybeSync();
     HealthSync.planBedtime();
+    Watch.push();
   }
 
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); HealthSync.maybeSync(); } });

@@ -33,7 +33,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # the project plus the Info.plist and entitlements XcodeGen writes next to the sources
-          git add ios/Baseline.xcodeproj ios/Baseline/Info.plist ios/Baseline/Baseline.entitlements
+          git add ios/Baseline.xcodeproj ios/Baseline/Info.plist ios/Baseline/Baseline.entitlements ios/Watch/Info.plist ios/Watch/BaselineWatch.entitlements
           if ! git diff --cached --quiet; then
             git commit -m "Regenerate the Xcode project, Info.plist and entitlements from project.yml"
             git push
@@ -51,8 +51,10 @@ jobs:
           set -o pipefail
           xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=com.example.baseline build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
           test -d build/Build/Products/Debug-iphonesimulator/Baseline.app
+          # the watch app is built with it and embedded
+          test -d build/Build/Products/Debug-iphonesimulator/Baseline.app/Watch/BaselineWatch.app
 
       - name: Launch in the simulator
         run: |
@@ -75,6 +77,34 @@ jobs:
           grep -q "page: Baseline Health | rendered" app.log
           grep -q "sync request" app.log
 
+      - name: Build the watch app for the watch simulator
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -project Baseline.xcodeproj -scheme BaselineWatch -configuration Debug \
+            -sdk watchsimulator -destination 'generic/platform=watchOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee watchbuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+          test -d build/Build/Products/Debug-watchsimulator/BaselineWatch.app
+
+      # informative: a watch simulator without a paired phone may refuse to run a companion app
+      - name: Launch the watch app in a watch simulator
+        continue-on-error: true
+        run: |
+          set -x
+          WATCH=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in sorted(d, reverse=True) if 'watchOS' in k for x in d[k] if 'Watch' in x['name']))")
+          xcrun simctl boot "$WATCH"
+          xcrun simctl bootstatus "$WATCH" -b
+          xcrun simctl install "$WATCH" ios/build/Build/Products/Debug-watchsimulator/BaselineWatch.app
+          xcrun simctl launch "$WATCH" com.example.baseline.watchkitapp
+          for i in $(seq 1 18); do
+            sleep 5
+            xcrun simctl spawn "$WATCH" log show --last 10m --style compact --predicate 'subsystem == "com.example.baseline"' > watch.log 2>/dev/null || true
+            grep -q "watch: home rendered" watch.log && break
+          done
+          cat watch.log
+          xcrun simctl io "$WATCH" screenshot watch.png
+          grep -q "watch: home rendered" watch.log
+
       - name: Keep the build log and screenshot
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,6 +112,9 @@ jobs:
           name: ios-build
           path: |
             ios/xcodebuild.log
+            ios/watchbuild.log
+            watch.png
+            watch.log
             launch.png
             app.log
           if-no-files-found: ignore

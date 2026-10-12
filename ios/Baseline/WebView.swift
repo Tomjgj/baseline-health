@@ -10,6 +10,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     let webView: WKWebView
     private let health = HealthReader()
     private let scanner = BarcodeScanner()
+    private let watch = WatchLink()
 
     override init() {
         let config = WKWebViewConfiguration()
@@ -23,6 +24,9 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.allowsBackForwardNavigationGestures = false
         webView.navigationDelegate = self
+        watch.deliver = { [weak self] json in
+            self?.webView.callAsyncJavaScript("window.BaselineBridge && window.BaselineBridge.fromWatch && window.BaselineBridge.fromWatch(JSON.parse(json))", arguments: ["json": json], in: nil, in: .page, completionHandler: nil)
+        }
         health.onNewReadings = { [weak self] in
             DispatchQueue.main.async {
                 self?.webView.evaluateJavaScript("window.BaselineBridge && window.BaselineBridge.changed && window.BaselineBridge.changed()", completionHandler: nil)
@@ -59,6 +63,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "scan", id }                                        → { code } from the camera
     ///   { type: "food", id, path }                                  → { text } from Open Food Facts (path starts with /)
     ///   { type: "notify", id, key, at: ms since 1970, title, body } and { type: "unnotify", id, key } → local reminders
+    ///   { type: "watch", id, json }                                 → the context for the watch app (WatchLink)
     ///   { type: "share", id, filename, text }                       → the share sheet with that file
     ///   { type: "latest", id }                                      → { at, hr: [[time, bpm]], hrv: [[time, ms]] }, the last few hours
     /// and tells the page when the watch has delivered new readings by calling BaselineBridge.changed().
@@ -87,6 +92,10 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             return
         case "unnotify":
             if let key = body["key"] as? String { Notifier.cancel(key: key) }
+            reply(["id": id, "ok": true, "payload": [:] as [String: Any]])
+            return
+        case "watch":
+            if let json = body["json"] as? String { watch.send(context: json) }
             reply(["id": id, "ok": true, "payload": [:] as [String: Any]])
             return
         case "share":

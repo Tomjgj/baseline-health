@@ -1,11 +1,16 @@
-# XcodeGen spec for the Baseline iPhone app. Generate the Xcode project with:
+# XcodeGen spec for the Baseline iPhone app and its Apple Watch app. Generate the Xcode project with:
 #   brew install xcodegen && cd ios && xcodegen generate && open Baseline.xcodeproj
 name: Baseline
 options:
   bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "17.0"
+    watchOS: "10.0"
   createIntermediateGroups: true
+settings:
+  base:
+    # unique per developer team, so nobody has to invent a bundle id before pressing Run; the watch app's id is this plus .watchkitapp
+    BASE_BUNDLE_ID: com.baselinehealth.app.$(DEVELOPMENT_TEAM)
 targets:
   Baseline:
     type: application
@@ -15,6 +20,9 @@ targets:
       # the web app itself, bundled as-is and served to the web view from baseline://app/
       - path: ../index.html
         buildPhase: resources
+    dependencies:
+      # the watch app ships inside the iPhone app
+      - target: BaselineWatch
     info:
       path: Baseline/Info.plist
       properties:
@@ -35,9 +43,36 @@ targets:
         com.apple.developer.healthkit.access: []
     settings:
       base:
-        # unique per developer team, so nobody has to invent a bundle id before pressing Run
-        PRODUCT_BUNDLE_IDENTIFIER: com.baselinehealth.app.$(DEVELOPMENT_TEAM)
+        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID)
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
+  BaselineWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Watch
+    info:
+      path: Watch/Info.plist
+      properties:
+        CFBundleDisplayName: Baseline
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: $(BASE_BUNDLE_ID)
+        WKBackgroundModes: [workout-processing]
+        NSHealthShareUsageDescription: Baseline reads your heart rate and energy during workouts.
+        NSHealthUpdateUsageDescription: Baseline saves the workouts you track on your watch to Apple Health.
+    entitlements:
+      path: Watch/BaselineWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID).watchkitapp
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "4"
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
