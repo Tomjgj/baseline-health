@@ -28,6 +28,7 @@
 		72194399B75B95F06A0BA393 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CAC6C2A9B00ADEDA55343E85 /* Assets.xcassets */; };
 		7AEFC28840863DD1ADAC6790 /* PhoneLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924C1504E79CC403AD9712B0 /* PhoneLink.swift */; };
 		7FE60B7AF485B9D6F96959EE /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15499D24B5F0209C0403DDA /* Model.swift */; };
+		86B18B680A86D4A218E45A46 /* foods-usda.json in Resources */ = {isa = PBXBuildFile; fileRef = 1B4FA591A59AD720AB89503A /* foods-usda.json */; };
 		8AC95D8343D1682EED252445 /* LiftView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C7FFB61942B9AB733E35EC /* LiftView.swift */; };
 		913CC0EC758B237661F89FE7 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DD3D5AA734480075A76408 /* Lift.swift */; };
 		94A2CE2C3975D4EBF03BA679 /* WatchLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 461C9E0C900D09FB79DA1842 /* WatchLink.swift */; };
@@ -107,6 +108,7 @@
 		007A5A45919FF650EAB251AE /* BaselineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineApp.swift; sourceTree = "<group>"; };
 		0635709FE02D3D92086A5E29 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1759753A4215CA4DFCE94732 /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
+		1B4FA591A59AD720AB89503A /* foods-usda.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "foods-usda.json"; sourceTree = "<group>"; };
 		28C14136341FC43BFD2764BD /* WorkoutLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLiveActivity.swift; sourceTree = "<group>"; };
 		2FE63A7AFA8B216CFAA968A5 /* BaselineWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BaselineWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32DD3D5AA734480075A76408 /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 		BFAC29F95EF2BA0F3602BE64 /* baseline-health */ = {
 			isa = PBXGroup;
 			children = (
+				1B4FA591A59AD720AB89503A /* foods-usda.json */,
 				EA573ECBA46052214E5DC85D /* index.html */,
 			);
 			name = "baseline-health";
@@ -361,6 +364,7 @@
 			files = (
 				72194399B75B95F06A0BA393 /* Assets.xcassets in Resources */,
 				33CD9F6DAD6C0290C0355F77 /* coach.json in Resources */,
+				86B18B680A86D4A218E45A46 /* foods-usda.json in Resources */,
 				E5D347444E82C197F5314FFE /* index.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
