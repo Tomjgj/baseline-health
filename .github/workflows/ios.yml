@@ -50,7 +50,7 @@ jobs:
           cd ios
           set -o pipefail
           xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
-            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
           test -d build/Build/Products/Debug-iphonesimulator/Baseline.app
           # the watch app is built with it and embedded
@@ -82,7 +82,7 @@ jobs:
           cd ios
           set -o pipefail
           xcodebuild -project Baseline.xcodeproj -scheme BaselineWatch -configuration Debug \
-            -sdk watchsimulator -destination 'generic/platform=watchOS Simulator' \
+            -destination 'generic/platform=watchOS Simulator' \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee watchbuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
           test -d build/Build/Products/Debug-watchsimulator/BaselineWatch.app
 
