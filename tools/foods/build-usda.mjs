@@ -14,16 +14,26 @@ const PAGE = 'https://fdc.nal.usda.gov/download-datasets';
 const SKIP_GROUPS = /baby foods|infant/i;
 const SKIP_NAMES = /\binfant formula\b|\bbaby food\b|\bUSDA Commodity\b|\bCHILD NUTRITION\b/i;
 
-/** Finds the newest zip of one dataset on the download page (filenames carry dates, so they change). */
-async function zipUrl(pattern) {
+/** Finds the newest zip of one dataset. The download page fills its links in with JavaScript, so known file names
+ *  (they carry release dates) are tried too, newest first; the first that exists wins. */
+const BASE = 'https://fdc.nal.usda.gov/fdc-datasets/';
+const KNOWN = {
+  foundation: ['2026-04-30', '2025-12-18', '2025-04-24', '2024-10-31', '2024-04-18', '2023-12-14', '2023-10-26', '2023-04-20'].map((d) => `FoodData_Central_foundation_food_csv_${d}.zip`),
+  sr: ['FoodData_Central_sr_legacy_food_csv_2018-04.zip', 'FoodData_Central_sr_legacy_food_csv_%202019-04-02.zip'],
+};
+async function exists(url) {
+  try { const r = await fetch(url, { method: 'HEAD' }); return r.ok; } catch { return false; }
+}
+async function zipUrl(pattern, known) {
   for (const page of [PAGE, PAGE + '.html']) {
     try {
       const html = await (await fetch(page)).text();
-      const links = [...html.matchAll(/href="([^"]+\.zip)"/g)].map((m) => new URL(m[1], page).href).filter((u) => pattern.test(u));
+      const links = [...html.matchAll(/["'(]([^"'()\s]*\.zip)["')]/g)].map((m) => new URL(m[1], page).href).filter((u) => pattern.test(u));
       if (links.length) return links.sort().pop();
     } catch {}
   }
-  throw new Error(`no download link matching ${pattern}`);
+  for (const f of known) { const u = BASE + f; if (await exists(u)) return u; console.log('not there:', u); }
+  return null;
 }
 
 async function download(url, dir) {
@@ -138,8 +148,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) await main();
 async function main() {
 const dir = mkdtempSync(join(tmpdir(), 'usda-'));
 const sets = [];
-for (const [label, re] of [['Foundation Foods', /foundation_food_csv/i], ['SR Legacy', /sr_legacy_food_csv/i]]) {
-  const url = await zipUrl(re);
+for (const [label, re, known, required] of [['Foundation Foods', /foundation_food_csv/i, KNOWN.foundation, false], ['SR Legacy', /sr_legacy_food_csv/i, KNOWN.sr, true]]) {
+  const url = await zipUrl(re, known);
+  if (!url) { if (required) throw new Error(`no download for ${label}`); console.log(`skipping ${label}: no download found`); continue; }
   const rows = readDataset(await download(url, dir));
   console.log(label, rows.length, 'foods from', url.split('/').pop());
   sets.push({ label, file: url.split('/').pop(), rows });

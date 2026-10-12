@@ -33,6 +33,10 @@ jobs:
             exit 1
           fi
 
+      # the food database is built by foods.yml; until it's committed, the app bundles an empty one
+      - name: Make sure the food database file exists
+        run: '[ -f foods-usda.json ] || echo ''{"v":1,"foods":[]}'' > foods-usda.json'
+
       - name: Generate the Xcode projects
         run: |
           brew install xcodegen
