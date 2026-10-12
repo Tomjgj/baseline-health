@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		07D0E37A09E5A753530006DE /* foods-usda.json in Resources */ = {isa = PBXBuildFile; fileRef = 7669C6EFAF847004C4117DB8 /* foods-usda.json */; };
 		09BCE8DBC10111DE1659EF70 /* BaselineWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6867FA866805D007EE33F78E /* BaselineWatchApp.swift */; };
 		0E308EE67E246955E905A6CB /* BaselineWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B5F9FADE462E4BDFE7A13B95 /* BaselineWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		10BC9DB007EF6E348361A92B /* coach.json in Resources */ = {isa = PBXBuildFile; fileRef = 6FD309E14DF68FBDAA7DC56C /* coach.json */; };
@@ -69,6 +70,7 @@
 		6DAE60371921458EA5FE96C5 /* LiveWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWorkout.swift; sourceTree = "<group>"; };
 		6FD309E14DF68FBDAA7DC56C /* coach.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = coach.json; sourceTree = "<group>"; };
 		75350BDB10DF009568233587 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		7669C6EFAF847004C4117DB8 /* foods-usda.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "foods-usda.json"; sourceTree = "<group>"; };
 		7D536680EA988B449D2E0FAD /* WatchLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLink.swift; sourceTree = "<group>"; };
 		A81F9203599A82EFB178785D /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
 		AAF106C59CA931FB05A0BE5F /* WorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutManager.swift; sourceTree = "<group>"; };
@@ -150,6 +152,7 @@
 		E4315ED9015860AC5CC759A8 /* baseline-health */ = {
 			isa = PBXGroup;
 			children = (
+				7669C6EFAF847004C4117DB8 /* foods-usda.json */,
 				D29A34F35A2DE9F6C239331D /* index.html */,
 			);
 			name = "baseline-health";
@@ -249,6 +252,7 @@
 			files = (
 				5B7E77A4B568F8E8041411FC /* Assets.xcassets in Resources */,
 				10BC9DB007EF6E348361A92B /* coach.json in Resources */,
+				07D0E37A09E5A753530006DE /* foods-usda.json in Resources */,
 				4250E60FAAD1D3811B122B52 /* index.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
