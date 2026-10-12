@@ -9481,14 +9481,17 @@ const FoodNet = (() => {
 const FoodDB = (() => {
   const D = {};
   let list = null, loading = null;
-  const LIQUID = /beverage|juice|milk|drink|soda|coffee|tea\b|water|wine|beer|soup|broth/i;
+  const LIQUID = /\b(juice|milk|soymilk|soup|broth|drink|beverage|smoothie|shake|nectar|lemonade|coffee|tea|wine|beer|soda|water)\b/i;
   // "Cheese, cheddar (Includes foods for USDA's Food Distribution Program)" reads "Cheese, cheddar"
   const tidy = (n) => n.replace(/\s*\((?:Includes|includes|formerly|Formerly)[^)]*\)/g, '').replace(/\s+/g, ' ').trim();
   const row = ([id, name, kcal, p, c, f, fiber, serv, group]) => {
-    const liquid = LIQUID.test(name.split(',')[0] + ' ' + group) && !/powder|dry|dehydrated|solids/i.test(name);
+    const liquid = (group === 'Beverages' || LIQUID.test(name.split(',')[0])) && !/powder|dry|dried|dehydrated|solids|condensed|mix\b|\bbar\b|cereal|cheese|chocolate|candy|bread|cake|pudding/i.test(name);
     const servings = String(serv || '').split('|').filter(Boolean).map((x) => { const k = x.lastIndexOf(':'); return { label: x.slice(0, k), g: +x.slice(k + 1) }; });
     servings.push({ label: liquid ? '100 ml' : '100 g', g: 100 });
-    return { id: 'u' + id, name: tidy(name), kcal, p, c, f, fiber, group, liquid, servings, src: 'usda', low: tidy(name).toLowerCase() };
+    // processed or unusual forms, brand items (in capitals) and regional foods go below the plain ones
+    const odd = /\b(dried|dehydrated|powder|canned|frozen|meatless|imitation|feet|spread|salted|fermented|babyfood|substitute|mix|concentrate)\b/i.test(name) || /\b[A-Z]{3,}\b/.test(name)
+      || /Alaska Native|American Indian|Restaurant|Fast Foods/.test(group + ' ' + name);
+    return { id: 'u' + id, name: tidy(name), kcal, p, c, f, fiber, group, liquid, servings, src: 'usda', low: tidy(name).toLowerCase(), odd };
   };
   D.ready = () => !!list;
   D.size = () => list?.length || 0;
@@ -9505,7 +9508,10 @@ const FoodDB = (() => {
     for (const f of list) {
       if (!words.every((w) => has(f.low, w) || has(f.low, stem(w)))) continue;
       const first = f.low.split(',')[0];
-      const s = (first === q || first === stem(q) || stem(first) === stem(q) ? 0 : f.low.startsWith(stem(words[0])) ? 0.5 : 1.2)
+      // a whole word beats the start of a longer one: "salmon" before "salmonberries", "beer" before "beerwurst"
+      const whole = words.every((w) => new RegExp(`\\b${stem(w).replace(/[^a-z0-9]/g, '')}(s|es)?\\b`).test(f.low));
+      const s = (first === q || first === stem(q) || stem(first) === stem(q) ? 0 : f.low.startsWith(stem(words[0])) ? 0.5 : 1.2) + (whole ? 0 : 1.5) + (f.odd ? 0.9 : 0)
+        + (/\b(whole|plain)\b/.test(f.low) ? -0.1 : 0)
         + (f.low.match(/,/g) || []).length * 0.18 + f.low.length / 160 + (/\braw\b/.test(f.low) && !/meat|chicken|beef|pork|fish|egg/.test(f.low) ? -0.15 : 0)
         + (/\bcooked|roasted|boiled|baked|grilled\b/.test(f.low) && /meat|chicken|beef|pork|fish|rice|pasta/.test(f.low) ? -0.2 : 0);
       out.push({ f, s });

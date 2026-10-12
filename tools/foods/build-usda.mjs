@@ -121,7 +121,13 @@ function readDataset(dir) {
     const amount = parseFloat(x.amount);
     const what = [unit && unit !== 'undetermined' ? unit : '', x.modifier || x.portion_description || ''].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
     if (!what || /^(quantity not specified|guideline amount)/i.test(what)) continue;
-    const label = `${Number.isFinite(amount) && amount > 0 ? +amount.toFixed(2) + ' ' : ''}${what}`.slice(0, 40) + ` (${Math.round(g)} g)`;
+    // short labels, cut at a word and never inside brackets: "1 piece, cooked, excluding refuse (yield…" → "1 piece, cooked, excluding refuse"
+    let text = `${Number.isFinite(amount) && amount > 0 ? +amount.toFixed(2) + ' ' : ''}${what}`;
+    if (text.length > 36) text = text.slice(0, 36).replace(/[\s,]+\S*$/, '');
+    const open = text.lastIndexOf('(');
+    if (open > 0 && text.indexOf(')', open) < 0) text = text.slice(0, open);
+    text = text.replace(/[\s,(]+$/, '').replace(/^(\d+\.?\d*) (\w+) \(1 \2\)$/, '$1 $2');
+    const label = `${text} (${Math.round(g)} g)`;
     const list = portions.get(x.fdc_id) || [];
     if (!list.some((p) => p.label === label)) list.push({ label: label.replace(/:/g, ' ').replace(/\|/g, '/'), g: Math.round(g), seq: +x.seq_num || 0 });
     portions.set(x.fdc_id, list);
