@@ -4967,7 +4967,7 @@ const Charts = (() => {
     const x = (i) => ((i + 0.5) / 48) * W, xm = (m) => (m / 1440) * W;
     const y = (v) => pt + (H - pt - pb) * (1 - (Math.max(min, Math.min(max, v)) - min) / (max - min));
     const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'mini', 'aria-hidden': 'true', preserveAspectRatio: 'none' });
-    for (const sh of shades) svg.append(s('rect', { x: xm(sh.a).toFixed(1), y: 0, width: Math.max(1, xm(sh.b) - xm(sh.a)).toFixed(1), height: H, fill: sh.kind === 'active' ? 'var(--shade-active)' : sh.kind === 'act' ? 'var(--shade-act)' : 'var(--shade-sleep)' }));
+    for (const sh of shades) svg.append(s('rect', { x: xm(sh.a).toFixed(1), y: 0, width: Math.max(1, xm(sh.b) - xm(sh.a)).toFixed(1), height: H, opacity: 0.55, fill: sh.kind === 'active' ? 'var(--shade-active)' : sh.kind === 'act' ? 'var(--shade-act)' : 'var(--shade-sleep)' }));
     for (const lv of levels) svg.append(s('line', { x1: 0, x2: W, y1: y(lv), y2: y(lv), class: 'lv', 'vector-effect': 'non-scaling-stroke' }));
     svg.append(s('line', { x1: 0, x2: W, y1: H - pb, y2: H - pb, class: 'base', 'vector-effect': 'non-scaling-stroke' }));
     const fill = gradDef(svg, color, 0.32);
@@ -5641,7 +5641,7 @@ const Tabs = (() => {
     const pending = Store.canWrite && left > 0;
     const open = !!App.ui.todayHabits;
     const n = answered(date);
-    const sub = pending ? `${left} to answer about ${jd === C.todayStr ? 'today' : jd === addDays(C.todayStr, -1) ? 'yesterday' : U.fmtShort(jd)}`
+    const sub = pending ? `${left} to answer${jd === C.todayStr ? '' : jd === addDays(C.todayStr, -1) ? ' for yesterday' : ' for ' + U.fmtShort(jd)}`
       : `${n} of ${C.habits.length} logged ${isToday ? 'today' : 'this day'}`;
     const dots = h('span', { class: 'hdots', 'aria-hidden': 'true' }, C.habits.map((hb) => {
       const a = ansOf(date, hb.id), ok = E.habitSuccess(C.habitMeta(hb).kind, a);

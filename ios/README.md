@@ -17,7 +17,17 @@ Not yet checked: the HealthKit permission sheet and real Health data, which need
 - **Strength workout:** swipe left for pause and end, right for the exercise list. The middle page has the set: tap weight or reps and turn the Digital Crown, then Done. The rest timer taps your wrist when it's up. At the end you rate the effort and save.
 - **Phone link:** every set reaches the iPhone's workout logger as you go, and the finished workout is saved in Baseline and to Apple Health with heart rate and energy.
 
-When you run the iPhone app from Xcode, set your Team for both targets (Baseline and BaselineWatch) under Signing & Capabilities. With your Apple Watch paired, the watch app installs with it; if it doesn't, open the Watch app on your iPhone → Baseline → Install.
+### Installing the watch app
+
+With a personal (free) Apple ID, the watch app can't be installed from the Watch app on the iPhone until Xcode has seen your Apple Watch; Xcode adds the watch to your signing profile the first time it runs something on it. Run it on the watch from Xcode once:
+
+1. Watch on your wrist, unlocked, near the Mac, on the same Wi-Fi; iPhone connected by cable and unlocked.
+2. In Xcode: *Window → Devices and Simulators*. Your Apple Watch should appear under the iPhone. If Xcode asks, trust the Mac on the watch.
+3. On the watch: *Settings → Privacy & Security → Developer Mode* → on (the watch restarts). The option appears after step 2.
+4. In Xcode, both targets (*Baseline* and *BaselineWatch*) → *Signing & Capabilities* → *Team* → your Apple ID.
+5. At the top of the Xcode window pick the scheme *BaselineWatch* and your Apple Watch as the destination, then press ▶. The first install over Wi-Fi can take several minutes.
+
+The watch needs watchOS 10 or later. A free Apple ID can have at most 3 of your own apps on a device at once; delete old test apps if Xcode says the limit is reached. If it still fails, Xcode shows the reason in a red banner or the Issue navigator.
 
 ## Run it on your iPhone (no Terminal)
 
