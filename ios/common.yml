@@ -25,6 +25,10 @@ targets:
       # the web app itself, bundled as-is and served to the web view from baseline://app/
       - path: ../index.html
         buildPhase: resources
+      # the offline food database (built by .github/workflows/foods.yml), served next to the page
+      - path: ../foods-usda.json
+        buildPhase: resources
+        optional: true
     dependencies:
       # the watch app ships inside the iPhone app
       - target: BaselineWatch

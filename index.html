@@ -825,7 +825,23 @@ a.btn { text-decoration: none; }
 .qty { display: inline-flex; align-items: center; border-radius: 999px; background: var(--surface-3); flex: none; }
 .qty button { width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; font-size: calc(18 * var(--fs)); font-weight: 600; color: var(--ink); }
 .qty span { min-width: 40px; text-align: center; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(14 * var(--fs)); font-weight: 500; }
-.scan-view { display: grid; gap: 14px; }
+.scan-view { display: grid; gap: 12px; }
+.scan-card { display: grid; gap: 12px; }
+.scan-state { display: flex; gap: 12px; align-items: center; }
+.scan-state .ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex: none; }
+.scan-state .ic svg { width: 22px; height: 22px; }
+.scan-state .tx, .scan-hit .tx { display: grid; gap: 2px; min-width: 0; }
+.scan-state b, .scan-hit b { font-weight: 600; font-size: calc(16 * var(--fs)); }
+.scan-state span, .scan-hit .tx span { color: var(--muted); font-size: calc(13 * var(--fs)); }
+.scan-hit { display: flex; gap: 12px; align-items: center; }
+.scan-hit img, .scan-hit .ph { width: 64px; height: 64px; border-radius: 14px; object-fit: contain; background: #fff; flex: none; }
+.scan-hit .ph { background: var(--surface-2); display: grid; place-items: center; color: var(--muted); }
+.scan-hit.small img { width: 48px; height: 48px; border-radius: 12px; }
+.scan-mac { margin-inline: -18px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.scan-mac .sc-cell { padding: 6px 18px; }
+.scan-mac .sc-cell .v { font-size: calc(18 * var(--fs)); }
+.scan-type { display: flex; gap: 8px; }
+.scan-type .input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
 .scan-view .frame { position: relative; aspect-ratio: 1 / 0.85; border-radius: 24px; background: radial-gradient(circle at 50% 40%, var(--surface-3), var(--surface)); display: grid; place-items: center; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
 .scan-view .frame::before, .scan-view .frame::after { content: ""; position: absolute; inset: 22% 14%; border-radius: 18px; border: 2.5px solid color-mix(in srgb, var(--ink) 70%, transparent); clip-path: polygon(0 0, 22% 0, 22% 100%, 78% 100%, 78% 0, 100% 0, 100% 22%, 0 22%, 0 78%, 100% 78%, 100% 100%, 0 100%); }
 .scan-view .frame::after { inset: 49.6% 18%; border: 0; height: 2px; background: var(--hr); border-radius: 2px; clip-path: none; box-shadow: 0 0 12px var(--hr); animation: scanline 2.2s ease-in-out infinite; }
@@ -9389,7 +9405,7 @@ const Watch = (() => {
    Results become per-100 g foods with servings, the same shape as the built-in list, so the portion sheet takes them as-is. */
 const FoodNet = (() => {
   const S = {};
-  const FIELDS = 'code,product_name,product_name_en,generic_name,brands,quantity,serving_size,serving_quantity,nutriments';
+  const FIELDS = 'code,product_name,product_name_en,generic_name,brands,quantity,serving_size,serving_quantity,nutriments,image_front_small_url';
   const cache = new Map();
   async function get(path) {
     if (HealthSync.native()) {
@@ -9420,14 +9436,21 @@ const FoodNet = (() => {
     servings.push({ label: liquid ? '100 ml' : '100 g', g: 100 });
     const pq = num(String(pr.quantity || '').match(/[\d.,]+/)?.[0]);
     if (pq > 0 && pq < 3000 && /\d\s*(g|ml)\b/i.test(pr.quantity || '') && !servings.some((x) => x.g === Math.round(pq))) servings.push({ label: `whole pack (${Math.round(pq)} ${liquid ? 'ml' : 'g'})`, g: Math.round(pq) });
-    return { id: 'off' + pr.code, code: String(pr.code || ''), name, kcal: Math.round(kcal), p: U.round(num(n.proteins_100g) || 0, 1), c: U.round(num(n.carbohydrates_100g) || 0, 1),
+    const img = /^https:\/\//.test(pr.image_front_small_url || '') ? pr.image_front_small_url : null;
+    return { id: 'off' + pr.code, code: String(pr.code || ''), name, brand, img, kcal: Math.round(kcal), p: U.round(num(n.proteins_100g) || 0, 1), c: U.round(num(n.carbohydrates_100g) || 0, 1),
       f: U.round(num(n.fat_100g) || 0, 1), fiber: U.round(num(n.fiber_100g) || 0, 1), liquid, servings, group: 'Packaged', src: 'off' };
   }
   S.toFood = toFood;
+  /** A product you added from its label (per 100 g, with a barcode) as a food the portion sheet takes. */
+  S.mine = (f) => ({ id: f.id, code: f.code, name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, fiber: f.fiber || 0, liquid: !!f.liquid, group: 'Packaged', src: 'mine',
+    servings: [...(f.serving > 0 ? [{ label: `1 serving (${f.serving} ${f.liquid ? 'ml' : 'g'})`, g: f.serving }] : []), ...(f.pack > 0 ? [{ label: `whole pack (${f.pack} ${f.liquid ? 'ml' : 'g'})`, g: f.pack }] : []), { label: f.liquid ? '100 ml' : '100 g', g: 100 }] });
   /** The food with this barcode, or null if Open Food Facts doesn't know it (or knows it without nutrition values). */
   S.byBarcode = async (code) => {
     code = String(code).replace(/\D/g, '');
     if (!code) return null;
+    // a product you added yourself wins: it's what's on your pack
+    const mine = (Store.state().myFoods || []).find((f) => f.code === code);
+    if (mine) return S.mine(mine);
     if (cache.has('b' + code)) return cache.get('b' + code);
     const j = await get(`/api/v2/product/${code}.json?fields=${FIELDS}`);
     const f = j && j.status === 1 ? toFood({ ...j.product, code: j.product?.code || code }) : null;
@@ -9447,9 +9470,49 @@ const FoodNet = (() => {
   };
   S.errorText = (e) => ({
     cancelled: '', camera_denied: 'Baseline can’t use the camera. Allow it in the Settings app → Baseline → Camera.',
-    scan_unavailable: 'This iPhone can’t scan barcodes with the camera. Search for the food instead.',
+    scan_unavailable: 'This iPhone can’t scan barcodes with the camera. Type the number under the barcode instead.', manual: '',
   }[e?.code] ?? 'Couldn’t reach the food database. Check your connection and try again.');
   return S;
+})();
+
+/* ===== fooddb.js — the offline food database: USDA FoodData Central (Foundation Foods and SR Legacy), about 7,800 foods =====
+   foods-usda.json sits next to the page (bundled in the iPhone app; built by .github/workflows/foods.yml from USDA's public
+   domain data). It loads on the first search. Without it, search uses the built-in list and Open Food Facts as before. */
+const FoodDB = (() => {
+  const D = {};
+  let list = null, loading = null;
+  const LIQUID = /beverage|juice|milk|drink|soda|coffee|tea\b|water|wine|beer|soup|broth/i;
+  // "Cheese, cheddar (Includes foods for USDA's Food Distribution Program)" reads "Cheese, cheddar"
+  const tidy = (n) => n.replace(/\s*\((?:Includes|includes|formerly|Formerly)[^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  const row = ([id, name, kcal, p, c, f, fiber, serv, group]) => {
+    const liquid = LIQUID.test(name.split(',')[0] + ' ' + group) && !/powder|dry|dehydrated|solids/i.test(name);
+    const servings = String(serv || '').split('|').filter(Boolean).map((x) => { const k = x.lastIndexOf(':'); return { label: x.slice(0, k), g: +x.slice(k + 1) }; });
+    servings.push({ label: liquid ? '100 ml' : '100 g', g: 100 });
+    return { id: 'u' + id, name: tidy(name), kcal, p, c, f, fiber, group, liquid, servings, src: 'usda', low: tidy(name).toLowerCase() };
+  };
+  D.ready = () => !!list;
+  D.size = () => list?.length || 0;
+  D.load = () => (loading ||= fetch('foods-usda.json').then((r) => (r.ok ? r.json() : null)).then((j) => (list = (j?.foods || []).map(row))).catch(() => (list = [])));
+  /** Foods whose name has every word (from a word start), plainest first: "apple" puts "Apples, raw, with skin" before "Apple pie". */
+  D.search = (q, n = 20) => {
+    if (!list?.length) return [];
+    q = q.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (q.length < 2) return [];
+    const words = q.split(' ');
+    const stem = (w) => (w.length > 3 && w.endsWith('ies') ? w.slice(0, -3) : w.length > 3 && w.endsWith('es') ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w);
+    const has = (hay, w) => { let i = hay.indexOf(w); while (i > 0 && /[a-z]/.test(hay[i - 1])) i = hay.indexOf(w, i + 1); return i >= 0; };
+    const out = [];
+    for (const f of list) {
+      if (!words.every((w) => has(f.low, w) || has(f.low, stem(w)))) continue;
+      const first = f.low.split(',')[0];
+      const s = (first === q || first === stem(q) || stem(first) === stem(q) ? 0 : f.low.startsWith(stem(words[0])) ? 0.5 : 1.2)
+        + (f.low.match(/,/g) || []).length * 0.18 + f.low.length / 160 + (/\braw\b/.test(f.low) && !/meat|chicken|beef|pork|fish|egg/.test(f.low) ? -0.15 : 0)
+        + (/\bcooked|roasted|boiled|baked|grilled\b/.test(f.low) && /meat|chicken|beef|pork|fish|rice|pasta/.test(f.low) ? -0.2 : 0);
+      out.push({ f, s });
+    }
+    return out.sort((a, b) => a.s - b.s).slice(0, n).map((x) => x.f);
+  };
+  return D;
 })();
 
 /* ===== ui-train.js — workout logger, finish summary, sessions, exercises, routines, muscles, load ===== */
@@ -10095,11 +10158,11 @@ const Train = (() => {
       const mealBtn = h('span', { class: 'meal-pick' });
       const drawHead = () => { put(mealBtn, mealName(meal), h('span', { class: 'num' }, date === C.todayStr ? mealAt(date, meal).slice(11, 16) : U.fmtShort(date)), icon('chevD'), mealSel); mealSel.value = meal; };
       drawHead();
-      if (mode === 'scan' && !HealthSync.native()) mode = 'search';
       // the camera scan lives in the iPhone app; describing a meal needs Claude in the artifact runtime
-      const modes = [['search', 'Search'], ...(HealthSync.native() ? [['scan', 'Scan']] : []), ...(App.sample ? [['describe', 'Describe']] : []), ['quick', 'Quick']];
+      const modes = [['search', 'Search'], ['scan', HealthSync.native() ? 'Scan' : 'Barcode'], ...(App.sample ? [['describe', 'Describe']] : []), ['quick', 'Quick']];
       const modeSeg = seg(modes, mode, (v) => { mode = v; drawBody(); }, { label: 'How to log', cls: 'solid' });
 
+      const toSearch = () => { mode = 'search'; modeSeg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(modes[i][0] === 'search'))); drawBody(); };
       // ---- result row ----
       const resRow = (x, sub, onOpen) => {
         const cur = inPlate(x);
@@ -10111,7 +10174,7 @@ const Train = (() => {
       const dbItem = (f, sv) => {
         if (f.custom) return { name: f.name, kcal: f.kcal, p: f.p, c: f.c, f: f.f, fiber: f.fiber || 0, qty: 1, unit: f.serving || 'serving', src: 'mine', foodId: f.id, label: f.serving || '1 serving' };
         const n = FOODS.portion(f, sv.g);
-        return { name: f.name, ...n, qty: sv.g, unit: f.liquid ? 'ml' : 'g', grams: sv.g, src: 'db', foodId: f.id, label: sv.label };
+        return { name: f.name, ...n, qty: sv.g, unit: f.liquid ? 'ml' : 'g', grams: sv.g, src: f.src || 'db', foodId: f.id, label: sv.label };
       };
 
       // ---- modes ----
@@ -10133,10 +10196,15 @@ const Train = (() => {
             recents.map((r) => resRow(r, `${r.qty && r.unit ? qtyText(r) : '1 serving'} · your usual`))] : meals.length || favs.length ? null : h('p', { class: 'muted small', style: { padding: '8px 4px' } }, 'Search the food list, or create your own food.')].flat(3).filter(Boolean));
           return;
         }
-        const mine = (st.myFoods || []).map((f) => ({ ...f, custom: true }));
+        // your own foods: recipes per serving, and products added from a label (per 100 g, with a barcode)
+        const mine = (st.myFoods || []).map((f) => (f.code ? FoodNet.mine(f) : { ...f, custom: true }));
         const rec = recents.filter((r) => r.name.toLowerCase().includes(qq));
         const res = FOODS.search(qq, mine).filter((f) => !rec.some((r) => r.name.toLowerCase() === f.name.toLowerCase())).slice(0, 25);
-        const foodRow = (f) => { const it = dbItem(f, f.custom ? null : f.servings[0]); return resRow(it, `${it.label}${f.custom ? ' · my food' : ''}`, () => Sheet.portion({ food: f, onAdd: (x) => addToPlate(x) })); };
+        const foodRow = (f) => { const it = dbItem(f, f.custom ? null : f.servings[0]); return resRow(it, `${it.label}${f.custom ? ' · my food' : f.src === 'mine' ? ' · your product' : ''}`, () => Sheet.portion({ food: f, onAdd: (x) => addToPlate(x) })); };
+        // the offline database, under the everyday list (it loads on the first search)
+        const known = new Set([...res, ...rec].map((f) => f.name.toLowerCase()));
+        const usda = FoodDB.ready() ? FoodDB.search(qq, 15).filter((f) => !known.has(f.name.toLowerCase())) : [];
+        if (!FoodDB.ready()) FoodDB.load().then(() => { if (q.trim().toLowerCase() === qq && FoodDB.size()) drawResults(); });
         // packaged foods from Open Food Facts, looked up once the typing pauses
         const net = h('div', { class: 'col', style: { gap: '8px' } });
         const drawNet = (st2) => {
@@ -10146,9 +10214,11 @@ const Train = (() => {
           else if (Array.isArray(st2)) put(net, st2.length ? [h('div', { class: 'eyebrow', style: { margin: '10px 4px 0' } }, 'Packaged foods'), st2.map(foodRow), h('p', { class: 'xs muted', style: { padding: '0 4px' } }, 'From Open Food Facts, with the values printed on the pack.')]
             : none ? h('p', { class: 'muted small', style: { padding: '8px 4px' } }, `Nothing matches “${q}”. Check the spelling, or create it as your own food.`) : null);
         };
-        const none = !res.length && !rec.length;
+        const none = !res.length && !rec.length && !usda.length;
         put(results, rec.map((r) => resRow(r, `${r.qty && r.unit ? qtyText(r) : '1 serving'} · your usual`)),
-          res.map(foodRow), net,
+          res.map(foodRow),
+          usda.length ? [h('div', { class: 'eyebrow', style: { margin: '10px 4px 0' } }, 'More foods'), usda.map(foodRow), h('p', { class: 'xs muted', style: { padding: '0 4px' } }, 'From the USDA food database, per 100 g.')] : null,
+          net,
           none && qq.length < 3 ? h('p', { class: 'muted small', style: { padding: '8px 4px' } }, `Nothing matches “${q}” yet. Keep typing.`) : null,
           h('button', { class: 'btn ghost block', onclick: () => Sheet.customFood({ name: q, onAdd: (x) => addToPlate(x) }) }, icon('plus'), 'Create a food'));
         clearTimeout(netTimer);
@@ -10221,26 +10291,52 @@ const Train = (() => {
       function drawBody() {
         if (mode === 'search') { put(body, h('div', { class: 'searchbox' }, icon('search'), searchIn), results); drawResults(); if (!('ontouchstart' in window)) setTimeout(() => searchIn.focus({ preventScroll: true }), 50); }
         else if (mode === 'scan') {
-          const msg = h('p', null, 'Point the camera at the barcode on the pack.');
-          const after = h('div', { class: 'col', style: { gap: '10px' } });
-          const toSearch = () => { mode = 'search'; modeSeg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(modes[i][0] === 'search'))); drawBody(); };
-          const scanBtn = h('button', { class: 'btn primary block lg' }, icon('barcode'), 'Scan a barcode');
-          const go = async () => {
-            put(after); scanBtn.disabled = true; msg.textContent = 'Point the camera at the barcode on the pack.';
-            let code = '';
-            try { code = await HealthSync.scan(); } catch (e) { msg.textContent = FoodNet.errorText(e) || 'Point the camera at the barcode on the pack.'; scanBtn.disabled = false; return; }
-            msg.textContent = 'Looking it up…';
+          // the camera opens straight away (iPhone app); what it found shows here, with the number to type as the fallback
+          const card = h('section', { class: 'card scan-card', 'aria-live': 'polite' });
+          const scanBtn = HealthSync.native() ? h('button', { class: 'btn primary block lg', onclick: () => go() }, icon('barcode'), 'Scan a barcode') : null;
+          const codeIn = h('input', { class: 'input', id: 'scan-code', inputmode: 'numeric', autocomplete: 'off', placeholder: 'Number under the barcode', 'aria-label': 'Barcode number',
+            onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); lookup(codeIn.value); } } });
+          const typeRow = h('div', { class: 'scan-type' }, codeIn, h('button', { class: 'btn', onclick: () => lookup(codeIn.value) }, 'Look up'));
+          // one main action at a time: the scan button until the card offers its own
+          const lead = (on) => { if (scanBtn) scanBtn.className = 'btn block lg' + (on ? ' primary' : ''); };
+          const state = (ic, title, sub, ...kids) => lead(!kids.length) || put(card, h('div', { class: 'scan-state' }, h('span', { class: 'ic food' }, icon(ic)), h('div', { class: 'tx' }, h('b', null, title), sub ? h('span', null, sub) : null)), ...kids);
+          const product = (f) => {
+            const per = f.liquid ? '100 ml' : '100 g';
+            put(card, h('div', { class: 'scan-hit' }, f.img ? h('img', { src: f.img, alt: '', onerror: (e) => e.target.replaceWith(h('span', { class: 'ph' }, icon('barcode'))) }) : h('span', { class: 'ph' }, icon('barcode')),
+              h('div', { class: 'tx' }, h('b', null, f.brand ? f.name.replace(` (${f.brand})`, '') : f.name), h('span', null, [f.brand, f.code].filter(Boolean).join(' · ')))),
+              h('div', { class: 'sc-strip scan-mac' }, [['kcal', fmtInt(f.kcal)], ['Protein', `${+fmt1(f.p)} g`], ['Carbs', `${+fmt1(f.c)} g`], ['Fat', `${+fmt1(f.f)} g`]].map(([k, v]) => h('div', { class: 'sc-cell' }, h('span', { class: 'k' }, k), h('span', { class: 'v' }, v)))),
+              h('p', { class: 'xs muted' }, `Per ${per}${f.src === 'mine' ? ', as you entered it' : ', from Open Food Facts'}`),
+              h('button', { class: 'btn primary block', onclick: () => choose(f) }, icon('plus'), 'Choose amount'));
+            lead(false);
+          };
+          const choose = (f) => Sheet.portion({ food: f, onAdd: (x) => { addToPlate(x); toast(`${x.name} added to your plate`); afterAdd(); } });
+          const afterAdd = () => { if (HealthSync.native()) setTimeout(() => go(), 500); };
+          async function lookup(raw) {
+            const code = String(raw || '').replace(/\D/g, '');
+            if (code.length < 6) { codeIn.focus(); toast('Type the 8 or 13 digits under the barcode'); return; }
+            state('search', 'Looking it up…', code);
             try {
               const f = await FoodNet.byBarcode(code);
-              scanBtn.disabled = false;
-              if (f) { msg.textContent = `Found: ${f.name}`; Sheet.portion({ food: f, onAdd: (x) => { addToPlate(x); toast(`${x.name} added to your plate`); } }); return; }
-              msg.textContent = `Barcode ${code} isn’t in Open Food Facts yet, or has no nutrition values there.`;
-              put(after, h('button', { class: 'btn block', onclick: () => Sheet.customFood({ onAdd: (x) => addToPlate(x) }) }, icon('plus'), 'Enter it from the label'));
-            } catch (e) { scanBtn.disabled = false; msg.textContent = FoodNet.errorText(e); }
-          };
-          scanBtn.onclick = go;
-          put(body, h('div', { class: 'scan-view' }, h('div', { class: 'frame' }, msg), scanBtn, after,
-            h('button', { class: 'btn block', onclick: toSearch }, icon('search'), 'Search instead')));
+              if (f) { product(f); choose(f); return; }
+              state('barcode', 'Not in the food database yet', `Barcode ${code}. Add it once from the label and the next scan finds it.`,
+                h('button', { class: 'btn primary block', onclick: () => Sheet.addProduct({ code, onAdd: (x) => { addToPlate(x); toast(`${x.name} added to your plate`); afterAdd(); } }) }, icon('plus'), 'Add it from the label'));
+            } catch (e) { state('info', 'Couldn’t look it up', FoodNet.errorText(e), h('button', { class: 'btn block', onclick: () => lookup(code) }, 'Try again')); }
+          }
+          async function go() {
+            if (!HealthSync.native()) { codeIn.focus(); return; }
+            let code = '';
+            try { code = await HealthSync.scan(); } catch (e) {
+              if (e?.code === 'manual') { state('edit', 'Type the number', 'The digits under the barcode, usually 13.'); setTimeout(() => codeIn.focus(), 60); }
+              else if (e?.code !== 'cancelled') state('info', 'The camera isn’t available', FoodNet.errorText(e));
+              return;
+            }
+            codeIn.value = code;
+            lookup(code);
+          }
+          if (HealthSync.native()) state('barcode', 'Scan a barcode', 'Point the camera at the barcode on the pack.');
+          else state('barcode', 'Type the barcode number', 'The digits under the barcode on the pack.');
+          put(body, h('div', { class: 'scan-view' }, card, scanBtn,
+            typeRow, h('button', { class: 'btn quiet block', onclick: toSearch }, icon('search'), 'Search instead')));
           if (!entry.scanned) { entry.scanned = true; go(); }
         } else if (mode === 'describe') {
           put(body, preview, text, App.imgLimits ? h('button', { class: 'btn block', onclick: () => fileIn.click() }, icon('camera'), file ? 'Change photo' : 'Add a photo') : null, fileIn, goBtn, stopBtn, status, estOut,
@@ -10626,7 +10722,8 @@ const Sheet = (() => {
       put(nutri, kv('Calories', fmtInt(n.kcal)), kv('Protein', `${fmt1(n.p)} g`), kv('Carbs', `${fmt1(n.c)} g`), kv('Fat', `${fmt1(n.f)} g`), kv('Fiber', `${fmt1(n.fiber)} g`),
         h('p', { class: 'note' }, n.grams ? qtyText({ qty: n.grams, unit: food.liquid ? 'ml' : 'g' }) : `${n.qty} × ${food.serving || 'serving'}`));
     }
-    const sh = Sheets.open({ title: food.name, body: [chips, amountRow, nutri], foot: [h('button', { class: 'btn primary', onclick: () => {
+    const pic = food.img || food.brand ? h('div', { class: 'scan-hit small' }, food.img ? h('img', { src: food.img, alt: '', onerror: (e) => e.target.remove() }) : null, h('div', { class: 'tx' }, h('span', null, [food.brand, food.src === 'usda' ? 'USDA food database' : null].filter(Boolean).join(' · ')))) : null;
+    const sh = Sheets.open({ title: food.brand ? food.name.replace(` (${food.brand})`, '') : food.name, body: [pic, chips, amountRow, nutri], foot: [h('button', { class: 'btn primary', onclick: () => {
       const n = calc();
       if (!(n.kcal >= 0) || (isUnit(sel) && !(U.num(gramsInput.value, 0) > 0))) { toast('Enter an amount first'); return; }
       onAdd({ name: food.name, kcal: n.kcal, p: n.p, c: n.c, f: n.f, fiber: n.fiber, qty: n.qty, unit: n.unit, grams: n.grams, src: custom ? 'mine' : food.src || 'db', foodId: food.id });
@@ -10651,6 +10748,39 @@ const Sheet = (() => {
         onAdd({ name: food.name, kcal: food.kcal, p: food.p, c: food.c, f: food.f, fiber: 0, qty: 1, unit: food.serving, src: 'mine', foodId: food.id });
         toast('Saved to your foods');
       } }, 'Save and add')],
+    });
+  };
+  /** A packaged food from its nutrition label (per 100 g or ml), kept with its barcode so the next scan finds it. */
+  S.addProduct = ({ code = '', name = '', onAdd }) => {
+    let liquid = false;
+    const inp = (id, ph, mode = 'decimal') => h('input', { class: 'input', id, inputmode: mode, placeholder: ph });
+    const f = { name: h('input', { class: 'input', id: 'ap-name', value: name, placeholder: 'e.g. Skyr natur', autofocus: true }), brand: h('input', { class: 'input', id: 'ap-brand', placeholder: 'optional' }),
+      kcal: inp('ap-kcal', '0'), p: inp('ap-p', '0'), c: inp('ap-c', '0'), f: inp('ap-f', '0'), fiber: inp('ap-fiber', '0'), serving: inp('ap-serving', 'optional', 'numeric'), pack: inp('ap-pack', 'optional', 'numeric') };
+    const per = h('span');
+    const unitSeg = seg([[false, 'Solid (g)'], [true, 'Drink (ml)']], liquid, (v) => { liquid = v; per.textContent = v ? 'per 100 ml' : 'per 100 g'; });
+    per.textContent = 'per 100 g';
+    const err = h('p', { class: 'error-text', hidden: true });
+    const sh = Sheets.open({
+      title: 'Add this product',
+      body: [code ? h('p', { class: 'small muted' }, `Barcode ${code}`) : null, field('Name', f.name), field('Brand', f.brand), unitSeg,
+        h('div', { class: 'eyebrow' }, 'Nutrition ', per),
+        h('div', { class: 'grid2' }, field('Calories (kcal)', f.kcal), field('Protein (g)', f.p), field('Carbs (g)', f.c), field('Fat (g)', f.f), field('Fibre (g)', f.fiber)),
+        h('div', { class: 'grid2' }, field('One serving', f.serving, 'g or ml'), field('Whole pack', f.pack, 'g or ml')), err,
+        h('p', { class: 'note' }, 'Copy the “per 100 g” column from the label. It’s saved on this device with the barcode.')],
+      foot: [h('button', { class: 'btn primary', onclick: () => {
+        const nm = f.name.value.trim(), br = f.brand.value.trim();
+        let kcal = U.num(f.kcal.value, NaN);
+        const p = U.num(f.p.value), c = U.num(f.c.value), fat = U.num(f.f.value);
+        if (!(kcal >= 0) && (p || c || fat)) kcal = Math.round(4 * p + 4 * c + 9 * fat);
+        if (!nm || !(kcal >= 0 && kcal <= 950)) { err.textContent = 'Add a name and the calories per 100 g (or protein, carbs and fat).'; err.hidden = false; return; }
+        const food = { id: 'm' + U.uid(), code: code || null, name: br && !nm.toLowerCase().includes(br.toLowerCase()) ? `${nm} (${br})` : nm, brand: br || null, liquid,
+          kcal: Math.round(kcal), p, c, f: fat, fiber: U.num(f.fiber.value), serving: Math.round(U.num(f.serving.value)) || null, pack: Math.round(U.num(f.pack.value)) || null };
+        Store.setMyFoods([food, ...(Store.state().myFoods || []).filter((x) => !code || x.code !== code)]);
+        sh.close();
+        toast('Saved. The next scan finds it');
+        const fd = FoodNet.mine(food);
+        Sheet.portion({ food: fd, onAdd });
+      } }, 'Save and choose amount')],
     });
   };
   S.foodItem = (date, it) => {

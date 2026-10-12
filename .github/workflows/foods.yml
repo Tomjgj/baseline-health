@@ -1,0 +1,33 @@
+# Builds foods-usda.json, the offline food database the app searches (USDA FoodData Central: Foundation Foods and
+# SR Legacy, public domain), and commits it next to index.html. Runs when the builder changes, or by hand.
+name: Food database
+
+on:
+  push:
+    paths: ['tools/foods/**', '.github/workflows/foods.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # to commit the database
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the database
+        run: node tools/foods/build-usda.mjs
+      - name: Commit it if it changed
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add foods-usda.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update the offline food database from USDA FoodData Central"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

@@ -5,9 +5,9 @@ name: iOS build
 
 on:
   push:
-    paths: ['ios/**', 'index.html', 'server/coach.mjs', 'server/export-config.mjs', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'index.html', 'foods-usda.json', 'server/coach.mjs', 'server/export-config.mjs', '.github/workflows/ios.yml']
   pull_request:
-    paths: ['ios/**', 'index.html', 'server/coach.mjs', 'server/export-config.mjs', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'index.html', 'foods-usda.json', 'server/coach.mjs', 'server/export-config.mjs', '.github/workflows/ios.yml']
   workflow_dispatch:
 
 jobs:

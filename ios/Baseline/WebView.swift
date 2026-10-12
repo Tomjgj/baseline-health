@@ -69,7 +69,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
 
     /// The page asks, and the app answers by calling BaselineBridge.receive({ id, ok, payload | error }):
     ///   { type: "sync", id, from: "YYYY-MM-DD", to: "YYYY-MM-DD" }  → a baseline.health/1 payload
-    ///   { type: "scan", id }                                        → { code } from the camera
+    ///   { type: "scan", id }                                        → { code } from the camera, or error "manual" to type it in
     ///   { type: "food", id, path }                                  → { text } from Open Food Facts (path starts with /)
     ///   { type: "notify", id, key, at: ms since 1970, title, body } and { type: "unnotify", id, key } → local reminders
     ///   { type: "watch", id, json }                                 → the context for the watch app (WatchLink)
@@ -99,6 +99,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
                 case .cancelled: self.reply(["id": id, "ok": false, "error": "cancelled"])
                 case .denied: self.reply(["id": id, "ok": false, "error": "camera_denied"])
                 case .unavailable: self.reply(["id": id, "ok": false, "error": "scan_unavailable"])
+                case .manual: self.reply(["id": id, "ok": false, "error": "manual"])
                 }
             }
             return
@@ -285,7 +286,7 @@ final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
             task.didFailWithError(URLError(.fileDoesNotExist))
             return
         }
-        let mime = ext == "html" ? "text/html" : ext == "js" ? "text/javascript" : ext == "css" ? "text/css" : "application/octet-stream"
+        let mime = ext == "html" ? "text/html" : ext == "js" ? "text/javascript" : ext == "css" ? "text/css" : ext == "json" ? "application/json" : "application/octet-stream"
         task.didReceive(URLResponse(url: url, mimeType: mime, expectedContentLength: data.count, textEncodingName: "utf-8"))
         task.didReceive(data)
         task.didFinish()
