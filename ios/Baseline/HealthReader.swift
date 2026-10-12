@@ -27,6 +27,7 @@ final class HealthReader {
         (.basalEnergyBurned, "basal", HKUnit.kilocalorie()),
         (.timeInDaylight, "daylight", HKUnit.minute()),
         (.dietaryCaffeine, "caffeine", HKUnit.gramUnit(with: .milli)),
+        (.dietaryWater, "water", HKUnit.literUnit(with: .milli)),
         (.numberOfAlcoholicBeverages, "alcohol", HKUnit.count()),
         (.bloodPressureSystolic, "bpSys", HKUnit.millimeterOfMercury()),
         (.bloodPressureDiastolic, "bpDia", HKUnit.millimeterOfMercury()),
@@ -157,7 +158,7 @@ final class HealthReader {
                 }
                 switch key {
                 case "temp": samples["temp", default: []].append([local.string(from: q.endDate), v])
-                case "caffeine": samples[key, default: []].append([t, v, src])
+                case "caffeine", "water": samples[key, default: []].append([t, v, src])
                 case "bpSys": bp[t, default: (nil, nil)].sys = v
                 case "bpDia": bp[t, default: (nil, nil)].dia = v
                 case "weight", "bodyFat", "lean", "waist": samples["body", default: []].append([t, key, v])

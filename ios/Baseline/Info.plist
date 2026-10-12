@@ -23,7 +23,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Baseline uses the camera to scan food barcodes. Nothing is recorded or stored.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone unless you connect your own coach server.</string>
+	<string>Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine, water and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone unless you connect your own coach server.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>

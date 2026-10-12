@@ -66,6 +66,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "watch", id, json }                                 → the context for the watch app (WatchLink)
     ///   { type: "share", id, filename, text }                       → the share sheet with that file
     ///   { type: "latest", id }                                      → { at, hr: [[time, bpm]], hrv: [[time, ms]] }, the last few hours
+    ///   { type: "haptic", id, kind: "light" | "medium" | "success" } → a tap from the Taptic Engine, no answer
     /// and tells the page when the watch has delivered new readings by calling BaselineBridge.changed().
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let id = body["id"] as? String else { return }
@@ -100,6 +101,14 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             return
         case "share":
             share(id: id, filename: body["filename"] as? String ?? "baseline-export.json", text: body["text"] as? String ?? "")
+            return
+        case "haptic":
+            // fire and forget: the page doesn't wait for an answer
+            switch body["kind"] as? String {
+            case "success": UINotificationFeedbackGenerator().notificationOccurred(.success)
+            case "medium": UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            default: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
             return
         case "latest":
             Task {

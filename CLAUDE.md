@@ -67,6 +67,11 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - First sync: the last 30 days, then `HealthSync.backfill` fetches older months 30 days at a time to 180 (`meta.syncedFrom`). `applyImport` kind `'backfill'` doesn't touch `meta.lastSync`.
 - `HealthReader` sends steps, energy and daylight as Health statistics in half-hour buckets (source "Health") and heart rate as per-minute averages; everything else raw.
 
+## Water and pull to sync
+- Water lives in the day's food doc as `water: [{id, at, ml}]` (`Store.addWater` / `removeWater` / `restoreWater`; `putFood` keeps it). `C.water(date)` adds those logs, food-log items named Water, and `day.water.ml` from Apple Health (other apps' samples; source "Baseline" is skipped). The goal is `profile.waterGoal`, else `C.waterSuggest()` (33 ml per kg, 1.5–4 L). Show amounts with `mlText` / `mlParts`; log with `logWater(date, ml)` (undo toast and a haptic). Colour `--water`. The hydration habit is only ever filled in as yes (2 L or more).
+- Pull down at the top of a screen (iPhone app only, not in sheets or flow pages) calls `HealthSync.refresh()`; the indicator is `#ptr`. With data in, background syncs show no banner; only the first sync does.
+- `HealthSync.haptic(kind)` sends `{ type: 'haptic', kind: 'light' | 'medium' | 'success' }` and doesn't wait for an answer.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
