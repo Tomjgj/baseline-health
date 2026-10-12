@@ -54,6 +54,10 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Keep explanations to one short sentence; long ones go in an expander or go.
 - Balance: selected segments, pager tabs and days use `--seg-on` (soft grey), not white; solid white (`.btn.primary`) is for the one main action on a screen. No boxes inside cards: tiles in a card are split by hairlines. Big numbers: `.huge-num` 48, hero rings 52 (44 when 4+ characters), tiles 28–30. Empty measurements collapse to one line instead of "–" boxes.
 
+## Muscles
+- Two levels: the 10 groups in `E.MUSCLES` (routine suggestions, muscular load, the Train hero text) and 19 muscles in `E.PARTS` (`{name, group, region}`), which the map and the Muscles page use. `EX_PARTS` says which muscles each built-in exercise works (primary | secondary, half a set); `E.exerciseParts(name)` falls back to every muscle of the exercise's groups. A new exercise needs both its `FOODS.EXERCISES` groups and an `EX_PARTS` line.
+- `C.muscleParts(d)` gives each muscle `fresh`, `status`, `readyIn` (hours to 70% fresh), `sets7` and `hits`. `Charts.bodyMap(fill, { detail: true })` passes muscle names to `fill`; without `detail` it passes group names. Colours come from `Train.freshColor` / `Train.partFill`.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.

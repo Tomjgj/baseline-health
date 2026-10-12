@@ -190,6 +190,18 @@ h1, h2, h3 { text-wrap: balance; }
 .m-sum .d { font-size: calc(13 * var(--fs)); color: var(--muted); }
 .m-sum .r { text-align: right; }
 .m-stats { margin-top: 12px; }
+.mu-legend { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: calc(12 * var(--fs)); color: var(--muted); }
+.mu-legend .grad { width: 120px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--crit), var(--warn) 45%, var(--good) 85%); }
+.mu-legend .steps { display: flex; gap: 2px; width: 120px; }
+.mu-legend .steps b { flex: 1; height: 6px; border-radius: 3px; }
+.mu-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 44px; gap: 12px; align-items: center; width: 100%; min-height: 52px; padding: 6px 16px; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font: inherit; }
+.mu-row.on { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.mu-row .n { font-size: calc(15 * var(--fs)); font-weight: 500; min-width: 0; }
+.mu-row .n small { display: block; font-size: calc(12 * var(--fs)); font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mu-row .v { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mu-bar { position: relative; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.mu-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+.mu-bar em { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--good) 22%, transparent); }
 .card.ha-row { display: grid; grid-template-columns: minmax(0, 1fr) 70px 14px; gap: 12px; align-items: center; width: 100%; text-align: left; border: 0; color: inherit; font: inherit; }
 .ha-row .k { display: block; font-size: calc(12 * var(--fs)); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 .ha-row .v { display: block; font-size: calc(28 * var(--fs)); font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
@@ -552,7 +564,11 @@ a.btn { text-decoration: none; }
 .gauge-s { font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); margin-top: 4px; }
 .body-map { width: 100%; height: auto; display: block; }
 .body-map .bm-neutral { fill: var(--surface-3); }
-.body-map .bm-part { stroke: var(--surface); stroke-width: 1.5; cursor: pointer; }
+.body-map .bm-part { stroke: var(--surface); stroke-width: 1.2; stroke-linejoin: round; cursor: pointer; transition: fill 0.2s; }
+.body-map .bm-sil { fill: color-mix(in srgb, var(--ink) 9%, var(--surface)); }
+.body-map .bm-line { fill: none; stroke: var(--surface); stroke-width: 1; opacity: 0.8; pointer-events: none; }
+.body-map .bm-part.sel { stroke: var(--ink); stroke-width: 1.6; }
+.body-map.compact .bm-part { cursor: inherit; }
 .body-map .bm-label { font-size: calc(11 * var(--fs)); font-weight: 500; fill: var(--muted); font-family: var(--font); }
 
 /* ---------- Today ---------- */
@@ -567,7 +583,7 @@ a.btn { text-decoration: none; }
 .ready-card .pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .ready-card h3 { font-size: calc(21 * var(--fs)); font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; margin-top: 12px; }
 .tomorrow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; text-align: left; color: inherit; background: transparent; border-top: 1px solid var(--line); padding: 14px 0 0; margin-top: 14px; }
-.tomorrow svg.body-map { width: 46px; flex: none; }
+.tomorrow svg.body-map { width: 84px; flex: none; }
 .tomorrow b { display: block; font-size: calc(15 * var(--fs)); font-weight: 600; color: var(--ink); }
 .tomorrow .grow > span { display: block; font-size: calc(13 * var(--fs)); color: var(--muted); line-height: 1.4; }
 .tomorrow > svg:last-child { width: 18px; height: 18px; color: var(--faint); flex: none; }
@@ -1645,6 +1661,39 @@ const E = (() => {
     const ex = typeof FOODS !== 'undefined' ? FOODS.EXERCISES.find((e) => e.name === name) : null;
     return ex ? { p: ex.p || [], s: ex.s || [], bw: ex.bodyweight } : { p: [], s: [], bw: false };
   }
+  // ---------- the detailed map: 19 muscles, each inside one of the 10 groups above ----------
+  const PARTS = [
+    ['Upper chest', 'Chest', 'Push'], ['Lower chest', 'Chest', 'Push'], ['Front delts', 'Shoulders', 'Push'], ['Side delts', 'Shoulders', 'Push'], ['Triceps', 'Triceps', 'Push'],
+    ['Lats', 'Back', 'Pull'], ['Upper back', 'Back', 'Pull'], ['Traps', 'Back', 'Pull'], ['Rear delts', 'Shoulders', 'Pull'], ['Biceps', 'Biceps', 'Pull'], ['Forearms', 'Biceps', 'Pull'],
+    ['Quads', 'Quads', 'Legs'], ['Adductors', 'Quads', 'Legs'], ['Hamstrings', 'Hamstrings', 'Legs'], ['Glutes', 'Glutes', 'Legs'], ['Calves', 'Calves', 'Legs'],
+    ['Abs', 'Core', 'Core'], ['Obliques', 'Core', 'Core'], ['Lower back', 'Back', 'Core'],
+  ].map(([name, group, region]) => ({ name, group, region }));
+  const PART_GROUP = Object.fromEntries(PARTS.map((x) => [x.name, x.group]));
+  // which muscles each exercise works: primary | secondary (half a set)
+  const EX_PARTS = {
+    'Bench press': 'Lower chest,Upper chest|Triceps,Front delts', 'Incline bench press': 'Upper chest,Front delts|Triceps,Lower chest',
+    'Dumbbell bench press': 'Lower chest,Upper chest|Triceps,Front delts', 'Incline dumbbell press': 'Upper chest,Front delts|Triceps',
+    'Push-up': 'Lower chest|Triceps,Front delts,Upper chest,Abs', 'Cable fly': 'Lower chest,Upper chest|Front delts', 'Dips': 'Lower chest,Triceps|Front delts',
+    'Deadlift': 'Hamstrings,Glutes,Lower back|Quads,Traps,Lats,Upper back,Forearms', 'Pull-up': 'Lats|Biceps,Upper back,Rear delts,Forearms',
+    'Chin-up': 'Lats,Biceps|Upper back,Forearms', 'Lat pulldown': 'Lats|Biceps,Upper back,Rear delts', 'Barbell row': 'Upper back,Lats|Biceps,Rear delts,Lower back,Traps',
+    'Dumbbell row': 'Lats,Upper back|Biceps,Rear delts', 'Seated cable row': 'Upper back,Lats|Biceps,Rear delts,Traps', 'T-bar row': 'Upper back,Lats|Biceps,Rear delts,Lower back',
+    'Face pull': 'Rear delts,Upper back|Traps,Side delts', 'Overhead press': 'Front delts,Side delts|Triceps,Upper chest,Traps,Abs',
+    'Dumbbell shoulder press': 'Front delts,Side delts|Triceps,Traps', 'Lateral raise': 'Side delts|Traps', 'Rear delt fly': 'Rear delts|Upper back,Traps',
+    'Back squat': 'Quads,Glutes|Adductors,Hamstrings,Lower back,Abs', 'Front squat': 'Quads|Glutes,Abs,Upper back,Adductors', 'Goblet squat': 'Quads|Glutes,Adductors,Abs',
+    'Hack squat': 'Quads|Glutes', 'Leg press': 'Quads|Glutes,Adductors', 'Romanian deadlift': 'Hamstrings|Glutes,Lower back,Forearms',
+    'Bulgarian split squat': 'Quads,Glutes|Adductors,Hamstrings', 'Walking lunge': 'Quads,Glutes|Hamstrings,Adductors,Calves', 'Leg extension': 'Quads|',
+    'Leg curl': 'Hamstrings|Calves', 'Hip thrust': 'Glutes|Hamstrings', 'Calf raise': 'Calves|', 'Barbell curl': 'Biceps|Forearms', 'Dumbbell curl': 'Biceps|Forearms',
+    'Hammer curl': 'Biceps,Forearms|', 'Preacher curl': 'Biceps|', 'Triceps pushdown': 'Triceps|', 'Overhead triceps extension': 'Triceps|', 'Skull crusher': 'Triceps|',
+    'Close-grip bench press': 'Triceps|Lower chest,Front delts', 'Hanging leg raise': 'Abs|Obliques,Forearms', 'Cable crunch': 'Abs|Obliques',
+    'Ab wheel rollout': 'Abs|Lats,Obliques', 'Russian twist': 'Obliques|Abs', 'Plank (seconds)': 'Abs|Obliques,Lower back',
+  };
+  /** The detailed muscles an exercise works; for one without its own mapping, every muscle of its groups. */
+  function exerciseParts(name) {
+    const m = EX_PARTS[name];
+    if (m) { const [p, sec] = m.split('|'); return { p: p ? p.split(',') : [], s: sec ? sec.split(',') : [] }; }
+    const info = exerciseInfo(name), of = (gs) => PARTS.filter((x) => gs.includes(x.group)).map((x) => x.name);
+    return { p: of(info.p), s: of(info.s).filter((x) => !of(info.p).includes(x)) };
+  }
   function liftStats(w, bw) {
     let sets = 0, volume = 0;
     for (const ex of w.exercises || []) {
@@ -2263,6 +2312,45 @@ const E = (() => {
       return out;
     });
 
+    // ---------- the same, muscle by muscle, with what hit each one and when it's ready again ----------
+    const PART_FULL = 8; // effective hard sets that leave a single muscle fully spent
+    const muscleParts = m('mparts', (d) => {
+      const ref = d === todayStr ? now.getTime() : U.isoToDate(d + 'T23:59').getTime();
+      const out = {};
+      for (const x of PARTS) out[x.name] = { ...x, fatigue: 0, last: null, sets7: 0, hits: [] };
+      for (let i = 0; i < 7; i++) {
+        const dd = addDays(d, -i);
+        for (const w of loggedByDate[dd] || []) {
+          const t = U.isoToDate(w.end || w.start || dd + 'T18:00').getTime();
+          if (t > ref) continue;
+          const decay = Math.exp(-((ref - t) / 36e5) / 48), eff = (w.rpe || 7) / 8;
+          for (const ex of w.exercises || []) {
+            const n = (ex.sets || []).filter((st) => +st.r > 0 && st.done !== false && st.t !== 'W').length;
+            if (!n) continue;
+            const mp = exerciseParts(ex.name);
+            const add = (name, k) => {
+              const o = out[name]; if (!o) return;
+              o.fatigue += n * k * eff * decay; o.sets7 += n * k;
+              if (!o.last || t > o.last) o.last = t;
+              o.hits.push({ name: ex.name, sets: n, k, t, date: dd });
+            };
+            mp.p.forEach((x) => add(x, 1)); mp.s.forEach((x) => add(x, 0.5));
+          }
+        }
+      }
+      for (const x of PARTS) {
+        const o = out[x.name];
+        o.fresh = Math.round(100 * (1 - Math.min(1, o.fatigue / PART_FULL)));
+        o.status = o.fresh >= 70 ? 'recovered' : o.fresh >= 40 ? 'fatigued' : 'depleted';
+        o.hoursSince = o.last ? (ref - o.last) / 36e5 : null;
+        // fatigue fades with a 48 h time constant; ready means back to 70% fresh
+        const limit = 0.3 * PART_FULL;
+        o.readyIn = o.fatigue > limit ? Math.round(48 * Math.log(o.fatigue / limit)) : 0;
+        o.hits.sort((a, b) => b.t - a.t);
+      }
+      return out;
+    });
+
     // ---------- muscle freshness: recent hard sets, fading with a ~36 h time constant ----------
     const muscleState = m('mstate', (d) => {
       const ref = d === todayStr ? now.getTime() : U.isoToDate(d + 'T23:59').getTime();
@@ -2838,7 +2926,7 @@ const E = (() => {
       training, routines, routineInfo, suggestRoutine, lastSets, records, prCheck, prsOf, progression, exSettings, workoutsSorted,
       dayStates, hrvDayBase, sleepWindows, activeWindows,
       P, todayStr, days, food, body, workouts, allDates, bodyDates,
-      ageOn, hrParams, sessions, strain, strainTarget, sleepOf, sleepNeed, sleepScore, recovery, stress,
+      muscleParts, ageOn, hrParams, sessions, strain, strainTarget, sleepOf, sleepNeed, sleepScore, recovery, stress,
       intake, trendWeight, latestBody, energy, tdee, load, healthAge, insights,
       hrvBase, rhrBase, respBase, tempBase, activeMean,
       naps, journal, habits, loggedNaps, napsOn, muscleSets, habitEffect, autoAnswer, answerOf, habitEffectTrend: habitEffectTrendOf, experiment, experiments, activeExperiment, hrDay, muscleState,
@@ -2866,7 +2954,7 @@ const E = (() => {
   ];
 
   return { context, strainFromTrimp, trimpFromHist, zonesFromHist, histMinutes, mifflin, stressLevel, e1rm, DEFAULT_PROFILE, srpeTrimp, defaultRpe,
-    MUSCLES, exerciseInfo, liftStats, HABIT_CATALOG, DEFAULT_HABITS, DEFAULT_ROUTINES, HABIT_GROUPS, habitGroup, AGE_GROUPS,
+    MUSCLES, PARTS, PART_GROUP, exerciseParts, exerciseInfo, liftStats, HABIT_CATALOG, DEFAULT_HABITS, DEFAULT_ROUTINES, HABIT_GROUPS, habitGroup, AGE_GROUPS,
     ACTIVITY_TYPES, actType, actKey, habitMeta, habitShort, habitSuccess, effectFit, effectLabel, EFFECT_LABELS, EFFECT_MIN };
 })();
 
@@ -4750,52 +4838,77 @@ const Charts = (() => {
   }
 
   // ---------- front and back body figures, each muscle group filled by fillFor(group) ----------
-  function bodyMap(fillFor, { height = 300, onPick, compact = false } = {}) {
-    const W = compact ? 120 : 260, H = 282;
-    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'body-map', role: 'img', 'aria-label': compact ? 'Muscles worked' : 'Muscle map, front and back' });
-    const neutral = (el) => { el.setAttribute('class', 'bm-neutral'); return el; };
-    const part = (g, el) => {
-      const f = fillFor(g);
-      el.setAttribute('class', 'bm-part');
-      el.setAttribute('fill', f.color);
-      if (f.opacity != null) el.setAttribute('fill-opacity', f.opacity);
-      el.dataset.group = g;
-      el.append(s('title', {}, f.title || g));
-      if (onPick) el.addEventListener('click', () => onPick(g));
-      return el;
+  /** Front and back figures with 19 muscles. fillFor(name) gets the muscle's own name with `detail`, else its group
+   *  (Chest, Back, Shoulders, Biceps, Triceps, Quads, Hamstrings, Glutes, Calves, Core), and returns {color, opacity, title}. */
+  function bodyMap(fillFor, { height = 300, onPick, compact = false, detail = false, selected = null } = {}) {
+    const W = 248, H = 290;
+    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'body-map' + (compact ? ' compact' : ''), role: 'img', 'aria-label': compact ? 'Muscles' : 'Muscle map, front and back' });
+    // left half of each muscle; the right half is the mirror image
+    const FRONT = {
+      Traps: 'M55 37 Q50 41 44 43 L54 44 Z',
+      'Side delts': 'M41 44 Q31 44 28 52 Q26 59 29 65 Q31 58 34 53 Q37 48 41 46 Z',
+      'Front delts': 'M45 45 Q39 46 36 51 Q33 57 33 65 Q38 61 40 55 Q42 50 46 48 Z',
+      'Upper chest': 'M59 46 L48 46 Q41 48 40 55 L59 57 Z',
+      'Lower chest': 'M59 59 L40 57 Q39 66 45 71 Q52 74 59 71 Z',
+      Biceps: 'M34 67 Q29 73 28 84 Q28 93 31 97 Q35 92 36 83 Q37 74 36 67 Z',
+      Forearms: 'M30 101 Q25 108 23 121 Q22 131 24 136 L28 136 Q31 124 33 112 Q34 105 33 100 Z',
+      Obliques: 'M47 75 Q42 77 41 88 Q41 101 44 111 Q47 113 48 108 Q46 92 47 75 Z',
+      Abs: 'M59 75 L50 75 Q48 90 48 104 Q50 116 59 122 Z',
+      Quads: 'M53 132 Q45 129 40 137 Q37 153 39 172 Q42 188 49 193 Q53 191 55 183 Q56 160 53 132 Z',
+      Adductors: 'M58 130 Q55 132 55 140 Q55 154 57 166 L59 166 Q60 148 58 130 Z',
+      Calves: 'M43 205 Q38 217 40 233 Q43 244 46 244 Q48 228 47 210 Z',
     };
-    const E_ = (cx, cy, rx, ry, rot = 0) => s('ellipse', { cx, cy, rx, ry, transform: rot ? `rotate(${rot} ${cx} ${cy})` : null });
-    const R_ = (x, y, w, h, r) => s('rect', { x, y, width: w, height: h, rx: r });
+    const BACK = {
+      Traps: 'M60 31 Q54 37 44 43 Q52 47 55 57 L60 80 Z',
+      'Side delts': 'M41 44 Q31 44 28 52 Q26 59 29 65 Q31 58 33 54 Q35 50 38 48 Z',
+      'Rear delts': 'M44 45 Q38 46 35 51 Q34 55 34 58 Q39 56 43 53 Q46 50 47 47 Z',
+      'Upper back': 'M54 58 Q48 54 43 55 Q41 61 44 67 Q50 70 57 71 Z',
+      Lats: 'M43 69 Q39 76 41 88 Q44 100 52 107 L56 103 Q53 87 57 73 Z',
+      'Lower back': 'M59 83 L57 84 Q55 96 55 106 Q56 115 59 118 Z',
+      Triceps: 'M34 67 Q29 73 28 84 Q28 93 31 97 Q35 92 36 83 Q37 74 36 67 Z',
+      Forearms: 'M30 101 Q25 108 23 121 Q22 131 24 136 L28 136 Q31 124 33 112 Q34 105 33 100 Z',
+      Glutes: 'M59 121 Q48 118 42 126 Q39 138 44 147 Q52 151 59 147 Z',
+      Hamstrings: 'M57 151 Q47 149 41 157 Q39 172 42 186 Q47 194 52 193 Q56 181 57 151 Z',
+      Calves: 'M53 204 Q42 202 40 216 Q40 230 46 239 Q52 237 55 227 Q56 214 53 204 Z',
+    };
+    // the body outline the muscles sit on
+    const SIL = 'M60 38 L53 38 Q46 41 38 42 Q28 44 26 54 Q24 66 25 82 Q23 92 22 100 Q19 112 18 124 Q16 134 16 140 Q15 148 19 150 Q23 150 24 144 L26 136 Q30 124 33 110 Q35 102 36 96 Q38 86 38 74 L39 78 Q40 96 42 108 Q40 116 38 126 Q35 146 37 168 Q39 186 41 196 Q39 210 39 224 Q40 238 43 250 Q41 258 40 264 Q46 266 52 264 Q53 256 52 250 Q55 232 55 214 Q55 202 56 196 Q57 176 58 152 L60 136 Z';
     const figure = (ox, back) => {
       const g = s('g', { transform: `translate(${ox} 0)` });
-      g.append(neutral(s('circle', { cx: 60, cy: 18, r: 12 })), neutral(R_(54, 28, 12, 10, 4)),
-        neutral(E_(20, 132, 6, 9, 10)), neutral(E_(100, 132, 6, 9, -10)),
-        neutral(E_(24, 108, 6, 15, 10)), neutral(E_(96, 108, 6, 15, -10)),
-        neutral(E_(48, 196, 8, 6)), neutral(E_(72, 196, 8, 6)), neutral(E_(46, 258, 9, 5)), neutral(E_(74, 258, 9, 5)));
-      if (!back) {
-        g.append(part('Chest', R_(40, 44, 19, 22, 8)), part('Chest', R_(61, 44, 19, 22, 8)));
-        g.append(part('Biceps', E_(29, 77, 7, 15, 8)), part('Biceps', E_(91, 77, 7, 15, -8)));
-        g.append(part('Core', R_(46, 69, 28, 50, 9)));
-        g.append(neutral(R_(44, 118, 32, 14, 6)));
-        g.append(part('Quads', E_(49, 158, 11, 28, 4)), part('Quads', E_(71, 158, 11, 28, -4)));
-        g.append(part('Calves', E_(47, 224, 7, 24, 2)), part('Calves', E_(73, 224, 7, 24, -2)));
-      } else {
-        g.append(part('Back', s('path', { d: 'M42 40 L78 40 L84 62 L76 104 L44 104 L36 62 Z' })));
-        g.append(part('Triceps', E_(29, 77, 7, 15, 8)), part('Triceps', E_(91, 77, 7, 15, -8)));
-        g.append(part('Core', R_(48, 104, 24, 14, 5)));
-        g.append(part('Glutes', E_(50, 130, 12, 12)), part('Glutes', E_(70, 130, 12, 12)));
-        g.append(part('Hamstrings', E_(49, 167, 10, 24, 3)), part('Hamstrings', E_(71, 167, 10, 24, -3)));
-        g.append(part('Calves', E_(47, 222, 8, 22, 2)), part('Calves', E_(73, 222, 8, 22, -2)));
+      const both = (d, cls, name) => {
+        for (const mirror of [false, true]) {
+          const el = s('path', { d, transform: mirror ? 'matrix(-1 0 0 1 120 0)' : null, class: cls });
+          if (name) {
+            const key = detail ? name : PART_GROUP[name] || name;
+            const f = fillFor(key, name) || {};
+            el.setAttribute('fill', f.color || 'var(--surface-3)');
+            if (f.opacity != null) el.setAttribute('fill-opacity', f.opacity);
+            el.dataset.part = name;
+            if (selected === name) el.classList.add('sel');
+            el.append(s('title', {}, f.title || name));
+            if (onPick) el.addEventListener('click', () => onPick(name));
+          }
+          g.append(el);
+        }
+      };
+      g.append(s('circle', { cx: 60, cy: 20, r: 12, class: 'bm-sil' }));
+      both(SIL, 'bm-sil');
+      for (const [name, d] of Object.entries(back ? BACK : FRONT)) both(d, 'bm-part', name);
+      if (!back) for (const y of [86, 97, 108]) g.append(s('path', { d: `M49 ${y} Q60 ${y + 1.5} 71 ${y}`, class: 'bm-line' }));
+      // the seams inside the big leg muscles, both sides
+      for (const d of back ? ['M49 156 Q47 172 49 191', 'M47 207 Q46 222 47 236'] : ['M47 140 Q45 165 50 189', 'M44 150 Q43 170 46 186']) {
+        g.append(s('path', { d, class: 'bm-line' }), s('path', { d, class: 'bm-line', transform: 'matrix(-1 0 0 1 120 0)' }));
       }
-      g.append(part('Shoulders', E_(35, 50, 11, 9, -20)), part('Shoulders', E_(85, 50, 11, 9, 20)));
-      if (!compact) g.append(s('text', { x: 60, y: H - 2, class: 'bm-label', 'text-anchor': 'middle' }, back ? 'Back' : 'Front'));
+      if (!back) g.append(s('path', { d: 'M60 76 L60 120', class: 'bm-line' }));
+      if (back) g.append(s('path', { d: 'M60 80 L60 118', class: 'bm-line' }));
+      if (!compact) g.append(s('text', { x: 60, y: H - 4, class: 'bm-label', 'text-anchor': 'middle' }, back ? 'Back' : 'Front'));
       return g;
     };
-    if (compact) svg.append(figure(0, true));
-    else svg.append(figure(8, false), figure(132, true));
+    svg.append(figure(2, false), figure(126, true));
     svg.style.maxHeight = height + 'px';
     return svg;
   }
+  const PART_GROUP = Object.fromEntries((E.PARTS || []).map((x) => [x.name, x.group]));
 
   /** Horizontal meter with a track of the same hue. */
   function meter(value, max, color, { over = false, h = 6 } = {}) {
@@ -6144,7 +6257,7 @@ const Tabs = (() => {
       h('div', { class: 'pills' }, recOk ? pill(`Recovery ${r.score}%`, RECOVERY_BAND[r.band].pill) : null, pill(`Strain ${v.toFixed(1)} / ${tgt[0]}–${tgt[1]}`, 'strain')),
       h('h3', null, headline),
       mTitle ? h('button', { class: 'tomorrow tap', onclick: () => App.open('muscles', { date }) },
-        Charts.bodyMap((g) => Train.freshFill(mstT[g]), { compact: true, height: 70 }),
+        (() => { const mp = C.muscleParts(slot.d); return Charts.bodyMap((n) => Train.partFill(mp[n]), { compact: true, detail: true, height: 84 }); })(),
         h('span', { class: 'grow' }, h('b', null, mTitle), h('span', null, mSub)),
         icon('chevR')) : null));
     // start a workout
@@ -8589,6 +8702,9 @@ const Train = (() => {
   const FRESH = { recovered: ['Recovered', 'var(--good)'], fatigued: ['Fatigued', 'var(--warn)'], depleted: ['Depleted', 'var(--crit)'] };
   T.FRESH = FRESH;
   T.freshFill = (o) => (!o.last ? { color: 'var(--good)', opacity: 0.85, title: 'Recovered, not trained this week' } : { color: FRESH[o.status][1], opacity: 0.88, title: `${FRESH[o.status][0]}, ${o.fresh}% fresh` });
+  /** Freshness as a colour that slides from red through amber to green; muscles not trained this week are a quieter green. */
+  T.freshColor = (fresh) => (fresh >= 70 ? `color-mix(in oklab, var(--good) ${Math.round(40 + (fresh - 70) * 2)}%, var(--warn))` : fresh >= 40 ? `color-mix(in oklab, var(--warn) ${Math.round((fresh - 40) / 30 * 100)}%, var(--crit))` : 'var(--crit)');
+  T.partFill = (o) => (!o ? {} : !o.last ? { color: 'var(--good)', opacity: 0.45, title: `${o.name}: fresh, not trained this week` } : { color: T.freshColor(o.fresh), opacity: 0.92, title: `${o.name}: ${o.fresh}% fresh` });
   T.muscleInsight = (mst) => {
     const upper = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps'], lower = ['Quads', 'Hamstrings', 'Glutes', 'Calves'];
     const avg = (gs) => U.mean(gs.map((g) => mst[g].fresh));
@@ -9078,41 +9194,74 @@ const Train = (() => {
     render(C, args, entry) {
       setTint('#2ea866', '#3b8deb');
       const d = entry.d || args.date || App.date;
-      const mode = App.ui.muscleMode || 'fresh', filter = entry.filter || 'all';
-      const mst = C.muscleState(d);
-      const maxSets = Math.max(10, ...E.MUSCLES.map((g) => mst[g].sets7));
-      const fillFor = (g) => {
-        const o = mst[g];
-        if (mode === 'fresh') { const f = T.freshFill(o); return filter !== 'all' && (o.last ? o.status : 'recovered') !== filter ? { color: 'var(--surface-3)', title: f.title } : f; }
-        const v = o.sets7 / maxSets;
-        return { color: 'var(--hrv)', opacity: v ? 0.22 + 0.78 * v : 0.07, title: `${o.sets7} sets` };
-      };
-      const rows = E.MUSCLES.filter((g) => mode !== 'fresh' || filter === 'all' || (mst[g].last ? mst[g].status : 'recovered') === filter)
-        .sort((a, b) => (mode === 'fresh' ? mst[a].fresh - mst[b].fresh : mst[b].sets7 - mst[a].sets7))
-        .map((g) => {
-          const o = mst[g];
-          const st = o.last ? o.status : 'recovered';
-          const since = o.hoursSince == null ? 'not trained this week' : o.hoursSince < 24 ? `trained ${Math.round(o.hoursSince)} h ago` : `trained ${Math.round(o.hoursSince / 24)} days ago`;
-          return prow({ t: h('span', { class: 'row', style: { gap: '10px' } }, h('i', { class: 'status-dot', style: { background: mode === 'fresh' ? FRESH[st][1] : 'var(--hrv)' } }), g),
-            s: mode === 'fresh' ? `${FRESH[st][0]} · ${since}` : since, right: h('span', { class: 'val' }, mode === 'fresh' ? `${o.fresh}%` : `${o.sets7 % 1 ? o.sets7.toFixed(1) : o.sets7}`, mode === 'fresh' ? null : h('small', null, 'sets')) });
-        });
-      const trained = E.MUSCLES.some((g) => mst[g].last);
+      const mode = App.ui.muscleMode || 'fresh';
+      const mp = C.muscleParts(d), mst = C.muscleState(d);
       const reDraw = () => { entry.el = null; App.render(); };
+      const sel = entry.sel && mp[entry.sel] ? mp[entry.sel] : null;
+      const SET_LO = 10, SET_HI = 20; // hard sets a week most muscles grow on
+      const setsColor = (n) => (n >= SET_LO && n <= SET_HI ? 'var(--good)' : n > SET_HI ? 'var(--warn)' : n > 0 ? 'var(--hrv)' : 'var(--surface-3)');
+      const fillFor = (name) => {
+        const o = mp[name];
+        if (mode === 'fresh') return T.partFill(o);
+        return { color: setsColor(o.sets7), opacity: o.sets7 ? 0.35 + 0.6 * Math.min(1, o.sets7 / SET_HI) : 1, title: `${name}: ${fmtSets(o.sets7)} sets this week` };
+      };
+      const fmtSets = (n) => (n % 1 ? n.toFixed(1) : String(n));
+      const since = (o) => (o.hoursSince == null ? 'not trained this week' : o.hoursSince < 24 ? `trained ${Math.max(1, Math.round(o.hoursSince))} h ago` : `trained ${plural(Math.round(o.hoursSince / 24), 'day')} ago`);
+      const ready = (o) => (!o.last || !o.readyIn ? 'ready' : o.readyIn < 24 ? `ready in ${o.readyIn} h` : `ready in ${plural(Math.round(o.readyIn / 24), 'day')}`);
+      const pick = (name) => { entry.sel = entry.sel === name ? null : name; reDraw(); requestAnimationFrame(() => document.getElementById('mu-detail')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })); };
+      const legend = mode === 'fresh'
+        ? h('div', { class: 'mu-legend' }, h('span', null, 'Spent'), h('i', { class: 'grad' }), h('span', null, 'Fresh'))
+        : h('div', { class: 'mu-legend' }, h('span', null, '0'), h('i', { class: 'steps' }, h('b', { style: { background: 'var(--hrv)' } }), h('b', { style: { background: 'var(--good)' } }), h('b', { style: { background: 'var(--warn)' } })), h('span', null, `${SET_HI}+ sets`));
+      // the muscle you tapped: how fresh, when it's ready, what hit it
+      let detail = null;
+      if (sel) {
+        const hist = []; for (let k = 13; k >= 0; k--) hist.push(C.muscleParts(addDays(d, -k))[sel.name].fresh);
+        const byEx = new Map();
+        for (const x of sel.hits) { const key = x.name + x.date; const cur = byEx.get(key) || { ...x, sets: 0 }; cur.sets += x.sets * x.k; byEx.set(key, cur); }
+        detail = h('section', { class: 'card', id: 'mu-detail', 'aria-label': sel.name },
+          h('div', { class: 'card-title' }, h('h2', null, sel.name), h('button', { class: 'icon-btn plain sm', 'aria-label': 'Close', onclick: () => pick(sel.name) }, icon('close'))),
+          h('div', { class: 'grid3' },
+            stat(h('span', { style: { color: sel.last ? T.freshColor(sel.fresh) : 'var(--good-ink)' } }, `${sel.fresh}%`), 'fresh'),
+            stat(sel.last ? (sel.readyIn ? (sel.readyIn < 24 ? `${sel.readyIn} h` : `${Math.round(sel.readyIn / 24)} d`) : 'Now') : 'Now', 'ready'),
+            stat(fmtSets(sel.sets7), 'sets this week')),
+          h('div', { style: { marginTop: '12px' } }, Charts.sparkline(hist, { color: 'var(--good)', w: 320, h: 44, range: [0, 100], end: true })),
+          h('div', { class: 'xlabels' }, h('span', null, '2 weeks ago'), h('span', null, d === C.todayStr ? 'now' : U.fmtShort(d))),
+          byEx.size ? h('div', { class: 'list', style: { marginTop: '8px' } }, [...byEx.values()].map((x) =>
+            h('div', { class: 'kv' }, h('span', null, x.name, h('small', { class: 'muted' }, ` · ${x.date === C.todayStr ? 'today' : x.date === addDays(C.todayStr, -1) ? 'yesterday' : U.fmtShort(x.date)}`)), h('span', { class: 'v' }, `${fmtSets(x.sets)} ${x.sets === 1 ? 'set' : 'sets'}`))))
+            : h('p', { class: 'note', style: { marginTop: '8px' } }, `No sets for ${sel.name.toLowerCase()} in the last 7 days.`),
+          h('p', { class: 'note', style: { marginTop: '8px' } }, `Part of ${sel.group.toLowerCase()}. Helper work counts as half a set.`));
+      }
+      // every muscle, grouped the way workouts are: push, pull, legs, core
+      const groups = ['Push', 'Pull', 'Legs', 'Core'].map((region) => {
+        const parts = E.PARTS.filter((x) => x.region === region).map((x) => mp[x.name])
+          .sort((a, b) => (mode === 'fresh' ? a.fresh - b.fresh : b.sets7 - a.sets7));
+        return h('section', { class: 'card flush' }, h('div', { class: 'grp-h', style: { padding: '12px 16px 2px' } }, region),
+          parts.map((o) => {
+            const val = mode === 'fresh' ? o.fresh : o.sets7;
+            const bar = mode === 'fresh'
+              ? h('span', { class: 'mu-bar' }, h('i', { style: { width: `${o.fresh}%`, background: o.last ? T.freshColor(o.fresh) : 'var(--good)', opacity: o.last ? 1 : 0.5 } }))
+              : h('span', { class: 'mu-bar' }, h('em', { style: { left: `${SET_LO / 25 * 100}%`, width: `${(SET_HI - SET_LO) / 25 * 100}%` } }), h('i', { style: { width: `${Math.min(100, o.sets7 / 25 * 100)}%`, background: setsColor(o.sets7) } }));
+            return h('button', { class: 'mu-row tap' + (sel?.name === o.name ? ' on' : ''), onclick: () => { pick(o.name); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+              h('span', { class: 'n' }, o.name, h('small', null, mode === 'fresh' ? (o.last ? `${ready(o)} · ${since(o)}` : 'not trained this week') : since(o))),
+              bar, h('span', { class: 'v' }, mode === 'fresh' ? `${val}%` : fmtSets(val)));
+          }));
+      });
+      const trained = E.PARTS.some((x) => mp[x.name].last);
       return view(pageHead('Muscles', { sub: `${d === C.todayStr ? 'Today' : U.fmtDay(d)} · from logged sets` }),
-        seg([['fresh', 'Freshness'], ['sets', 'Weekly sets']], mode, (v) => { App.ui.muscleMode = v; App.saveUi(); entry.filter = 'all'; reDraw(); }, { label: 'Measure', cls: 'solid' }),
-        h('section', { class: 'card' }, Charts.bodyMap(fillFor, { height: 300, onPick: (g) => toast(`${g}: ${mode === 'fresh' ? mst[g].fresh + '% fresh' : mst[g].sets7 + ' sets this week'}`) }),
-          mode === 'fresh' ? h('div', { class: 'chips wrap small', style: { justifyContent: 'center', marginTop: '12px' } },
-            // each status is a toggle: tap to show only those muscles, tap again to show all
-            [['recovered', 'Recovered', 'var(--good)'], ['fatigued', 'Fatigued', 'var(--warn)'], ['depleted', 'Depleted', 'var(--crit)']].map(([k, n, col]) =>
-              h('button', { class: 'chip', 'aria-pressed': String(filter === k), onclick: () => { entry.filter = filter === k ? 'all' : k; reDraw(); } }, h('i', { class: 'status-dot', style: { background: col } }), n))) : null,
-          h('div', { class: 'row', style: { marginTop: '12px', justifyContent: 'center' } },
+        seg([['fresh', 'Recovery'], ['sets', 'Weekly sets']], mode, (v) => { App.ui.muscleMode = v; App.saveUi(); reDraw(); }, { label: 'Measure', cls: 'solid' }),
+        h('section', { class: 'card' }, Charts.bodyMap(fillFor, { height: 340, detail: true, selected: sel?.name, onPick: pick }),
+          legend,
+          h('div', { class: 'row', style: { marginTop: '8px', justifyContent: 'center' } },
             h('button', { class: 'icon-btn sm', 'aria-label': 'Previous day', onclick: () => { entry.d = addDays(d, -1); reDraw(); } }, icon('chevL')),
-            h('span', { style: { fontWeight: 600, minWidth: '150px', textAlign: 'center' } }, d === C.todayStr ? `Today, ${U.fmtShort(d)}` : U.fmtDayLong(d)),
-            h('button', { class: 'icon-btn sm', 'aria-label': 'Next day', disabled: d >= C.todayStr, onclick: () => { entry.d = addDays(d, 1); reDraw(); } }, icon('chevR')))),
-        trained ? h('section', { class: 'card claude' }, h('p', { style: { lineHeight: 1.55 } }, T.muscleInsight(mst)),
-          Coach.available() ? h('button', { class: 'btn sm tint', style: { marginTop: '12px' }, onclick: () => App.open('coach', { q: 'Based on my muscle freshness and recent training, plan my next 3 sessions.' }) }, icon('spark'), 'Plan my next 3 sessions') : null) : h('p', { class: 'note' }, 'Log strength sets to see which muscles are fresh and which need rest.'),
-        h('section', { class: 'card flush' }, h('div', { class: 'list' }, rows)),
-        h('p', { class: 'note' }, mode === 'fresh' ? 'Freshness drops with the hard sets you log and recovers over two to three days. Helper muscles count as half a set.' : 'Hard sets in the last 7 days. Helper muscles count as half a set; warm-ups don’t count.'));
+            h('span', { style: { fontWeight: 500, minWidth: '150px', textAlign: 'center' } }, d === C.todayStr ? `Today, ${U.fmtShort(d)}` : U.fmtDayLong(d)),
+            h('button', { class: 'icon-btn sm', 'aria-label': 'Next day', disabled: d >= C.todayStr, onclick: () => { entry.d = addDays(d, 1); reDraw(); } }, icon('chevR'))),
+          !sel ? h('p', { class: 'note', style: { textAlign: 'center' } }, 'Tap a muscle for its details.') : null),
+        detail,
+        trained && !sel ? h('section', { class: 'card claude' }, h('p', { style: { lineHeight: 1.55 } }, T.muscleInsight(mst)),
+          Coach.available() ? h('button', { class: 'btn sm tint', style: { marginTop: '12px' }, onclick: () => App.open('coach', { q: 'Based on my muscle freshness and recent training, plan my next 3 sessions.' }) }, icon('spark'), 'Plan my next 3 sessions') : null) : null,
+        ...groups,
+        h('p', { class: 'note' }, mode === 'fresh' ? 'Each muscle tires with the hard sets that work it and recovers over two to three days; ready means back to 70% fresh. Helper work counts as half a set.'
+          : `Hard sets in the last 7 days. Most muscles grow best on about ${SET_LO}–${SET_HI} a week (the shaded part of each bar). Warm-ups don’t count.`));
     },
   };
 
