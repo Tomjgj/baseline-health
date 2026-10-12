@@ -29,17 +29,32 @@ final class Lift: ObservableObject {
     }
 
     static func encode(_ exs: [Ex]) -> [[String: Any]] {
-        exs.map { ex in
-            ["id": ex.id, "name": ex.name, "rest": ex.rest, "bw": ex.bw ?? false,
-             "sets": ex.sets.map { s -> [String: Any] in ["t": s.t, "w": s.w ?? -1, "r": s.r ?? -1, "ph": s.ph ?? -1, "done": s.done] }]
+        var out: [[String: Any]] = []
+        for ex in exs {
+            var sets: [[String: Any]] = []
+            for s in ex.sets {
+                let w: Double = s.w ?? -1, r: Int = s.r ?? -1, ph: Int = s.ph ?? -1
+                sets.append(["t": s.t, "w": w, "r": r, "ph": ph, "done": s.done])
+            }
+            let bw: Bool = ex.bw ?? false
+            out.append(["id": ex.id, "name": ex.name, "rest": ex.rest, "bw": bw, "sets": sets])
         }
+        return out
     }
 
     var exercise: Ex? { plan.exercises.indices.contains(ei) ? plan.exercises[ei] : nil }
     var set: WSet? { exercise.flatMap { $0.sets.indices.contains(si) ? $0.sets[si] : nil } }
     var finished: Bool { plan.exercises.allSatisfy { $0.sets.allSatisfy(\.done) } }
-    var doneSets: Int { plan.exercises.reduce(0) { $0 + $1.sets.filter { $0.done && $0.t != "W" }.count } }
-    var totalSets: Int { plan.exercises.reduce(0) { $0 + $1.sets.filter { $0.t != "W" }.count } }
+    var doneSets: Int {
+        var n = 0
+        for ex in plan.exercises { n += ex.sets.filter { $0.done && $0.t != "W" }.count }
+        return n
+    }
+    var totalSets: Int {
+        var n = 0
+        for ex in plan.exercises { n += ex.sets.filter { $0.t != "W" }.count }
+        return n
+    }
     /// "Set 2 of 3" counting working sets; warm-ups are named as such.
     var setLabel: String {
         guard let ex = exercise, let s = set else { return "" }
@@ -49,14 +64,22 @@ final class Lift: ObservableObject {
         return "Set \(n) of \(work.count)"
     }
     var volumeKg: Double {
-        plan.exercises.reduce(0) { a, ex in a + ex.sets.filter { $0.done && $0.t != "W" }.reduce(0) { $0 + max(0, $1.w ?? 0) * Double($1.r ?? 0) } }
+        var total = 0.0
+        for ex in plan.exercises {
+            for s in ex.sets where s.done && s.t != "W" {
+                let w: Double = max(0, s.w ?? 0)
+                total += w * Double(s.r ?? 0)
+            }
+        }
+        return total
     }
 
     /// Point at a set and load its numbers: last time's weight from the plan, else the set above.
     func select(_ e: Int, _ s: Int) {
         ei = e; si = s
         guard let ex = exercise, let st = set else { return }
-        let w = st.w ?? ex.sets[0..<s].last(where: { $0.w != nil })?.w ?? 0
+        let above: Double? = ex.sets[0..<s].last(where: { $0.w != nil })?.w
+        let w: Double = st.w ?? above ?? 0
         weight = units.show(max(0, w))
         reps = Double(st.r ?? st.ph ?? 8)
     }

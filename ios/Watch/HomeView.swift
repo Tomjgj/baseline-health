@@ -26,8 +26,7 @@ struct TodayPage: View {
             HStack(spacing: 6) {
                 score(value: Double(day?.recovery ?? 0) / 100, color: Theme.band(day?.band),
                       text: day?.recovery.map { "\($0)%" } ?? "–", label: "Recovery")
-                score(value: (day?.strain ?? 0) / 21, color: Theme.strain,
-                      target: day.flatMap { d in d.lo.flatMap { lo in d.hi.map { (lo / 21)...($0 / 21) } } },
+                score(value: (day?.strain ?? 0) / 21, color: Theme.strain, target: strainTarget(day),
                       text: day?.strain.map { String(format: "%.1f", $0) } ?? "–", label: "Strain")
                 score(value: Double(day?.sleep ?? 0) / 100, color: Theme.sleep,
                       text: day?.sleep.map(String.init) ?? "–", label: "Sleep")
@@ -47,6 +46,11 @@ struct TodayPage: View {
         }
         .padding(.horizontal, 4)
         .navigationTitle("Today")
+    }
+
+    private func strainTarget(_ d: WatchContext.Day?) -> ClosedRange<Double>? {
+        guard let lo = d?.lo, let hi = d?.hi, hi >= lo else { return nil }
+        return (lo / 21)...(hi / 21)
     }
 
     private func score(value: Double, color: Color, target: ClosedRange<Double>? = nil, text: String, label: String) -> some View {
