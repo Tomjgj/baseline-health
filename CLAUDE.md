@@ -52,6 +52,7 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Health starts with "Your numbers" (scores, then the baselines as rows); health age is one row that opens `Pages.healthAge`.
 - Motion is quick and quiet: tab change is a 0.16 s fade, push 0.26 s, pop 0.22 s; rows and cards dim when pressed instead of scaling.
 - Keep explanations to one short sentence; long ones go in an expander or go.
+- Balance: selected segments, pager tabs and days use `--seg-on` (soft grey), not white; solid white (`.btn.primary`) is for the one main action on a screen. No boxes inside cards: tiles in a card are split by hairlines. Big numbers: `.huge-num` 48, hero rings 52 (44 when 4+ characters), tiles 28–30. Empty measurements collapse to one line instead of "–" boxes.
 
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.

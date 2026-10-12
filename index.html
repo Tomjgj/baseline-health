@@ -239,7 +239,7 @@ body.past-title .minihead { opacity: 1; transform: none; pointer-events: auto; }
 .phead .sub { font-size: calc(13 * var(--fs)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pager { flex: 1; min-width: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 3px; border-radius: 999px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
 .pager button { min-height: 38px; border: 0; border-radius: 999px; background: transparent; font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--ink-2); padding: 0 4px; white-space: nowrap; transition: background 0.2s, color 0.2s; }
-.pager button[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+.pager button[aria-current="page"] { background: var(--seg-on); color: var(--ink); font-weight: 600; box-shadow: inset 0 1px 0 var(--hi); }
 
 /* ---------- buttons ---------- */
 .icon-btn {
@@ -298,8 +298,8 @@ a.btn { text-decoration: none; }
 .card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; min-height: 24px; }
 .card-title h2 { font-size: calc(17 * var(--fs)); font-weight: 600; letter-spacing: -0.01em; }
 .card-title .r { font-size: calc(12.5 * var(--fs)); color: var(--muted); text-align: right; }
-.section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 8px 4px -4px; }
-.section-title h2 { font-size: calc(20 * var(--fs)); font-weight: 700; letter-spacing: -0.015em; }
+.section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 14px 4px -4px; }
+.section-title h2 { font-size: calc(19 * var(--fs)); font-weight: 600; letter-spacing: -0.015em; }
 .section-title .r { font-size: calc(13 * var(--fs)); color: var(--muted); }
 .eyebrow { font-size: calc(11.5 * var(--fs)); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
 .eyebrow svg { width: 14px; height: 14px; }
@@ -307,7 +307,7 @@ a.btn { text-decoration: none; }
 .big-num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(34 * var(--fs)); font-weight: 650; line-height: 1.05; letter-spacing: -0.02em; }
 .big-num small, .mid-num small { font-family: var(--font); font-size: calc(14 * var(--fs)); font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
 .mid-num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(24 * var(--fs)); font-weight: 650; line-height: 1.1; letter-spacing: -0.01em; }
-.huge-num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(60 * var(--fs)); font-weight: 650; line-height: 1; letter-spacing: -0.03em; }
+.huge-num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(48 * var(--fs)); font-weight: 650; line-height: 1; letter-spacing: -0.03em; }
 .huge-num small { font-family: var(--font); font-size: calc(17 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
 .kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 7px; font-size: calc(14 * var(--fs)); }
 .kv > span:first-child { color: var(--ink-2); }
@@ -347,7 +347,7 @@ a.btn { text-decoration: none; }
 .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
 .seg button { min-height: 36px; border: 0; border-radius: 999px; background: transparent; font-size: calc(13.5 * var(--fs)); font-weight: 500; color: var(--muted); white-space: nowrap; padding: 0 8px; transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
 .seg button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), 0 2px 8px rgba(0, 0, 0, 0.22); }
-.seg.solid button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.seg.solid button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), 0 2px 8px rgba(0, 0, 0, 0.22); }
 .seg.small button { min-height: 30px; font-size: calc(12.5 * var(--fs)); }
 
 /* ---------- week strip ---------- */
@@ -356,8 +356,8 @@ a.btn { text-decoration: none; }
 .week .wd { font-size: calc(11.5 * var(--fs)); font-weight: 500; color: var(--muted); }
 .week .dn { font-family: var(--font-num); font-size: calc(20 * var(--fs)); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .week .dt { width: 6px; height: 6px; border-radius: 50%; background: transparent; }
-.week button[aria-current="date"] { background: var(--accent); color: var(--on-accent); }
-.week button[aria-current="date"] .wd { color: inherit; opacity: 0.65; }
+.week button[aria-current="date"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi); }
+.week button[aria-current="date"] .wd { color: var(--ink-2); }
 .week button:disabled { opacity: 0.32; cursor: default; }
 
 /* ---------- score rings ---------- */
@@ -374,7 +374,8 @@ a.btn { text-decoration: none; }
 .ring-u { font-size: calc(11 * var(--fs)); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
 .ring-s { font-size: calc(12 * var(--fs)); font-weight: 500; margin-top: 4px; }
 .ring:not(.hero) .ring-v.long { font-size: calc(24 * var(--fs)); letter-spacing: -0.04em; }
-.ring.hero .ring-v { font-size: calc(56 * var(--fs)); }
+.ring.hero .ring-v { font-size: calc(52 * var(--fs)); }
+.ring.hero .ring-v.long { font-size: calc(44 * var(--fs)); letter-spacing: -0.04em; }
 .ring.hero .ring-u { font-size: calc(12 * var(--fs)); }
 .ring.hero .ring-s { font-size: calc(14 * var(--fs)); }
 .scores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -436,6 +437,13 @@ a.btn { text-decoration: none; }
 /* ---------- metric tiles ---------- */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tiles.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* tiles inside a card are one surface split by hairlines, not cards within the card */
+.fold-body .tiles { gap: 0; }
+.fold-body .mtile { background: transparent; border-radius: 0; box-shadow: none; padding: 12px 14px 12px 0; }
+.fold-body .mtile:nth-child(even) { padding: 12px 0 12px 14px; border-left: 1px solid var(--line); }
+.fold-body .mtile:nth-child(n+3) { border-top: 1px solid var(--line); }
+.fold-body .mtile .spark { right: 10px; }
+.fold-body .mtile:nth-child(even) .spark { right: 0; }
 .mtile { position: relative; border: 0; text-align: left; color: inherit; background: var(--surface); border-radius: var(--r-lg); padding: 14px 14px 12px; display: grid; gap: 2px; overflow: hidden; min-width: 0;
   box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
 .mtile .k { font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -443,7 +451,7 @@ a.btn { text-decoration: none; }
 .mtile .v small { font-family: var(--font); font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
 .mtile .d { font-size: calc(12.5 * var(--fs)); font-weight: 500; color: var(--muted); padding-right: 60px; line-height: 1.35; min-height: 17px; }
 .mtile .spark { position: absolute; right: 12px; bottom: 12px; width: 58px; height: 24px; }
-.tile2 { background: var(--surface-2); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
+.tile2 { background: color-mix(in srgb, var(--ink) 4%, transparent); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
 .tile2 .k { font-size: calc(12 * var(--fs)); font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile2 .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(22 * var(--fs)); font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile2 .v small { font-family: var(--font); font-size: calc(12 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 2px; }
@@ -558,7 +566,7 @@ a.btn { text-decoration: none; }
 /* ---------- training ---------- */
 .ready-card .pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .ready-card h3 { font-size: calc(21 * var(--fs)); font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; margin-top: 12px; }
-.tomorrow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; text-align: left; color: inherit; background: var(--surface-2); border-radius: var(--r-md); padding: 10px 12px; margin-top: 14px; }
+.tomorrow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; text-align: left; color: inherit; background: transparent; border-top: 1px solid var(--line); padding: 14px 0 0; margin-top: 14px; }
 .tomorrow svg.body-map { width: 46px; flex: none; }
 .tomorrow b { display: block; font-size: calc(15 * var(--fs)); font-weight: 600; color: var(--ink); }
 .tomorrow .grow > span { display: block; font-size: calc(13 * var(--fs)); color: var(--muted); line-height: 1.4; }
@@ -889,7 +897,7 @@ input[type="range"].slider { height: 32px; }
 .fold .tg { width: 18px; height: 18px; color: var(--faint); flex: none; transition: transform 0.25s var(--ease); }
 .fold-head[aria-expanded="true"] .tg, .fold-tg[aria-expanded="true"] .tg { transform: rotate(180deg); }
 .fold-body { padding: 4px 10px 14px 0; }
-.fold .tiles .mtile { background: var(--surface-2); box-shadow: none; }
+.fold .tiles .mtile { background: transparent; box-shadow: none; }
 .habits-row .fold-top > .btn { flex: none; }
 .habits-row .fold-head .s { white-space: normal; }
 .hdots { display: inline-flex; gap: 3px; flex: none; }
@@ -917,12 +925,13 @@ input[type="range"].slider { height: 32px; }
 .cal .dl { font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); }
 .cal .dd { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(15 * var(--fs)); font-weight: 600; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; }
 .cal > button.is-today .dd { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
-.cal > button[aria-pressed="true"] .dd { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.cal > button[aria-pressed="true"] .dd { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi); }
 .cal .bx { position: relative; width: 100%; max-width: 50px; min-height: 48px; border-radius: 12px; display: grid; place-items: center; align-content: center; gap: 1px; padding: 4px 2px; background: var(--surface-2); color: var(--faint);
   font-size: calc(11 * var(--fs)); font-weight: 600; line-height: 1.15; text-align: center; overflow: hidden; border: 1.5px solid transparent; }
 .cal .bx.str { background: var(--hrv-bg); color: var(--hrv-ink); }
 .cal .bx.car { background: var(--strain-bg); color: var(--strain-ink); }
 .cal .bx.plan { background: transparent; border: 1.5px dashed color-mix(in srgb, var(--c) 70%, transparent); color: var(--c); }
+.cal .bx:not(.str):not(.car):not(.plan):not(.missed) { background: color-mix(in srgb, var(--ink) 3%, transparent); }
 .cal .bx.missed { background: transparent; border: 1.5px dashed var(--line); color: var(--faint); }
 .cal .bx small { display: block; font-family: var(--font-num); font-size: calc(11 * var(--fs)); font-weight: 500; opacity: 0.85; }
 .cal .bx .more { position: absolute; top: 2px; right: 3px; font-size: calc(11 * var(--fs)); font-weight: 600; opacity: 0.8; }
@@ -5405,7 +5414,7 @@ const Tabs = (() => {
     const imp = units() === 'imperial';
     return [s.min ? fmtDur(s.min) : null, s.km ? `${U.round(imp ? s.km / 1.609344 : s.km, 1)} ${imp ? 'mi' : 'km'}` : null,
       s.sets ? plural(s.sets, 'set') : null, s.volume ? `${fmtInt(U.kgTo(s.volume, units()))} ${wU()}` : null,
-      !s.sets && s.avgHr ? `${s.avgHr} bpm average` : null].filter(Boolean).join(' · ');
+      !s.sets && s.avgHr ? `avg ${s.avgHr} bpm` : null].filter(Boolean).join(' · ');
   }
   T.lightsOut = lightsOut; T.shortName = shortName; T.isStrength = isStrength; T.sessionSub = sessionSub; T.bandInk = bandInk;
 
@@ -5487,7 +5496,7 @@ const Tabs = (() => {
     const sum = C.activitySummary(date, 30);
     if (!sum.rows.length) {
       return cardT(title, null, h('p', { class: 'small ink2', style: { lineHeight: 1.55 } }, 'Tag work, study or time with friends to see which parts of your day raise your stress and which calm it.'),
-        Store.canWrite ? h('button', { class: 'btn sm primary', style: { marginTop: '12px' }, onclick: () => Sheet.activity({ date }) }, icon('plus'), 'Add an activity') : null);
+        Store.canWrite ? h('button', { class: 'btn sm', style: { marginTop: '12px' }, onclick: () => Sheet.activity({ date }) }, icon('plus'), 'Add an activity') : null);
     }
     const rows = sum.rows.slice(0, limit);
     return cardT(title, 'last 30 days',
@@ -5560,7 +5569,7 @@ const Tabs = (() => {
       body.hidden = !now; head.setAttribute('aria-expanded', String(now));
     } }, h('span', { class: 'ic good' }, icon('check')), h('span', { class: 'tx' }, h('span', { class: 't' }, 'Habits'), h('span', { class: 's' }, sub, pending ? null : dots)), pending ? null : icon('chevD', 'tg'));
     return h('section', { class: 'card fold habits-row', 'aria-label': 'Habits' },
-      h('div', { class: 'fold-top' }, head, pending ? h('button', { class: 'btn sm primary', onclick: () => App.open('checkin', { date: jd }) }, 'Check in') : null,
+      h('div', { class: 'fold-top' }, head, pending ? h('button', { class: 'btn sm', onclick: () => App.open('checkin', { date: jd }) }, 'Check in') : null,
         pending ? h('button', { class: 'icon-btn plain fold-tg', 'aria-label': open ? 'Hide today’s habits' : 'Show today’s habits', 'aria-expanded': String(open), onclick: () => head.click() }, icon('chevD', 'tg')) : null),
       body);
   }
@@ -6494,9 +6503,11 @@ const Tabs = (() => {
         h('span', { class: 'big-num' }, fmtW(en.trendWeight ?? latest.value), h('small', null, wU())),
         en.trendWeight != null && w90 != null ? h('span', { class: 'small muted', style: { fontWeight: 600 } }, `${fmtSigned(U.kgTo(en.trendWeight - w90, units()), 1)} ${wU()} in 90 days`) : null),
         h('div', { style: { marginTop: '8px' } }, weightChart(C, date, 90))) : h('p', { class: 'muted small' }, 'No weigh-ins yet. Weigh in a few mornings a week; the trend line smooths out water swings.'),
-      h('div', { class: 'grid3', style: { marginTop: '12px' } }, tile2('Body fat', bf ? fmt1(bf.value) : null, '%', bf ? U.fmtShort(bf.date) : null),
+      // only the measurements there are; with none, one quiet line instead of three empty boxes
+      bf || waist || lean ? h('div', { class: 'grid3', style: { marginTop: '12px' } }, tile2('Body fat', bf ? fmt1(bf.value) : null, '%', bf ? U.fmtShort(bf.date) : null),
         tile2('Waist', waist ? fmt1(U.cmTo(waist.value, units())) : null, U.lUnit(units()), waist ? U.fmtShort(waist.date) : null),
-        tile2('Lean mass', lean ? fmtW(lean.value) : null, wU(), lean ? U.fmtShort(lean.date) : 'from a smart scale')),
+        tile2('Lean mass', lean ? fmtW(lean.value) : null, wU(), lean ? U.fmtShort(lean.date) : 'from a smart scale'))
+        : h('p', { class: 'note', style: { marginTop: '10px' } }, 'Body fat, waist and lean mass show here once you log them or a smart scale records them.'),
       bloodPressure(C, date));
   }
   /** The latest blood pressure and its 90-day average, when a cuff or the Watch has sent some. */
@@ -6936,8 +6947,8 @@ const Pages = {};
     const box = h('div', { hidden: !on, style: { display: 'grid', justifyItems: 'center', gap: '10px', padding: '10px 0 2px' } },
       h('div', { style: { width: '150px', height: '150px', display: 'grid', placeItems: 'center' } }, h('div', { class: 'breath' })),
       h('p', { style: { fontWeight: 600 } }, 'In for 4 · hold 1 · out for 5'), h('p', { class: 'small muted', style: { textAlign: 'center' } }, 'Follow the circle for two minutes. Slow breathing out is what calms the body.'));
-    const btn = h('button', { class: 'btn block ' + (on ? 'tint' : 'primary'), style: { marginTop: '12px' }, onclick: () => {
-      on = !on; App.ui.breathing = on; box.hidden = !on; btn.className = 'btn block ' + (on ? 'tint' : 'primary');
+    const btn = h('button', { class: 'btn block ' + (on ? 'tint' : ''), style: { marginTop: '12px' }, onclick: () => {
+      on = !on; App.ui.breathing = on; box.hidden = !on; btn.className = 'btn block ' + (on ? 'tint' : '');
       btn.lastChild.textContent = on ? 'Stop' : 'Breathe for 2 minutes';
     } }, icon('wind'), h('span', null, on ? 'Stop' : 'Breathe for 2 minutes'));
     return h('section', { class: 'card', 'aria-label': 'Breathe' }, h('div', { class: 'card-title' }, h('h2', null, 'Breathe')),
@@ -6946,7 +6957,7 @@ const Pages = {};
   function liveCard(C, date) {
     if (!Live.enabled()) return breatheCard();
     const hb = C.hrvDayBase(date);
-    const val = (k) => h('span', { class: 'num', style: { fontSize: 'calc(38 * var(--fs))', fontWeight: 600, lineHeight: 1.05 } }, '–');
+    const val = (k) => h('span', { class: 'num', style: { fontSize: 'calc(30 * var(--fs))', fontWeight: 600, lineHeight: 1.1 } }, '–');
     const hrV = val(), hrvV = val(), stV = val();
     const stLbl = h('div', { class: 'xs', style: { fontWeight: 600 } }, ' ');
     const spark = h('div', { style: { height: '64px', marginTop: '6px' } });
@@ -6956,9 +6967,9 @@ const Pages = {};
       h('p', { style: { fontWeight: 600 } }, 'In for 4 · hold 1 · out for 5'), h('p', { class: 'small muted', style: { textAlign: 'center' } }, Live.real() ? 'Follow the circle for two minutes. Slow breathing out is what calms the body.' : 'Follow the circle. Your heart rate is watched while you breathe.'));
     const real = Live.real();
     const tag = real ? h('span', { class: 'xs muted', style: { fontWeight: 600 } }, 'Checking…') : h('span', { class: 'live-tag' }, h('i'), 'LIVE');
-    const btn = h('button', { class: 'btn block ' + (breathing ? 'tint' : 'primary'), onclick: () => {
+    const btn = h('button', { class: 'btn block ' + (breathing ? 'tint' : ''), onclick: () => {
       breathing = !breathing; App.ui.breathing = breathing; Live.setCalm(breathing);
-      breathBox.hidden = !breathing; btn.className = 'btn block ' + (breathing ? 'tint' : 'primary');
+      breathBox.hidden = !breathing; btn.className = 'btn block ' + (breathing ? 'tint' : '');
       btn.lastChild.textContent = breathing ? 'Stop breathing session' : 'Breathe for 2 minutes';
     } }, icon('wind'), h('span', null, breathing ? 'Stop breathing session' : 'Breathe for 2 minutes'));
     Live.setCalm(breathing);
@@ -7042,7 +7053,7 @@ const Pages = {};
       out.push(cardT(isToday ? 'Today’s activities' : 'Activities', Store.canWrite ? h('button', { class: 'link', onclick: () => Sheet.activity({ date }) }, icon('plus'), 'Add') : null,
         actRowsEl.length ? h('div', null, actRowsEl) : h('p', { class: 'small ink2', style: { lineHeight: 1.55 } }, 'Add work, study or time with friends to see how each compares with the rest of your day.'),
         ast.per.some((p) => p.avg != null) && ast.untagged.avg != null ? h('p', { class: 'note', style: { marginTop: '8px' } }, `The tick on each bar is the rest of ${isToday ? 'today' : 'that day'}: ${ast.untagged.avg} on average.`) : null,
-        !actRowsEl.length && Store.canWrite ? h('button', { class: 'btn sm primary', style: { marginTop: '12px' }, onclick: () => Sheet.activity({ date }) }, icon('plus'), 'Add an activity') : null));
+        !actRowsEl.length && Store.canWrite ? h('button', { class: 'btn sm', style: { marginTop: '12px' }, onclick: () => Sheet.activity({ date }) }, icon('plus'), 'Add an activity') : null));
       out.push(Tabs.stressDriversCard(C, date));
       // trend: daily stress and daytime HRV against its normal
       const range = App.ui.stressRange || 30;
