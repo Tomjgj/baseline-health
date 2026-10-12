@@ -190,6 +190,25 @@ h1, h2, h3 { text-wrap: balance; }
 .m-sum .d { font-size: calc(13 * var(--fs)); color: var(--muted); }
 .m-sum .r { text-align: right; }
 .m-stats { margin-top: 12px; }
+.sc-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 0; overflow: hidden; }
+.sc-cell { display: grid; gap: 2px; justify-items: start; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); text-align: left; font: inherit; min-width: 0; }
+.sc-cell + .sc-cell { border-left: 1px solid var(--line); }
+.sc-cell .k { font-size: calc(13 * var(--fs)); color: var(--muted); font-weight: 500; }
+.sc-cell .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(26 * var(--fs)); font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; }
+.sc-cell .s { font-size: calc(12 * var(--fs)); color: var(--muted); min-height: 16px; }
+.cat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cat { display: grid; gap: 6px; align-content: start; text-align: left; border: 0; color: var(--ink); font: inherit; background: var(--surface); border-radius: var(--r-lg); padding: 14px; box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line); min-width: 0; }
+.cat .top { display: flex; align-items: center; gap: 8px; }
+.cat .ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-2); flex: none; }
+.cat .ic svg { width: 16px; height: 16px; }
+.cat .ic.hr { background: var(--hr-bg); color: var(--hr-ink); } .cat .ic.sleep { background: var(--sleep-bg); color: var(--sleep-ink); }
+.cat .ic.strain { background: var(--strain-bg); color: var(--strain-ink); } .cat .ic.stress { background: var(--stress-bg); color: var(--stress-ink); }
+.cat .nm { font-size: calc(15 * var(--fs)); font-weight: 600; }
+.cat .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(24 * var(--fs)); font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat .v small { font-family: var(--font); font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.cat .st { font-size: calc(12.5 * var(--fs)); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.cat .st i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+.cat .st.good i { background: var(--good); } .cat .st.warn { color: var(--warn-ink); } .cat .st.warn i { background: var(--warn); }
 .mu-legend { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: calc(12 * var(--fs)); color: var(--muted); }
 .mu-legend .grad { width: 120px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--crit), var(--warn) 45%, var(--good) 85%); }
 .mu-legend .steps { display: flex; gap: 2px; width: 120px; }
@@ -6384,47 +6403,128 @@ const Tabs = (() => {
   const blFmt = (b, v) => (v == null ? '–' : b.dur ? fmtDur(v) : b.key === 'steps' ? fmtInt(v) : b.dp && !Number.isInteger(v) ? v.toFixed(b.dp) : String(Math.round(v)));
   T.BASELINES = BASELINES;
   T.healthAgeCard = (C, date) => healthAgeCard(C, date);
-  function baselinesCard(C, date) {
-    const avail = BASELINES.filter((b) => C.baseline(b.key, date));
-    if (!avail.length) return cardT('Your baselines', null, emptyState('pulse', 'Baselines start after a week', `Each one is your own 30-day normal for resting heart rate, HRV, breathing, sleep and more. ${HealthSync.native() ? 'They appear after a week or two of wearing your Apple Watch.' : 'Import a week or two of Apple Health data to see them.'}`));
-    // one row per measure: the latest value, your normal, a 3-month line; tap for the full history
-    const rows = [];
-    // the daily scores first
-    const scores = [['recovery', 'Recovery', (d) => { const r = C.recovery(d); return r && !r.calibrating ? r.score : null; }, 'var(--good)', (v) => `${v}%`],
-      ['sleepScore', 'Sleep score', (d) => C.sleepScore(d)?.score ?? null, 'var(--sleep)', (v) => String(v)],
-      ['strain', 'Strain', (d) => C.strain(d)?.value ?? null, 'var(--strain)', (v) => v.toFixed(1)]];
-    const scoreRows = scores.map(([key, name, f, color, fmt]) => {
-      let last = null; for (let k = 0; k < 4 && last == null; k++) last = f(addDays(date, -k));
-      if (last == null) return null;
-      const wk = []; for (let k = 12; k >= 0; k--) { const vs = []; for (let j = 0; j < 7; j++) { const v = f(addDays(date, -7 * k - j)); if (v != null) vs.push(v); } wk.push(vs.length ? U.mean(vs) : null); }
-      const avg = wk.filter((v) => v != null);
-      return h('button', { class: 'bl-row tap', type: 'button', 'aria-label': `${name}: ${fmt(last)}. Show history`, onclick: () => App.open('metric', { key, date }) },
-        h('span', { style: { minWidth: 0 } }, h('span', { class: 'n' }, name), h('span', { class: 's' }, avg.length ? `3-month average ${fmt(key === 'strain' ? U.round(U.mean(avg), 1) : Math.round(U.mean(avg)))}` : '')),
-        Charts.sparkline(wk, { color, w: 56, h: 22, area: false, end: true }), h('span', { class: 'v' }, fmt(last)), icon('chevR', 'chev'));
-    }).filter(Boolean);
-    if (scoreRows.length) rows.push(h('div', { class: 'grp-h' }, 'Scores'), ...scoreRows);
-    for (const g of [...new Set(avail.map((x) => x.group))]) {
-      rows.push(h('div', { class: 'grp-h' }, g));
-      for (const x of avail.filter((y) => y.group === g)) {
-        const pts = []; for (let k = 12; k >= 0; k--) pts.push(C.baseline(x.key, addDays(date, -7 * k))?.v ?? null);
-        const cur = C.baseline(x.key, date);
-        let last = null;
-        for (let k = 0; k < 8 && !last; k++) { const d = addDays(date, -k); if (d === C.todayStr && PARTIAL_TODAY.has(x.key)) continue; const v = C.dailyValue(x.key, d); if (v != null) last = { d, v }; }
-        const pos = !last || cur?.lo == null ? null : last.v > cur.hi ? 'above' : last.v < cur.lo ? 'below' : null;
-        const good = pos == null || !x.dir ? null : (pos === 'above') === (x.dir > 0);
-        const sub = [cur?.lo != null ? `normal ${blFmt(x, cur.lo)}–${blFmt(x, cur.hi)}` : x.key === 'vo2' ? 'latest reading' : '30-day average',
-          last && last.d !== date && last.d !== addDays(date, -1) ? U.fmtShort(last.d) : null].filter(Boolean).join(' · ');
-        rows.push(h('button', { class: 'bl-row tap', type: 'button', 'aria-label': `${x.name}: ${blFmt(x, (last || cur)?.v)} ${x.unit}. Show history`, onclick: () => App.open('metric', { key: x.key, date }) },
-          h('span', { style: { minWidth: 0 } }, h('span', { class: 'n' }, x.name), h('span', { class: 's' }, sub)),
-          Charts.sparkline(pts, { color: x.color, w: 56, h: 22, area: false, end: true }),
-          h('span', { class: 'v' }, blFmt(x, (last || cur)?.v), x.unit && !x.dur ? h('small', null, x.unit) : null,
-            pos ? h('span', { class: 'd ' + (good == null ? 'muted' : good ? 'up' : 'down') }, `${pos} normal`) : null),
-          icon('chevR', 'chev')));
-      }
-    }
-    return h('section', { class: 'card', 'aria-label': 'Your numbers' },
-      h('div', { class: 'card-title' }, h('h2', null, 'Your numbers'), h('span', { class: 'r xs muted' }, 'tap for history')), rows);
+  /** One measure's latest day (today's partial values skipped) against its normal. */
+  function latestOf(C, x, date) {
+    const cur = C.baseline(x.key, date);
+    let last = null;
+    for (let k = 0; k < 8 && !last; k++) { const d = addDays(date, -k); if (d === C.todayStr && PARTIAL_TODAY.has(x.key)) continue; const v = C.dailyValue(x.key, d); if (v != null) last = { d, v }; }
+    const pos = !last || cur?.lo == null ? null : last.v > cur.hi ? 'above' : last.v < cur.lo ? 'below' : null;
+    const good = pos == null || !x.dir ? null : (pos === 'above') === (x.dir > 0);
+    return { cur, last, pos, good };
   }
+  /** A row for one measure: latest value, your normal, a 3-month line; tap for its history. */
+  function numberRow(C, x, date) {
+    const { cur, last, pos, good } = latestOf(C, x, date);
+    const pts = []; for (let k = 12; k >= 0; k--) pts.push(C.baseline(x.key, addDays(date, -7 * k))?.v ?? null);
+    const sub = [cur?.lo != null ? `normal ${blFmt(x, cur.lo)}–${blFmt(x, cur.hi)}` : x.key === 'vo2' ? 'latest reading' : '30-day average',
+      last && last.d !== date && last.d !== addDays(date, -1) ? U.fmtShort(last.d) : null].filter(Boolean).join(' · ');
+    return h('button', { class: 'bl-row tap', type: 'button', 'aria-label': `${x.name}: ${blFmt(x, (last || cur)?.v)} ${x.unit}. Show history`, onclick: () => App.open('metric', { key: x.key, date }) },
+      h('span', { style: { minWidth: 0 } }, h('span', { class: 'n' }, x.name), h('span', { class: 's' }, sub)),
+      Charts.sparkline(pts, { color: x.color, w: 56, h: 22, area: false, end: true }),
+      h('span', { class: 'v' }, blFmt(x, (last || cur)?.v), x.unit && !x.dur ? h('small', null, x.unit) : null,
+        pos ? h('span', { class: 'd ' + (good == null ? 'muted' : good ? 'up' : 'down') }, `${pos} normal`) : null),
+      icon('chevR', 'chev'));
+  }
+
+  // ---------- the Health tab: highlights, scores, six categories, insights ----------
+  const CATS = [
+    { id: 'heart', name: 'Heart', ic: 'heart', tone: 'hr', keys: ['rhr', 'hrv', 'dayhrv'] },
+    { id: 'sleep', name: 'Sleep', ic: 'moon', tone: 'sleep', keys: ['asleep'] },
+    { id: 'breathing', name: 'Breathing', ic: 'wind', tone: 'strain', keys: ['resp', 'spo2', 'temp'] },
+    { id: 'activity', name: 'Activity', ic: 'steps', tone: 'strain', keys: ['steps', 'vo2'] },
+    { id: 'stress', name: 'Stress', ic: 'pulse', tone: 'stress', keys: ['stress'] },
+    { id: 'body', name: 'Body', ic: 'scale', tone: '', keys: [] },
+  ];
+  T.CATS = CATS;
+  const BL = (key) => BASELINES.find((b) => b.key === key);
+  /** Measures that are outside your normal on their latest day, for the highlights. */
+  function outsideNormal(C, date) {
+    const out = [];
+    for (const x of BASELINES) {
+      if (!C.baseline(x.key, date)) continue;
+      const l = latestOf(C, x, date);
+      if (l.pos && l.last && U.daysBetween(l.last.d, date) <= 2) out.push({ x, ...l });
+    }
+    // what's worse first, then what's just different
+    return out.sort((a, b) => (a.good === false ? 0 : a.good == null ? 1 : 2) - (b.good === false ? 0 : b.good == null ? 1 : 2));
+  }
+  function highlightsCard(C, date) {
+    const items = outsideNormal(C, date);
+    const anyData = BASELINES.some((b) => C.baseline(b.key, date));
+    if (!anyData) return null;
+    const rows = items.slice(0, 3).map(({ x, last, cur, pos, good }) => prow({ ic: 'dot', tone: good === false ? 'stress' : good ? 'good' : '',
+      t: `${x.name} ${pos} your normal`, s: `${blFmt(x, last.v)}${x.unit && !x.dur ? ' ' + x.unit : ''} · normal ${blFmt(x, cur.lo)}–${blFmt(x, cur.hi)}`,
+      onclick: () => App.open('metric', { key: x.key, date }) }));
+    return h('section', { class: 'card', 'aria-label': 'Highlights' },
+      h('div', { class: 'card-title' }, h('h2', null, 'Highlights')),
+      rows.length ? h('div', { class: 'list' }, rows, items.length > 3 ? h('p', { class: 'note', style: { paddingTop: '6px' } }, `${items.length - 3} more in the categories below.`) : null)
+        : h('p', { class: 'small ink2' }, 'Everything is within your normal range.'));
+  }
+  function scoresStrip(C, date) {
+    const scores = [['recovery', 'Recovery', (d) => { const r = C.recovery(d); return r && !r.calibrating ? r.score : null; }, (v) => `${Math.round(v)}%`],
+      ['sleepScore', 'Sleep', (d) => C.sleepScore(d)?.score ?? null, (v) => String(Math.round(v))],
+      ['strain', 'Strain', (d) => C.strain(d)?.value ?? null, (v) => v.toFixed(1)]];
+    const cells = scores.map(([key, name, f, fmt]) => {
+      let last = null; for (let k = 0; k < 4 && last == null; k++) last = f(addDays(date, -k));
+      const vs = []; for (let k = 0; k < 90; k++) { const v = f(addDays(date, -k)); if (v != null) vs.push(v); }
+      return h('button', { class: 'sc-cell tap', onclick: () => App.open('metric', { key, date }), 'aria-label': `${name}: ${last == null ? 'no data' : fmt(last)}. Show history` },
+        h('span', { class: 'k' }, name), h('span', { class: 'v' }, last == null ? '–' : fmt(last)), h('span', { class: 's' }, vs.length >= 7 ? `avg ${fmt(key === 'strain' ? U.mean(vs) : Math.round(U.mean(vs)))}` : ''));
+    });
+    return h('section', { class: 'card sc-strip', 'aria-label': 'Your scores' }, cells);
+  }
+  /** The headline number and status for a category tile. */
+  function catSummary(C, cat, date) {
+    if (cat.id === 'body') {
+      const en = C.energy(date);
+      return { v: en.trendWeight != null ? fmtW(en.trendWeight) : null, unit: wU(), status: en.weekChange != null ? `${fmtSigned(U.kgTo(en.weekChange, units()), 1)} ${wU()} this week` : 'Weigh in to start', tone: '' };
+    }
+    const xs = cat.keys.map(BL).filter((x) => x && C.baseline(x.key, date));
+    if (!xs.length) return { v: null, status: 'No data yet', tone: '' };
+    const head = latestOf(C, xs[0], date), off = xs.map((x) => latestOf(C, x, date)).filter((l) => l.pos);
+    return { v: head.last ? blFmt(xs[0], head.last.v) : null, unit: xs[0].dur ? '' : xs[0].unit, label: xs[0].name,
+      status: !off.length ? 'Within normal' : off.every((l) => l.good) ? `${off.length} better than normal` : `${off.length} outside normal`,
+      tone: off.some((l) => l.good === false) ? 'warn' : off.length && !off.every((l) => l.good) ? '' : 'good' };
+  }
+  function categoriesGrid(C, date) {
+    return h('section', { class: 'cat-grid', 'aria-label': 'Categories' }, CATS.map((cat) => {
+      const sm = catSummary(C, cat, date);
+      return h('button', { class: 'cat tap', onclick: () => App.open('healthCat', { id: cat.id, date }), 'aria-label': `${cat.name}: ${sm.v ?? 'no data'}. ${sm.status}` },
+        h('span', { class: 'top' }, h('span', { class: 'ic ' + cat.tone }, icon(cat.ic)), h('span', { class: 'nm' }, cat.name)),
+        h('span', { class: 'v' }, sm.v ?? '–', sm.v != null && sm.unit ? h('small', null, ' ' + sm.unit) : null),
+        h('span', { class: 'st ' + sm.tone }, sm.tone ? h('i') : null, sm.status));
+    }));
+  }
+  function insightsList(C, date) {
+    const answers = Object.keys(C.journal || {}).length;
+    const ex = currentExperiment(C);
+    const ha = C.healthAge(date);
+    return h('section', { class: 'card flush', 'aria-label': 'Insights' }, h('div', { class: 'card-title', style: { padding: '14px 16px 2px' } }, h('h2', null, 'Insights')),
+      h('div', { class: 'list' },
+        ex ? prow({ ic: 'flask', tone: 'claude', t: `Experiment: ${C.habits.find((hb) => hb.id === ex.habit)?.name || 'habit'}`, s: 'Two weeks, compared with the four before', onclick: () => App.open('experiment', { id: ex.id }) }) : null,
+        prow({ ic: 'check', tone: 'good', t: 'What goes with your recovery', s: answers >= 14 ? 'Habits linked to better or worse recovery and sleep' : 'Answer the morning check-in for two weeks to see', onclick: () => App.open('tracker', { date }) }),
+        prow({ ic: 'pulse', tone: 'stress', t: 'What drives your stress', s: 'Work, study and the rest of your day', onclick: () => App.open('stressDrivers', { date }) }),
+        ha.healthAge != null ? prow({ ic: 'trend', tone: '', t: `Health age ${fmt1(ha.healthAge)}`, s: Math.abs(ha.healthAge - ha.age) < 0.1 ? 'Same as your age' : `${fmt1(Math.abs(ha.healthAge - ha.age))} years ${ha.healthAge < ha.age ? 'younger' : 'older'} than your age`, onclick: () => App.open('healthAge', { date }) }) : null));
+  }
+  /** A category's own page: its numbers, then the charts that belong to it. */
+  T.healthCategory = (C, date, id) => {
+    const cat = CATS.find((c) => c.id === id) || CATS[0];
+    const xs = cat.keys.map(BL).filter((x) => x && C.baseline(x.key, date));
+    const out = [];
+    if (xs.length) out.push(h('section', { class: 'card', 'aria-label': cat.name }, xs.map((x) => numberRow(C, x, date))));
+    else if (cat.id !== 'body') out.push(cardT(cat.name, null, emptyState(cat.ic, 'Not enough data yet', `Your normal for each of these starts after about a week of wearing your Apple Watch.`)));
+    if (cat.id === 'sleep') out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
+      prow({ ic: 'moon', tone: 'sleep', t: 'Last night', s: 'Stages, timing and what made the score', onclick: () => App.open('sleep', { date }) }),
+      prow({ ic: 'trend', tone: 'sleep', t: 'Sleep score history', s: 'Week, month, 3 months or a year', onclick: () => App.open('metric', { key: 'sleepScore', date }) }))), sleepTimingCard(C, date));
+    if (cat.id === 'heart') out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
+      prow({ ic: 'heart', tone: 'hr', t: 'Recovery today', s: 'How HRV, resting heart rate and sleep add up', onclick: () => App.open('recovery', { date }) }))));
+    if (cat.id === 'activity') out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
+      prow({ ic: 'bolt', tone: 'strain', t: 'Strain today', s: 'Workouts and everyday movement', onclick: () => App.open('strain', { date }) }),
+      prow({ ic: 'trend', tone: 'strain', t: 'Active energy history', s: 'Week, month, 3 months or a year', onclick: () => App.open('metric', { key: 'active', date }) }))));
+    if (cat.id === 'activity') { const hr = healthAgeRow(C, date); if (hr) out.push(hr); }
+    if (cat.id === 'stress') out.push(stressDriversCard(C, date));
+    if (cat.id === 'body') out.push(bodyCard(C, date));
+    return { title: cat.name, out };
+  };
 
   // ---------- honest effects: a label, a range and a bar, shared by Health, the tracker and the habit page ----------
   const MEASURES = {
@@ -6461,38 +6561,6 @@ const Tabs = (() => {
   T.eff = { MEASURES, shown, pill: effPill, range: effRange, num: effNum, color: effColor, bar: effBar, more: effMore };
 
   // ---------- habits: only what's clear or likely, each with its range ----------
-  function habitsCard(C, date) {
-    const el = h('section', { class: 'card', 'aria-label': 'Habit effects' });
-    const checkins = Object.keys(C.journal).filter((d) => d >= addDays(date, -90)).length;
-    const draw = () => {
-      const ms = App.ui.habitMeasure || 'recovery', M = MEASURES[ms];
-      const effs = C.habits.map((hb) => ({ hb, f: C.habitEffect(hb.id, date, ms) }));
-      const any = effs.some((x) => x.f.est != null && x.f.label !== 'few');
-      const rank = { clear: 0, likely: 1 };
-      const top = effs.filter((x) => shown(x.f)).sort((a, b) => rank[a.f.label] - rank[b.f.label] || Math.abs(b.f.est) - Math.abs(a.f.est));
-      const rest = effs.filter((x) => !shown(x.f) && x.f.label !== 'few');
-      const scale = Math.max(M.unit === '%' ? 10 : 8, ...top.map((x) => Math.max(Math.abs(x.f.lo80), Math.abs(x.f.hi80))));
-      const rows = top.map(({ hb, f }) => h('button', { class: 'hrow eff tap', onclick: () => App.open('habit', { id: hb.id, date }),
-        'aria-label': `${hb.name}: ${E.EFFECT_LABELS[f.label]}, ${fmtSigned(f.est, 0, M.unit)} ${M.name}, likely range ${effRange(f, M.unit)}. Open details` },
-        h('span', { style: { minWidth: 0 } }, h('b', null, hb.name), h('span', { class: 's' }, effPill(f), effRange(f, M.unit))),
-        effBar(f, scale, M.worse),
-        h('span', { class: 'y', style: { color: effColor(f, M.worse) } }, effNum(f.est, M.unit)), icon('chevR')));
-      put(el,
-        h('div', { class: 'card-title' }, h('h2', null, `What goes with your ${M.name}`), h('button', { class: 'link', onclick: () => App.open('tracker', { date }) }, 'Tracker', icon('chevR'))),
-        any ? seg([['recovery', 'Recovery'], ['sleep', 'Sleep'], ['hrv', 'HRV'], ['stress', 'Stress']], ms, (v) => { App.ui.habitMeasure = v; App.saveUi(); draw(); }, { label: 'Measure', cls: 'small' }) : null,
-        any ? h('p', { class: 'small muted', style: { marginTop: '10px' } }, `${ms === 'stress' ? 'Stress on days with each habit' : 'The morning after days with each habit'} vs days without, last 90 days${checkins ? ` (${plural(checkins, 'day')} logged)` : ''}, allowing for weekends, training load and exam days. Bars show the likely range.`) : null,
-        any ? (rows.length ? h('div', null, rows) : h('p', { class: 'small ink2', style: { marginTop: '10px' } }, `Nothing stands out for ${M.name} yet. Every habit is still within the range of normal day-to-day swings.`)) : null,
-        any && rest.length ? h('div', { class: 'eff-rest' }, h('span', { class: 'xs muted', style: { fontWeight: 600 } }, 'Not clear yet'),
-          h('div', { class: 'chips wrap small' }, rest.map(({ hb }) => h('button', { class: 'chip', onclick: () => App.open('habit', { id: hb.id, date }) }, E.habitShort(hb))))) : null,
-        any ? null : h('div', null, h('p', { class: 'small ink2', style: { lineHeight: 1.55 } }, checkins ? `Each habit needs at least ${E.EFFECT_MIN} days with and ${E.EFFECT_MIN} without before it gets an estimate. Keep doing the morning check-in.` : 'Answer the morning check-in for two weeks to see which habits go with better or worse recovery and sleep.'),
-          Store.canWrite ? h('button', { class: 'btn sm', style: { marginTop: '12px' }, onclick: () => App.open('checkin', { date: new Date().getHours() < 17 ? addDays(C.todayStr, -1) : C.todayStr }) }, icon('clipboard'), 'Start a check-in') : null),
-        rows.length ? h('div', { style: { marginTop: '10px' } }, legend(['Clear', 'var(--ink)', 'dot'], ['Likely', 'var(--ink-2)', 'half'], ['Better', 'var(--strain)'], ['Worse', 'var(--stress)'])) : null);
-      el.setAttribute('aria-label', `What goes with your ${M.name}`);
-    };
-    draw();
-    return el;
-  }
-
   // ---------- experiments: the running one, or the last result ----------
   function expTitle(hb, target) {
     const PH = { late_meal: ['No food within 2 h of bed', 'Eat within 2 h of bed'], late_study: ['No studying or work late', 'Study late'], caffeine_late: ['No caffeine after 2 pm', 'Caffeine after 2 pm'], screens_bed: ['No screens in bed', 'Screens in bed'] };
@@ -6633,27 +6701,9 @@ const Tabs = (() => {
     return null;
   }
   /** Build a card only when it scrolls near the screen. The placeholder keeps the card's last height so the page doesn't jump. */
-  const lazyH = {}, lazySeen = new Set();
-  function lazy(key, build, guess = 360) {
-    // a card already drawn on this visit redraws right away, so a toggle inside it doesn't flash an empty placeholder
-    if (lazySeen.has(key)) return build();
-    const ph = h('div', { class: 'lazy', style: { minHeight: (lazyH[key] || guess) + 'px' }, 'aria-busy': 'true' });
-    let done = false;
-    const io = new IntersectionObserver((es) => {
-      if (done || !es.some((e) => e.isIntersecting) || !ph.isConnected) return;
-      done = true; io.disconnect(); lazySeen.add(key);
-      let el = null;
-      try { el = build(); } catch (e) { console.error(e); }
-      if (el) { ph.replaceWith(el); lazyH[key] = el.offsetHeight || lazyH[key]; } else ph.remove();
-    }, { rootMargin: '500px 0px' });
-    io.observe(ph);
-    return ph;
-  }
-  T.lazy = lazy;
 
   T.health = (C, date) => {
     setTint('#8f7bf0', '#1aa394');
-    if (!document.querySelector('#view > .health-view')) lazySeen.clear(); // a fresh visit starts lazy again
     const out = [tabHead('Health', 'The long view', askBtn(), settingsBtn())];
     const wc = weekCompare(C, date);
     let dataDays = 0;
@@ -6666,9 +6716,9 @@ const Tabs = (() => {
           h('div', { class: 'grow' }, h('b', { style: { display: 'block', fontSize: 'calc(15.5 * var(--fs))', fontWeight: 600 } }, `Your week ${isoWeek(date)} report is ready`),
             h('span', { style: { display: 'block', fontSize: 'calc(13 * var(--fs))', color: 'var(--claude)' } }, (bits.length ? bits.join(', ') + '. ' : '') + 'Read it with Claude.')), icon('chevR'))));
     }
-    const ex = currentExperiment(C);
-    out.push(baselinesCard(C, date), healthAgeRow(C, date) || healthAgeCard(C, date), ex ? experimentCard(C, ex) : null, lazy('habits', () => habitsCard(C, date), 700), lazy('drivers', () => stressDriversCard(C, date), 420));
-    out.push(lazy('body', () => bodyCard(C, date), 420), lazy('sleepTiming', () => sleepTimingCard(C, date), 380));
+    const anyData = BASELINES.some((b) => C.baseline(b.key, date));
+    out.push(highlightsCard(C, date), scoresStrip(C, date), sectionT('Categories'), categoriesGrid(C, date), insightsList(C, date));
+    if (!anyData) out.splice(1, 0, cardT('Your numbers', null, emptyState('pulse', 'Your normal starts after a week', `Each measure is compared with your own last 30 days. ${HealthSync.native() ? 'They appear after a week or two of wearing your Apple Watch.' : 'Import a week or two of Apple Health data to see them.'}`)));
     // data
     const st = Store.state();
     out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
@@ -6773,6 +6823,12 @@ const Pages = {};
     },
   };
 
+  Pages.healthCat = {
+    render(C, args) {
+      const { title, out } = Tabs.healthCategory(C, args.date || C.todayStr, args.id);
+      return view(pageHead(title), ...out);
+    },
+  };
   Pages.healthAge = { render: (C, args) => view(pageHead('Health age'), Tabs.healthAgeCard(C, args.date || C.todayStr)) };
 
   // =============== RECOVERY ===============

@@ -15,7 +15,6 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Type: write font sizes as `calc(N * var(--fs))`, never px, and N is at least 11. `--fs` follows the browser text size and, on iPhone, Dynamic Type. Only the tab bar labels and the Food add button stay fixed.
 - Touch targets: small controls get a 44 × 44 tap layer from the shared `::after` rule next to `.tap` in the CSS. Add new small control classes to that list.
 - Today: one focus card with "Next up" (`planRows` sorts by priority), a habits row, and `foldCard`s that remember open/closed in `App.ui.fold`.
-- Health: cards below the fold go through `lazy(key, build, guessHeight)`.
 - Streaks: `habitTrack` returns `streak`, `unit` ('day' or 'week'), `atRisk` and `forgiven`. Use `Tabs.streakText(tr)` to show one. Pauses live in `profile.habitPauses`; days answered "Felt sick" pause too.
 
 ## Conventions added in phase 2
@@ -49,7 +48,7 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 ## Conventions added in the lighter-feel pass
 - Weights: 400 body, 500 row titles and secondary labels, 600 card titles, buttons and small caps, 650–700 only for big numbers and page titles. `b`/`strong` are 600. Nothing above 700.
 - Every health number opens its history: `App.open('metric', { key, date })` (keys in `METRICS` in ui-pages: the baselines plus active, daylight, recovery, sleepScore, strain, weight). Week / month / 3 months / year, normal band, recent days that open that day.
-- Health starts with "Your numbers" (scores, then the baselines as rows); health age is one row that opens `Pages.healthAge`.
+- Health is four parts: Highlights (only measures outside the person's normal, else one calm line), the Recovery / Sleep / Strain strip (90-day average under each), Categories (six tiles from `CATS` in Tabs: heart, sleep, breathing, activity, stress, body) and Insights (experiment, recovery tracker, stress drivers, health age). A tile opens `Pages.healthCat` (`Tabs.healthCategory(C, date, id)`), which holds that category's number rows and its detail cards. New detail cards go on a category page, not on the tab.
 - Motion is quick and quiet: tab change is a 0.16 s fade, push 0.26 s, pop 0.22 s; rows and cards dim when pressed instead of scaling.
 - Keep explanations to one short sentence; long ones go in an expander or go.
 - Balance: selected segments, pager tabs and days use `--seg-on` (soft grey), not white; solid white (`.btn.primary`) is for the one main action on a screen. No boxes inside cards: tiles in a card are split by hairlines. Big numbers: `.huge-num` 48, hero rings 52 (44 when 4+ characters), tiles 28–30. Empty measurements collapse to one line instead of "–" boxes.
