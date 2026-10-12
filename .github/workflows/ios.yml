@@ -86,9 +86,8 @@ jobs:
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee watchbuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
           test -d build/Build/Products/Debug-watchsimulator/BaselineWatch.app
 
-      # informative: a watch simulator without a paired phone may refuse to run a companion app
+      # the watch app must launch on its own and draw its home screen
       - name: Launch the watch app in a watch simulator
-        continue-on-error: true
         run: |
           set -x
           WATCH=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in sorted(d, reverse=True) if 'watchOS' in k for x in d[k] if 'Watch' in x['name']))")
