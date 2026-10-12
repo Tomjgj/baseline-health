@@ -58,9 +58,20 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Two levels: the 10 groups in `E.MUSCLES` (routine suggestions, muscular load, the Train hero text) and 19 muscles in `E.PARTS` (`{name, group, region}`), which the map and the Muscles page use. `EX_PARTS` says which muscles each built-in exercise works (primary | secondary, half a set); `E.exerciseParts(name)` falls back to every muscle of the exercise's groups. A new exercise needs both its `FOODS.EXERCISES` groups and an `EX_PARTS` line.
 - `C.muscleParts(d)` gives each muscle `fresh`, `status`, `readyIn` (hours to 70% fresh), `sets7` and `hits`. `Charts.bodyMap(fill, { detail: true })` passes muscle names to `fill`; without `detail` it passes group names. Colours come from `Train.freshColor` / `Train.partFill`.
 
+## Apple Watch app (ios/Watch)
+- SwiftUI, watchOS 10+, embedded in the iPhone app (target `BaselineWatch`, bundle id `$(BASE_BUNDLE_ID).watchkitapp`). Same design rules: black, the data colours, rounded numerals, semibold at most except the one big number.
+- The page builds the watch's context in `Watch.context()` (today's scores, next and other routines pre-filled like the logger, a workout in progress, tired muscles) and sends it as JSON through the bridge (`{ type: "watch", json }`, `WatchLink.swift`). Keep it plain JSON; the watch decodes it with `Codable` (`Watch/Model.swift`).
+- The watch sends `start`, `set`, `finish` and `discard`; `Watch.receive` keeps one `App.draft` for both sides and saves the finished workout (`src: 'watch'`). Weights travel in kg; -1 means empty.
+- Strength and cardio sessions run as `HKWorkoutSession`s and are saved to Health; the phone's sync merges the Health workout with the logged one.
+
+## Sync
+- First sync: the last 30 days, then `HealthSync.backfill` fetches older months 30 days at a time to 180 (`meta.syncedFrom`). `applyImport` kind `'backfill'` doesn't touch `meta.lastSync`.
+- `HealthReader` sends steps, energy and daylight as Health statistics in half-hour buckets (source "Health") and heart rate as per-minute averages; everything else raw.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
 3. ~~Claude coach~~ (done, Oct 2026): backend in `server/`, editable memory, six tools with confirm/undo, inline charts, rare check-in notes, day-specific starting points. Not done: Claude-written check-in notes (they're local rules today), and food describe/photo through the backend.
-5. Daily-use pass (Oct 2026): done as above. Not done: a Watch app for second-by-second heart rate, larger Dynamic Type clipping on habit chips and Health labels, imperial for temperature and food, custom exercises without muscles, Claude coach setup for people who can't deploy a server.
+5. Daily-use pass (Oct 2026): done as above. Not done: larger Dynamic Type clipping on habit chips and Health labels, imperial for temperature and food, custom exercises without muscles, Claude coach setup for people who can't deploy a server.
+6. Watch app (Oct 2026): built and compiled in CI, not yet run on a watch. Next: complications, a Live Activity for workouts on the phone, editing exercises on the watch.
 4. ~~Data pipeline~~ (done, Oct 2026): one aggregation for export and JSON, new Health types, habits answered from data, the `HealthSync` bridge and an iOS shell in `ios/` (builds and launches in CI). Next: run the iOS app on a device with real Health data, background delivery, widgets, a Live Activity for workouts and a Watch complication.

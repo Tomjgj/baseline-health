@@ -1,4 +1,4 @@
-# Baseline for iPhone
+# Baseline for iPhone and Apple Watch
 
 A thin native shell around `index.html`. The interface is the web app, unchanged. The native side reads HealthKit and hands the samples to the page, so the page computes recovery, sleep, strain and stress the same way it does from an Apple Health export.
 
@@ -9,12 +9,22 @@ A thin native shell around `index.html`. The interface is the web app, unchanged
 
 Not yet checked: the HealthKit permission sheet and real Health data, which need a device.
 
+## The Apple Watch app
+
+`Watch/` is a SwiftUI watch app that ships inside the iPhone app.
+- **Today:** recovery, strain and sleep rings, HRV and resting heart rate.
+- **Train:** the planned or suggested routine, your other routines, a workout already running on the iPhone (Continue), and quick-start Run, Walk, Ride or Other.
+- **Strength workout:** swipe left for pause and end, right for the exercise list. The middle page has the set: tap weight or reps and turn the Digital Crown, then Done. The rest timer taps your wrist when it's up. At the end you rate the effort and save.
+- **Phone link:** every set reaches the iPhone's workout logger as you go, and the finished workout is saved in Baseline and to Apple Health with heart rate and energy.
+
+When you run the iPhone app from Xcode, set your Team for both targets (Baseline and BaselineWatch) under Signing & Capabilities. With your Apple Watch paired, the watch app installs with it; if it doesn't, open the Watch app on your iPhone → Baseline → Install.
+
 ## Run it on your iPhone (no Terminal)
 
 1. Download this branch as a ZIP from GitHub (Code → Download ZIP) and double-click it to unzip.
 2. Open `ios/Baseline.xcodeproj` (double-click).
 3. Connect your iPhone, unlock it, and pick it at the top of the Xcode window.
-4. Click *Baseline* in the left sidebar → *Signing & Capabilities* → *Team* → your Apple ID.
+4. Click *Baseline* in the left sidebar → *Signing & Capabilities* → *Team* → your Apple ID. Do the same for the *BaselineWatch* target.
 5. Press ▶ (Run).
 
 `Baseline.xcodeproj` is generated from `project.yml` by CI and committed, so don't edit it by hand.
