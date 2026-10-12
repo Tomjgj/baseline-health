@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BaselineAppGroup</key>
+	<string>group.$(BASE_BUNDLE_ID)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -23,13 +25,17 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Baseline uses the camera to scan food barcodes. Nothing is recorded or stored.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine, water and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone unless you connect your own coach server.</string>
+	<string>Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine, water and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone; only what you ask the coach goes to Anthropic.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Baseline saves the water you log to Apple Health so your other apps see it.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
-		<string></string>
+		<string>LaunchBackground</string>
 	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>

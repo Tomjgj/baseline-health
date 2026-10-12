@@ -10,6 +10,9 @@
 #
 # The iPhone needs to be unlocked, connected (cable or same Wi-Fi after pairing in Xcode once),
 # with Developer Mode on (Settings → Privacy & Security → Developer Mode).
+#
+# It builds the full app (widgets, Live Activity, watch complications). Those need an App Group, which a free Apple ID's
+# Personal Team may not allow; if signing fails for that reason, it builds Baseline Lite instead (the same app without them).
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -26,6 +29,7 @@ BUNDLE="${BUNDLE:-com.$(whoami | tr -cd 'a-zA-Z0-9').baseline}"
 
 command -v xcodegen >/dev/null || { echo "Installing XcodeGen…"; brew install xcodegen; }
 xcodegen generate --quiet
+xcodegen generate --quiet --spec project-lite.yml
 
 if [ -z "${DEVICE:-}" ]; then
   tmp=$(mktemp)
@@ -44,13 +48,32 @@ fi
 [ -n "$DEVICE" ] || { echo "No iPhone found. Connect it, unlock it, and trust this Mac."; exit 1; }
 echo "Building for $DEVICE as $BUNDLE (team $TEAM)…"
 APP=build/Build/Products/Debug-iphoneos/Baseline.app
-rm -rf "$APP" # so an old build can't pass for a new one
 
-xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
-  -destination "id=$DEVICE" -derivedDataPath build -allowProvisioningUpdates \
-  DEVELOPMENT_TEAM="$TEAM" BASE_BUNDLE_ID="$BUNDLE" CODE_SIGN_STYLE=Automatic \
-  build | grep -E "error:|warning: .*\.swift|BUILD (SUCCEEDED|FAILED)" || true
-[ -d "$APP" ] || { echo "Build failed. Open ios/Baseline.xcodeproj in Xcode to see the full error."; exit 1; }
+mkdir -p build
+# builds one project; succeeds only if xcodebuild says so (a half-signed .app can be left behind on failure)
+run_build() {
+  rm -rf "$APP"
+  xcodebuild -project "$1" -scheme Baseline -configuration Debug \
+    -destination "id=$DEVICE" -derivedDataPath build -allowProvisioningUpdates \
+    DEVELOPMENT_TEAM="$TEAM" BASE_BUNDLE_ID="$BUNDLE" CODE_SIGN_STYLE=Automatic \
+    build > build/xcodebuild.log 2>&1 || true
+  grep -E "error:|warning: .*\.swift|BUILD (SUCCEEDED|FAILED)" build/xcodebuild.log || true
+  grep -q "BUILD SUCCEEDED" build/xcodebuild.log && [ -d "$APP" ]
+}
+PROJECT=Baseline.xcodeproj
+if ! run_build "$PROJECT" && grep -qiE "app groups|application-groups|personal development team|personal team" build/xcodebuild.log; then
+  echo
+  echo "Your Apple ID's Personal Team can't sign the widgets: they need an App Group, which free Apple IDs may not get."
+  echo "Building Baseline Lite instead. It's the same app and watch app, without the widgets, the workout Live Activity"
+  echo "and the watch complications."
+  echo
+  PROJECT="Baseline Lite.xcodeproj"
+  run_build "$PROJECT" || true
+fi
+if ! grep -q "BUILD SUCCEEDED" build/xcodebuild.log || [ ! -d "$APP" ]; then
+  echo "Build failed. Open \"ios/$PROJECT\" in Xcode to see the full error (the full log is ios/build/xcodebuild.log)."
+  exit 1
+fi
 
 xcrun devicectl device install app --device "$DEVICE" "$APP"
 xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE"

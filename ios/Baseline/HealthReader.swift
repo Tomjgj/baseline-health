@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import WidgetKit
 
 /// Reads HealthKit and builds a `baseline.health/1` payload: the raw samples the page turns into daily
 /// summaries with the same code that reads the Health export (HI.fromJSON in index.html).
@@ -7,11 +8,20 @@ import HealthKit
 final class HealthReader {
     struct Failure: Error { let code: String }
 
+    /// One reader for the app, so the observers registered at launch (AppDelegate) are the ones the page's requests use.
+    static let shared = HealthReader()
+
     private let store = HKHealthStore()
     private var authorized = false
     private var observing = false
-    /// Called (on any thread) when the watch has written new heart-rate or HRV readings to Health.
+    /// Set once the person has been asked for Health access, so later launches register the observers straight away.
+    private static let askedKey = "baseline.healthAsked"
+    /// Marks the water samples the app writes, so a removed log can find its sample again.
+    private static let waterKey = "BaselineID"
+    /// Called (on any thread) when Health has new data: watch readings, last night's sleep, a workout, water.
     var onNewReadings: (() -> Void)?
+
+    private init() {}
 
     // what the app reads, with the unit each value is sent in
     private let quantities: [(HKQuantityTypeIdentifier, String, HKUnit)] = [
@@ -70,24 +80,139 @@ final class HealthReader {
     private func authorize() async throws {
         guard HKHealthStore.isHealthDataAvailable() else { throw Failure(code: "unavailable") }
         if authorized { return }
-        // iOS never says which types were refused; refused ones simply come back empty
-        try await store.requestAuthorization(toShare: [], read: readTypes)
+        // iOS never says which types were refused; refused ones simply come back empty. The only type written is water.
+        try await store.requestAuthorization(toShare: [HKQuantityType(.dietaryWater)], read: readTypes)
         authorized = true
+        UserDefaults.standard.set(true, forKey: Self.askedKey)
         observe()
     }
 
-    /// Watch for new heart-rate and HRV readings while the app runs, so the page can refresh what it shows as "now".
-    /// The watch measures heart rate every few minutes in the background (continuously during a workout) and hands
-    /// the readings to the iPhone in batches, so they land here a little after they were taken.
+    // MARK: new data, also in the background
+
+    /// Called at launch: once the person has answered the Health sheet, the observers go back on before the page asks for anything,
+    /// so a background launch by Health is handled too.
+    func startObserving() {
+        if UserDefaults.standard.bool(forKey: Self.askedKey) { observe() }
+    }
+
+    /// Watch Health for new data. Heart rate only while the app runs (for the page's "now"); the rest also wakes the app in the
+    /// background: sleep and workouts as soon as they're saved, HRV, resting heart rate and water at most hourly.
+    /// The watch hands its readings to the iPhone in batches, so they land here a little after they were taken.
     private func observe() {
-        guard !observing else { return }
-        observing = true
-        for id in [HKQuantityTypeIdentifier.heartRate, .heartRateVariabilitySDNN] {
-            let q = HKObserverQuery(sampleType: HKQuantityType(id), predicate: nil) { [weak self] _, completion, error in
-                if error == nil { self?.onNewReadings?() }
-                completion()
+        DispatchQueue.main.async {
+            guard !self.observing else { return }
+            self.observing = true
+            let watched: [(HKSampleType, HKUpdateFrequency?)] = [
+                (HKQuantityType(.heartRate), nil),
+                (HKQuantityType(.heartRateVariabilitySDNN), .hourly),
+                (HKQuantityType(.restingHeartRate), .hourly),
+                (HKCategoryType(.sleepAnalysis), .immediate),
+                (HKObjectType.workoutType(), .immediate),
+                (HKQuantityType(.dietaryWater), .hourly),
+            ]
+            for (type, frequency) in watched {
+                let sleep = type.identifier == HKCategoryTypeIdentifier.sleepAnalysis.rawValue
+                let q = HKObserverQuery(sampleType: type, predicate: nil) { [weak self] _, completion, error in
+                    guard let self, error == nil else { completion(); return }
+                    self.newData(sleep: sleep, completion: completion)
+                }
+                self.store.execute(q)
+                if let frequency {
+                    self.store.enableBackgroundDelivery(for: type, frequency: frequency) { ok, error in
+                        if !ok { log.error("background delivery off for \(type.identifier, privacy: .public): \(error?.localizedDescription ?? "", privacy: .public)") }
+                    }
+                }
             }
-            store.execute(q)
+        }
+    }
+
+    /// Widgets reload, the page (if it's loaded) syncs, and new sleep may mean the morning notification is due.
+    /// Health waits for `completion` before it lets the app sleep again.
+    private func newData(sleep: Bool, completion: @escaping () -> Void) {
+        DispatchQueue.main.async { WidgetCenter.shared.reloadAllTimelines() }
+        onNewReadings?()
+        guard sleep else { completion(); return }
+        Task {
+            await morningCheck()
+            completion()
+        }
+    }
+
+    private static let morningLock = NSLock()
+    private static var morningBusy = false
+
+    /// Once a morning (4:00 to 13:00), when last night's sleep has arrived: at least 3 hours asleep, ending in the last 3 hours.
+    private func morningCheck() async {
+        guard Prefs.morning else { return }
+        // the sleep observer can fire twice in a row; only one check runs at a time
+        let busy = Self.morningLock.withLock { () -> Bool in
+            let was = Self.morningBusy
+            Self.morningBusy = true
+            return was
+        }
+        guard !busy else { return }
+        defer { Self.morningLock.withLock { Self.morningBusy = false } }
+
+        let now = Date(), cal = Calendar.current
+        let today = day.string(from: now)
+        guard (4..<13).contains(cal.component(.hour, from: now)), Prefs.morningNotified != today,
+              let yesterday = cal.date(byAdding: .day, value: -1, to: now),
+              let start = cal.date(bySettingHour: 18, minute: 0, second: 0, of: yesterday) else { return }
+        let window = HKQuery.predicateForSamples(withStart: start, end: now, options: [])
+        guard let found = try? await read(HKCategoryType(.sleepAnalysis), window) else { return }
+        let asleepValues = Set([HKCategoryValueSleepAnalysis.asleepUnspecified, .asleepCore, .asleepDeep, .asleepREM].map(\.rawValue))
+        // the iPhone and the watch can both record the same night, so overlapping stretches count once
+        let spans = found.compactMap { s -> (Date, Date)? in
+            guard let c = s as? HKCategorySample, asleepValues.contains(c.value) else { return nil }
+            let from = max(c.startDate, start)
+            return c.endDate > from ? (from, c.endDate) : nil
+        }.sorted { $0.0 < $1.0 }
+        var total: TimeInterval = 0
+        var current: (Date, Date)?
+        for s in spans {
+            if let c = current, s.0 <= c.1 {
+                current = (c.0, max(c.1, s.1))
+            } else {
+                if let c = current { total += c.1.timeIntervalSince(c.0) }
+                current = s
+            }
+        }
+        if let c = current { total += c.1.timeIntervalSince(c.0) }
+        guard total >= 3 * 3600, let last = spans.map(\.1).max(), now.timeIntervalSince(last) <= 3 * 3600 else { return }
+        Prefs.morningNotified = today
+        let minutes = Int(total / 60)
+        Notifier.post(key: "morning", title: "Your recovery is ready",
+                      body: "You slept \(minutes / 60)h \(String(format: "%02d", minutes % 60))m. Open Baseline to see today's recovery.")
+        log.notice("morning notification posted")
+    }
+
+    // MARK: water, written to Health
+
+    /// Saves a water log as a dietary water sample at its time, tagged with the page's id. Returns false when Health
+    /// isn't available or the person didn't allow writing water.
+    func saveWater(key: String, ml: Double, at: Date) async -> Bool {
+        guard HKHealthStore.isHealthDataAvailable(), ml > 0, (try? await authorize()) != nil else { return false }
+        let type = HKQuantityType(.dietaryWater)
+        guard store.authorizationStatus(for: type) == .sharingAuthorized else { return false }
+        // the sync identifier makes a repeated save replace the first one instead of adding a second sample
+        let metadata: [String: Any] = [Self.waterKey: key, HKMetadataKeySyncIdentifier: "baseline.water." + key, HKMetadataKeySyncVersion: 1]
+        let sample = HKQuantitySample(type: type, quantity: HKQuantity(unit: .literUnit(with: .milli), doubleValue: ml), start: at, end: at, metadata: metadata)
+        return await withCheckedContinuation { cont in
+            store.save(sample) { ok, error in
+                if let error { log.error("water not saved: \(error.localizedDescription, privacy: .public)") }
+                cont.resume(returning: ok)
+            }
+        }
+    }
+
+    /// Deletes the sample saved for that water log (the app can only delete its own samples).
+    func deleteWater(key: String) async -> Bool {
+        guard HKHealthStore.isHealthDataAvailable() else { return false }
+        let type = HKQuantityType(.dietaryWater)
+        guard store.authorizationStatus(for: type) == .sharingAuthorized else { return false }
+        let match = HKQuery.predicateForObjects(withMetadataKey: Self.waterKey, allowedValues: [key])
+        return await withCheckedContinuation { cont in
+            store.deleteObjects(of: type, predicate: match) { ok, _, _ in cont.resume(returning: ok) }
         }
     }
 
@@ -148,8 +273,11 @@ final class HealthReader {
         for (key, pts) in [("steps", steps), ("active", active), ("basal", basal), ("daylight", daylight)] {
             samples[key] = pts.map { [local.string(from: $0.0), $0.1, "Health"] }
         }
+        let ownBundle = Bundle.main.bundleIdentifier
         for (key, unit, found) in rawResults {
             for case let q as HKQuantitySample in found {
+                // the water the app saved itself is already in the page's log
+                if key == "water", q.sourceRevision.source.bundleIdentifier == ownBundle { continue }
                 var v = q.quantity.doubleValue(for: unit)
                 let t = local.string(from: q.startDate), src = q.sourceRevision.source.name
                 switch key {

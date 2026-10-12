@@ -1,77 +1,90 @@
-# XcodeGen spec for the Baseline iPhone app and its Apple Watch app. Generate the Xcode project with:
+# XcodeGen spec for Baseline: the iPhone app, its Apple Watch app, the iPhone widgets and Live Activity, and the watch
+# complications. Generate the Xcode project with:
 #   brew install xcodegen && cd ios && xcodegen generate && open Baseline.xcodeproj
+# The app and watch app are in common.yml (shared with project-lite.yml). The widgets read today's numbers from an
+# App Group the apps write to; a free Apple ID's Personal Team may not allow App Groups, so then use Baseline Lite.xcodeproj.
+include:
+  - common.yml
 name: Baseline
-options:
-  bundleIdPrefix: com.example
-  deploymentTarget:
-    iOS: "17.0"
-    watchOS: "10.0"
-  createIntermediateGroups: true
-settings:
-  base:
-    # unique per developer team, so nobody has to invent a bundle id before pressing Run; the watch app's id is this plus .watchkitapp
-    BASE_BUNDLE_ID: com.baselinehealth.app.$(DEVELOPMENT_TEAM)
 targets:
   Baseline:
-    type: application
-    platform: iOS
-    sources:
-      - path: Baseline
-      # the web app itself, bundled as-is and served to the web view from baseline://app/
-      - path: ../index.html
-        buildPhase: resources
     dependencies:
-      # the watch app ships inside the iPhone app
-      - target: BaselineWatch
+      - target: BaselineWidgets
     info:
       path: Baseline/Info.plist
+      properties:
+        NSSupportsLiveActivities: true
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+    entitlements:
+      path: Baseline/Baseline.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
+  BaselineWatch:
+    dependencies:
+      - target: BaselineWatchWidgets
+    info:
+      path: Watch/Info.plist
+      properties:
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+    entitlements:
+      path: Watch/BaselineWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
+  # home-screen and lock-screen widgets, and the workout Live Activity
+  BaselineWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+        excludes: [Info.plist, "*.entitlements"]
+      - path: Shared/Glance.swift
+      - path: Shared/GlanceProvider.swift
+      - path: Shared/WorkoutAttributes.swift
+    info:
+      path: Widgets/Info.plist
       properties:
         CFBundleDisplayName: Baseline
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
-        NSHealthShareUsageDescription: Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine, water and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone unless you connect your own coach server.
-        NSCameraUsageDescription: Baseline uses the camera to scan food barcodes. Nothing is recorded or stored.
-        UILaunchScreen:
-          UIColorName: ""
-        UIApplicationSupportsIndirectInputEvents: true
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        UIUserInterfaceStyle: Dark
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
-      path: Baseline/Baseline.entitlements
+      path: Widgets/BaselineWidgets.entitlements
       properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID)
+        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID).widgets
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
-  BaselineWatch:
-    type: application
+  # watch-face complications
+  BaselineWatchWidgets:
+    type: app-extension
     platform: watchOS
     sources:
-      - path: Watch
+      - path: WatchWidgets
+        excludes: [Info.plist, "*.entitlements"]
+      - path: Shared/Glance.swift
+      - path: Shared/GlanceProvider.swift
     info:
-      path: Watch/Info.plist
+      path: WatchWidgets/Info.plist
       properties:
         CFBundleDisplayName: Baseline
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
-        WKApplication: true
-        WKCompanionAppBundleIdentifier: $(BASE_BUNDLE_ID)
-        WKBackgroundModes: [workout-processing]
-        NSHealthShareUsageDescription: Baseline reads your heart rate and energy during workouts.
-        NSHealthUpdateUsageDescription: Baseline saves the workouts you track on your watch to Apple Health.
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
-      path: Watch/BaselineWatch.entitlements
+      path: WatchWidgets/BaselineWatchWidgets.entitlements
       properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID).watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID).watchkitapp.widgets
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "4"
         SWIFT_VERSION: "5.0"

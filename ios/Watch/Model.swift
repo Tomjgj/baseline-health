@@ -11,6 +11,14 @@ struct WatchContext: Codable {
     var routines: [Plan]
     var draft: Plan?
     var tired: [String]?           // muscles still recovering, most tired first
+    var water: Water?              // today's water (missing in contexts from older versions of the page, like library)
+    var library: [Ex]?             // exercises that can be added to a running workout
+
+    struct Water: Codable {
+        var ml: Double
+        var goal: Double
+        var glass: Double?         // what one tap on "+ Glass" adds
+    }
 
     struct Day: Codable {
         var date: String

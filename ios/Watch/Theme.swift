@@ -8,6 +8,7 @@ enum Theme {
     static let stress = Color(hex: 0xDB6A24)
     static let hrv = Color(hex: 0x1AA394)
     static let heart = Color(hex: 0xE0526E)
+    static let water = Color(hex: 0x3AAEE0)
     static let good = Color(hex: 0x2EA866)
     static let warn = Color(hex: 0xE0A82E)
     static let crit = Color(hex: 0xE05252)

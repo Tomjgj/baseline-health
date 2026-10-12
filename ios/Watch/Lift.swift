@@ -15,6 +15,8 @@ final class Lift: ObservableObject {
     let startedAt: Date
     let units: Units
     private weak var link: PhoneLink?
+    /// When an exercise was last added or removed here; a context the phone built before it knew is not merged.
+    private var lastEdit = Date.distantPast
 
     init(plan: Plan, units: Units, link: PhoneLink, resumed: Bool) {
         self.plan = plan
@@ -85,9 +87,9 @@ final class Lift: ObservableObject {
     }
 
     private func moveToNextOpen(from e: Int, _ s: Int) {
-        for ex in e..<plan.exercises.count {
+        for ex in min(e, plan.exercises.count)..<plan.exercises.count {
             let sets = plan.exercises[ex].sets
-            for st in (ex == e ? s : 0)..<sets.count where !sets[st].done { select(ex, st); return }
+            for st in (ex == e ? min(s, sets.count) : 0)..<sets.count where !sets[st].done { select(ex, st); return }
         }
         // everything done: stay on the last set
         if let last = plan.exercises.indices.last { select(last, max(0, plan.exercises[last].sets.count - 1)) }
@@ -127,8 +129,34 @@ final class Lift: ObservableObject {
     /// The phone changed the same workout (a set ticked there): take its sets, keep our position if it's still open.
     func merge(_ phone: Plan) {
         guard phone.id == plan.id else { return }
+        if phone.exercises.count != plan.exercises.count && Date().timeIntervalSince(lastEdit) < 8 { return }
         plan.exercises = phone.exercises
         if set?.done ?? true { moveToNextOpen(from: ei, si) }
+    }
+
+    /// Adds an exercise from the library at the end, with its sets open, and tells the phone.
+    func add(_ library: Ex) {
+        var ex = library
+        for i in ex.sets.indices { ex.sets[i].done = false }
+        if ex.sets.isEmpty { ex.sets = [WSet(t: "N", w: nil, r: nil, ph: nil, done: false)] }
+        let wasFinished = finished
+        plan.exercises.append(ex)
+        lastEdit = Date()
+        link?.send(["kind": "add", "id": plan.id, "exercise": Self.encode([ex])[0]], mustArrive: true)
+        if wasFinished { select(plan.exercises.count - 1, 0) }
+    }
+
+    /// Removes an exercise (index before removal) and tells the phone. The last one stays: a workout needs something in it.
+    func remove(_ i: Int) {
+        guard plan.exercises.indices.contains(i), plan.exercises.count > 1 else { return }
+        plan.exercises.remove(at: i)
+        lastEdit = Date()
+        link?.send(["kind": "remove", "id": plan.id, "ex": i], mustArrive: true)
+        if i < ei {
+            ei -= 1
+        } else if i == ei {
+            moveToNextOpen(from: min(i, plan.exercises.count - 1), 0)
+        }
     }
 
     func finishEvent(effort: Int, end: Date, hr: (avgHr: Int?, maxHr: Int?, kcal: Int?)) -> [String: Any] {

@@ -21,8 +21,18 @@ struct TodayPage: View {
     @EnvironmentObject var link: PhoneLink
 
     var body: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                scores
+                if let w = link.water { water(w) }
+            }
+        }
+        .navigationTitle("Today")
+    }
+
+    private var scores: some View {
         let day = link.context?.day
-        VStack(spacing: 8) {
+        return VStack(spacing: 8) {
             HStack(spacing: 6) {
                 score(value: Double(day?.recovery ?? 0) / 100, color: Theme.band(day?.band),
                       text: day?.recovery.map { "\($0)%" } ?? "–", label: "Recovery")
@@ -45,7 +55,22 @@ struct TodayPage: View {
             }
         }
         .padding(.horizontal, 4)
-        .navigationTitle("Today")
+    }
+
+    /// Today's water against the goal, and a button that logs one glass on the phone.
+    private func water(_ w: (ml: Double, goal: Double, glass: Double)) -> some View {
+        Card {
+            HStack(spacing: 6) {
+                Image(systemName: "drop.fill").font(.system(size: 13)).foregroundStyle(Theme.water)
+                Text(Glance.waterText(ml: w.ml, goal: w.goal, imperial: link.units.lb))
+                    .font(Theme.number(15, .medium)).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            ProgressView(value: min(w.ml, max(w.goal, 1)), total: max(w.goal, 1)).tint(Theme.water)
+            Button { link.addGlass() } label: {
+                Text("+ Glass").font(.system(size: 15, weight: .semibold)).frame(maxWidth: .infinity)
+            }
+            .tint(Theme.water)
+        }
     }
 
     private func strainTarget(_ d: WatchContext.Day?) -> ClosedRange<Double>? {

@@ -1,0 +1,19 @@
+# XcodeGen spec for Baseline Lite: the same iPhone and Apple Watch apps as project.yml, without the widgets, the Live Activity
+# and the watch complications. Those need an App Group, which a free Apple ID's Personal Team may not be allowed; this
+# project has none, so it signs with any Apple ID. Generate it with:
+#   cd ios && xcodegen generate --spec project-lite.yml && open "Baseline Lite.xcodeproj"
+# Its Info.plist and entitlements files live in Lite/, so the two projects never overwrite each other's.
+include:
+  - common.yml
+name: Baseline Lite
+targets:
+  Baseline:
+    info:
+      path: Lite/Info.plist
+    entitlements:
+      path: Lite/Baseline.entitlements
+  BaselineWatch:
+    info:
+      path: Lite/WatchInfo.plist
+    entitlements:
+      path: Lite/BaselineWatch.entitlements

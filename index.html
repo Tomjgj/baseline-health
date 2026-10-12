@@ -8880,7 +8880,8 @@ const Coach = (() => {
         else if (ev?.t === 'error') { streams.delete(id); reject({ code: ev.code, message: ev.message, text }); }
       });
       signal?.addEventListener('abort', () => HealthSync.post({ type: 'coachCancel', id }));
-      HealthSync.post({ type: 'coach', id, messages });
+      // as a JSON string, so the app sends the turns back byte for byte (Claude's earlier thinking stays valid)
+      HealthSync.post({ type: 'coach', id, messages: JSON.stringify(messages) });
     });
   }
   /** Ask the app whether a key is stored, or to show its own secure prompt for one ('status' | 'prompt' | 'clear'). */
@@ -9163,8 +9164,9 @@ const HealthSync = (() => {
   // ---------- water you log, saved to Apple Health too (Baseline's own samples are skipped when reading back) ----------
   S.waterOut = (op, x) => {
     if (!S.native() || Store.demo || Store.state().profile.waterToHealth === false || !x) return;
-    if (op === 'add') ask({ type: 'water', id: x.id, ml: x.ml, at: x.at }, 15000).catch(() => {});
-    else ask({ type: 'unwater', id: x.id }, 15000).catch(() => {});
+    // `key` names the entry (the request's own id is for the reply)
+    if (op === 'add') ask({ type: 'water', key: x.id, ml: x.ml, at: x.at }, 15000).catch(() => {});
+    else ask({ type: 'unwater', key: x.id }, 15000).catch(() => {});
   };
   S.ask = ask;
   /** A request the app doesn't answer through receive(). */
@@ -9354,7 +9356,9 @@ const Watch = (() => {
       Object.assign(x, { w: msg.w >= 0 ? +msg.w : x.w, r: msg.r >= 0 ? +msg.r : x.r, done: !!msg.done });
       App.saveDraft(); App.render();
     } else if (msg.kind === 'water' && msg.ml > 0) {
-      logWater(U.today(), Math.min(2000, +msg.ml));
+      // a glass tapped while the phone was out of reach keeps the time it was tapped
+      const at = msg.at > 0 ? U.isoLocal(new Date(msg.at)).slice(0, 16) : null;
+      logWater(at ? at.slice(0, 10) : U.today(), Math.min(2000, +msg.ml), at || undefined);
     } else if (msg.kind === 'add' && mine && msg.exercise) {
       App.draft.exercises.push(exIn(msg.exercise));
       App.saveDraft(); App.render();

@@ -118,29 +118,95 @@ struct RestPage: View {
     }
 }
 
+/// The workout's exercises: tap one to go to its next set, swipe one away to remove it, or add one from the library.
 struct ExercisesPage: View {
     @ObservedObject var lift: Lift
+    @EnvironmentObject var link: PhoneLink
     var pick: (Int, Int) -> Void
+    @State private var adding = false
+    @State private var removing: Int?
 
     var body: some View {
         List {
-            ForEach(Array(lift.plan.exercises.enumerated()), id: \.element.id) { i, ex in
-                Button {
-                    pick(i, ex.sets.firstIndex(where: { !$0.done }) ?? max(0, ex.sets.count - 1))
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(ex.name).font(.system(size: 15, weight: i == lift.ei ? .semibold : .regular)).lineLimit(1)
-                            let done = ex.sets.filter { $0.done && $0.t != "W" }.count, all = ex.sets.filter { $0.t != "W" }.count
-                            Text("\(done) of \(all) sets").font(.footnote).foregroundStyle(done == all ? Theme.good : .secondary)
-                        }
-                        Spacer()
-                        if ex.sets.allSatisfy(\.done) { Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.good) }
-                    }
+            ForEach(Array(lift.plan.exercises.enumerated()), id: \.offset) { i, ex in
+                row(i, ex).deleteDisabled(lift.plan.exercises.count <= 1)
+            }
+            .onDelete { offsets in
+                guard let i = offsets.first, lift.plan.exercises.indices.contains(i) else { return }
+                // logged sets would go with it, so that asks first
+                if lift.plan.exercises[i].sets.contains(where: \.done) { removing = i } else { lift.remove(i) }
+            }
+            if !library.isEmpty {
+                Button { adding = true } label: {
+                    Label("Add exercise", systemImage: "plus").font(.system(size: 15, weight: .medium))
                 }
+                .tint(Theme.good)
             }
         }
         .navigationTitle("Exercises")
+        .sheet(isPresented: $adding) {
+            LibraryPicker(library: library) { ex in
+                lift.add(ex)
+                adding = false
+            }
+        }
+        .confirmationDialog("Remove this exercise and its logged sets?", isPresented: removeAsked) {
+            Button("Remove", role: .destructive) {
+                if let i = removing { lift.remove(i) }
+                removing = nil
+            }
+            Button("Keep", role: .cancel) { removing = nil }
+        }
+    }
+
+    /// The library, without what's already in the workout.
+    private var library: [Ex] {
+        let have = Set(lift.plan.exercises.map(\.id))
+        return (link.context?.library ?? []).filter { !have.contains($0.id) }
+    }
+
+    private var removeAsked: Binding<Bool> {
+        Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })
+    }
+
+    private func row(_ i: Int, _ ex: Ex) -> some View {
+        let done = ex.sets.filter { $0.done && $0.t != "W" }.count
+        let all = ex.sets.filter { $0.t != "W" }.count
+        return Button {
+            pick(i, ex.sets.firstIndex(where: { !$0.done }) ?? max(0, ex.sets.count - 1))
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(ex.name).font(.system(size: 15, weight: i == lift.ei ? .semibold : .regular)).lineLimit(1)
+                    Text("\(done) of \(all) sets").font(.footnote).foregroundStyle(done == all ? Theme.good : .secondary)
+                }
+                Spacer()
+                if ex.sets.allSatisfy(\.done) { Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.good) }
+            }
+        }
+    }
+}
+
+/// Exercises to add to a running workout, from the phone's library.
+struct LibraryPicker: View {
+    let library: [Ex]
+    var choose: (Ex) -> Void
+
+    var body: some View {
+        List(library) { ex in
+            Button { choose(ex) } label: {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(ex.name).font(.system(size: 15, weight: .medium)).lineLimit(2)
+                    Text(sets(ex)).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .navigationTitle("Add exercise")
+    }
+
+    private func sets(_ ex: Ex) -> String {
+        let n = ex.sets.filter { $0.t != "W" }.count
+        return n == 1 ? "1 set" : "\(n) sets"
     }
 }
 

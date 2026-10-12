@@ -1,12 +1,13 @@
-# Builds the iPhone app on a macOS runner and launches it in the iOS Simulator.
-# Runs when ios/ or index.html changes, or by hand from the Actions tab.
+# Builds the iPhone app (with its watch app, widgets and complications) on a macOS runner and launches it in the iOS Simulator,
+# and builds Baseline Lite (the same app without widgets, for free Apple IDs) so it can't rot.
+# Runs when ios/, index.html or the coach's config changes, or by hand from the Actions tab.
 name: iOS build
 
 on:
   push:
-    paths: ['ios/**', 'index.html', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'index.html', 'server/coach.mjs', 'server/export-config.mjs', '.github/workflows/ios.yml']
   pull_request:
-    paths: ['ios/**', 'index.html', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'index.html', 'server/coach.mjs', 'server/export-config.mjs', '.github/workflows/ios.yml']
   workflow_dispatch:
 
 jobs:
@@ -21,21 +22,36 @@ jobs:
       - name: Xcode version
         run: xcodebuild -version
 
-      - name: Generate the Xcode project
+      # the app's built-in coach sends the server's model, system prompt and tools from ios/Baseline/coach.json;
+      # it must be exactly what server/export-config.mjs writes from server/coach.mjs
+      - name: Check the coach config matches the server
+        run: |
+          cd server && npm ci && node export-config.mjs && cd ..
+          if [ -n "$(git status --porcelain ios/Baseline/coach.json)" ]; then
+            echo "ios/Baseline/coach.json is out of date: run 'cd server && node export-config.mjs' and commit it."
+            git diff ios/Baseline/coach.json | head -20
+            exit 1
+          fi
+
+      - name: Generate the Xcode projects
         run: |
           brew install xcodegen
-          cd ios && xcodegen generate
+          cd ios
+          xcodegen generate
+          xcodegen generate --spec project-lite.yml
 
-      # keep the committed project in step with project.yml, so it can be opened with a double-click
-      - name: Commit the Xcode project if it changed
+      # keep the committed projects in step with the specs, so they can be opened with a double-click
+      - name: Commit the Xcode projects if they changed
         if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # the project plus the Info.plist and entitlements XcodeGen writes next to the sources
-          git add ios/Baseline.xcodeproj ios/Baseline/Info.plist ios/Baseline/Baseline.entitlements ios/Watch/Info.plist ios/Watch/BaselineWatch.entitlements
+          # the projects plus the Info.plist and entitlements files XcodeGen writes next to the sources (Lite's are in ios/Lite)
+          git add ios/Baseline.xcodeproj "ios/Baseline Lite.xcodeproj" ios/Lite \
+            ios/Baseline/Info.plist ios/Baseline/Baseline.entitlements ios/Watch/Info.plist ios/Watch/BaselineWatch.entitlements \
+            ios/Widgets/Info.plist ios/Widgets/BaselineWidgets.entitlements ios/WatchWidgets/Info.plist ios/WatchWidgets/BaselineWatchWidgets.entitlements
           if ! git diff --cached --quiet; then
-            git commit -m "Regenerate the Xcode project, Info.plist and entitlements from project.yml"
+            git commit -m "Regenerate the Xcode projects, Info.plist and entitlements from the XcodeGen specs"
             git push
           fi
 
@@ -52,9 +68,14 @@ jobs:
           xcodebuild -project Baseline.xcodeproj -scheme Baseline -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
-          test -d build/Build/Products/Debug-iphonesimulator/Baseline.app
-          # the watch app is built with it and embedded
-          test -d build/Build/Products/Debug-iphonesimulator/Baseline.app/Watch/BaselineWatch.app
+          APP=build/Build/Products/Debug-iphonesimulator/Baseline.app
+          test -d $APP
+          # the watch app is built with it and embedded, and so are the widgets (iPhone) and the complications (watch)
+          test -d $APP/Watch/BaselineWatch.app
+          test -d $APP/PlugIns/BaselineWidgets.appex
+          test -d $APP/Watch/BaselineWatch.app/PlugIns/BaselineWatchWidgets.appex
+          # the coach's config travels as a resource
+          test -f $APP/coach.json
 
       - name: Launch in the simulator
         run: |
@@ -85,6 +106,7 @@ jobs:
             -destination 'generic/platform=watchOS Simulator' \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee watchbuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
           test -d build/Build/Products/Debug-watchsimulator/BaselineWatch.app
+          test -d build/Build/Products/Debug-watchsimulator/BaselineWatch.app/PlugIns/BaselineWatchWidgets.appex
 
       # the watch app must launch on its own and draw its home screen
       - name: Launch the watch app in a watch simulator
@@ -104,6 +126,18 @@ jobs:
           xcrun simctl io "$WATCH" screenshot watch.png
           grep -q "watch: home rendered" watch.log
 
+      # Baseline Lite: the same app and watch app, no widgets or App Groups. Built (not launched) so it keeps compiling.
+      - name: Build Baseline Lite for the simulator
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -project "Baseline Lite.xcodeproj" -scheme Baseline -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build-lite CODE_SIGNING_ALLOWED=NO BASE_BUNDLE_ID=com.example.baseline build 2>&1 | tee litebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+          test -d build-lite/Build/Products/Debug-iphonesimulator/Baseline.app/Watch/BaselineWatch.app
+          # no widgets in Lite
+          test ! -d build-lite/Build/Products/Debug-iphonesimulator/Baseline.app/PlugIns/BaselineWidgets.appex
+
       - name: Keep the build log and screenshot
         if: always()
         uses: actions/upload-artifact@v4
@@ -112,6 +146,7 @@ jobs:
           path: |
             ios/xcodebuild.log
             ios/watchbuild.log
+            ios/litebuild.log
             watch.png
             watch.log
             launch.png
