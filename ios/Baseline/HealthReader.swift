@@ -118,8 +118,36 @@ final class HealthReader {
 
         var samples: [String: [[Any]]] = [:]
         var bp: [String: (sys: Double?, dia: Double?)] = [:]
-        for (id, key, unit) in quantities {
-            let found = try await read(HKQuantityType(id), window)
+
+        // Totals (steps, energy, daylight) come from Health's own statistics in half-hour buckets: Health already merges
+        // iPhone and Watch without double counting, and it's far less data than every sample. Heart rate is averaged per
+        // minute, which keeps zones and lows intact but sends 60 values for a workout hour instead of 700.
+        let bpm = HKUnit.count().unitDivided(by: .minute())
+        async let hrPts = statistics(.heartRate, unit: bpm, start: start, end: end, minutes: 1, sum: false)
+        async let stepPts = statistics(.stepCount, unit: .count(), start: start, end: end, minutes: 30, sum: true)
+        async let activePts = statistics(.activeEnergyBurned, unit: .kilocalorie(), start: start, end: end, minutes: 30, sum: true)
+        async let basalPts = statistics(.basalEnergyBurned, unit: .kilocalorie(), start: start, end: end, minutes: 30, sum: true)
+        async let daylightPts = statistics(.timeInDaylight, unit: .minute(), start: start, end: end, minutes: 30, sum: true)
+        async let sleepFound = read(HKCategoryType(.sleepAnalysis), window)
+        async let mindfulFound = read(HKCategoryType(.mindfulSession), window)
+        async let workoutFound = read(HKObjectType.workoutType(), window)
+        // everything else, read in parallel
+        let viaStats: Set<String> = ["hr", "steps", "active", "basal", "daylight"]
+        let rawResults = try await withThrowingTaskGroup(of: (String, HKUnit, [HKSample]).self) { group -> [(String, HKUnit, [HKSample])] in
+            for (id, key, unit) in quantities where !viaStats.contains(key) {
+                group.addTask { (key, unit, try await self.read(HKQuantityType(id), window)) }
+            }
+            var all: [(String, HKUnit, [HKSample])] = []
+            for try await r in group { all.append(r) }
+            return all
+        }
+        let hrList = try await hrPts
+        samples["hr"] = hrList.map { [local.string(from: $0.0), $0.1] }
+        let steps = try await stepPts, active = try await activePts, basal = try await basalPts, daylight = try await daylightPts
+        for (key, pts) in [("steps", steps), ("active", active), ("basal", basal), ("daylight", daylight)] {
+            samples[key] = pts.map { [local.string(from: $0.0), $0.1, "Health"] }
+        }
+        for (key, unit, found) in rawResults {
             for case let q as HKQuantitySample in found {
                 var v = q.quantity.doubleValue(for: unit)
                 let t = local.string(from: q.startDate), src = q.sourceRevision.source.name
@@ -129,7 +157,7 @@ final class HealthReader {
                 }
                 switch key {
                 case "temp": samples["temp", default: []].append([local.string(from: q.endDate), v])
-                case "steps", "active", "basal", "daylight", "caffeine": samples[key, default: []].append([t, v, src])
+                case "caffeine": samples[key, default: []].append([t, v, src])
                 case "bpSys": bp[t, default: (nil, nil)].sys = v
                 case "bpDia": bp[t, default: (nil, nil)].dia = v
                 case "weight", "bodyFat", "lean", "waist": samples["body", default: []].append([t, key, v])
@@ -142,7 +170,7 @@ final class HealthReader {
         }
         for (t, r) in bp { if let s = r.sys, let d = r.dia { samples["bp", default: []].append([t, s, d]) } }
 
-        for case let c as HKCategorySample in try await read(HKCategoryType(.sleepAnalysis), window) {
+        for case let c as HKCategorySample in try await sleepFound {
             let stage: String
             switch HKCategoryValueSleepAnalysis(rawValue: c.value) ?? .asleepUnspecified {
             case .inBed: stage = "inBed"
@@ -154,12 +182,12 @@ final class HealthReader {
             }
             samples["sleep", default: []].append([local.string(from: c.startDate), local.string(from: c.endDate), stage, c.sourceRevision.source.name])
         }
-        for case let c as HKCategorySample in try await read(HKCategoryType(.mindfulSession), window) {
+        for case let c as HKCategorySample in try await mindfulFound {
             samples["mindful", default: []].append([local.string(from: c.startDate), local.string(from: c.endDate)])
         }
 
         var workouts: [[String: Any]] = []
-        for case let w as HKWorkout in try await read(HKObjectType.workoutType(), window) {
+        for case let w as HKWorkout in try await workoutFound {
             var o: [String: Any] = ["start": local.string(from: w.startDate), "end": local.string(from: w.endDate),
                                     "type": Self.workoutName(w.workoutActivityType), "min": w.duration / 60, "source": w.sourceRevision.source.name]
             if let e = w.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity() { o["kcal"] = e.doubleValue(for: .kilocalorie()) }
@@ -181,6 +209,29 @@ final class HealthReader {
         if let h = heights.first as? HKQuantitySample { me["heightCm"] = h.quantity.doubleValue(for: .meterUnit(with: .centi)) }
 
         return ["format": "baseline.health/1", "from": from, "to": to, "me": me, "samples": samples, "workouts": workouts]
+    }
+
+    /// Sums or averages in fixed buckets, from Health's statistics: (bucket start, value) for buckets that have data.
+    private func statistics(_ id: HKQuantityTypeIdentifier, unit: HKUnit, start: Date, end: Date, minutes: Int, sum: Bool) async throws -> [(Date, Double)] {
+        try await withCheckedThrowingContinuation { cont in
+            let q = HKStatisticsCollectionQuery(quantityType: HKQuantityType(id),
+                                                quantitySamplePredicate: HKQuery.predicateForSamples(withStart: start, end: end, options: []),
+                                                options: sum ? .cumulativeSum : .discreteAverage,
+                                                anchorDate: Calendar.current.startOfDay(for: start),
+                                                intervalComponents: DateComponents(minute: minutes))
+            q.initialResultsHandler = { _, results, error in
+                if let error = error as? HKError, error.code == .errorAuthorizationDenied || error.code == .errorAuthorizationNotDetermined || error.code == .errorNoData {
+                    cont.resume(returning: []); return
+                }
+                if let error { cont.resume(throwing: error); return }
+                var out: [(Date, Double)] = []
+                results?.enumerateStatistics(from: start, to: end) { s, _ in
+                    if let v = (sum ? s.sumQuantity() : s.averageQuantity())?.doubleValue(for: unit), v > 0 { out.append((s.startDate, v)) }
+                }
+                cont.resume(returning: out)
+            }
+            store.execute(q)
+        }
     }
 
     private func read(_ type: HKSampleType, _ predicate: NSPredicate?, limit: Int = HKObjectQueryNoLimit, newestFirst: Bool = false) async throws -> [HKSample] {

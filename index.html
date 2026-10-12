@@ -563,7 +563,6 @@ a.btn { text-decoration: none; }
 .gauge-v { font-size: calc(30 * var(--fs)); font-weight: 650; letter-spacing: -0.02em; }
 .gauge-s { font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); margin-top: 4px; }
 .body-map { width: 100%; height: auto; display: block; }
-.body-map .bm-neutral { fill: var(--surface-3); }
 .body-map .bm-part { stroke: var(--surface); stroke-width: 1.2; stroke-linejoin: round; cursor: pointer; transition: fill 0.2s; }
 .body-map .bm-sil { fill: color-mix(in srgb, var(--ink) 9%, var(--surface)); }
 .body-map .bm-line { fill: none; stroke: var(--surface); stroke-width: 1; opacity: 0.8; pointer-events: none; }
@@ -603,15 +602,6 @@ a.btn { text-decoration: none; }
 .rcard .st { display: flex; align-items: center; gap: 6px; font-size: calc(12.5 * var(--fs)); font-weight: 500; margin-top: 8px; }
 .rcard.new { display: grid; place-items: center; color: var(--ink-2); font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
 .rcard.new svg { width: 22px; height: 22px; }
-.wk7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.wk7 > div { display: grid; justify-items: center; gap: 4px; }
-.wk7 .dl { font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); }
-.wk7 .bx { width: 100%; aspect-ratio: 1 / 1.06; max-width: 46px; border-radius: 12px; display: grid; place-items: center; font-size: calc(11 * var(--fs)); font-weight: 600; background: var(--surface-2); color: var(--muted); }
-.wk7 .bx.str { background: var(--hrv-bg); color: var(--hrv-ink); }
-.wk7 .bx.car { background: var(--strain-bg); color: var(--strain-ink); }
-.wk7 .bx.today { box-shadow: inset 0 0 0 2px var(--ink-2); }
-.wk7 .bx.future { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
-.wk7 .sv { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--ink-2); }
 
 /* ---------- workout logger ---------- */
 .wk-head { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; margin-inline: -16px; padding: 10px 16px 10px; background: color-mix(in srgb, var(--bg) 78%, transparent);
@@ -987,9 +977,6 @@ input[type="range"].slider { height: 32px; }
 .bl-row .v { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(16 * var(--fs)); font-weight: 600; white-space: nowrap; line-height: 1.2; }
 .bl-row .v small { font-family: var(--font); font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 2px; }
 .bl-row .d { display: block; font-family: var(--font); font-size: calc(11.5 * var(--fs)); font-weight: 600; color: var(--muted); }
-.bl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-.bl-head .k { font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--muted); }
-.bl-head .stat .v { font-size: calc(26 * var(--fs)); }
 .hrow { display: grid; grid-template-columns: minmax(0, 1fr) 72px 46px 14px; gap: 10px; align-items: center; width: 100%; border: 0; background: none; color: inherit; text-align: left; padding-block: 10px; }
 .hrow + .hrow { border-top: 1px solid var(--line); }
 .hrow b { display: block; font-size: calc(14.5 * var(--fs)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1115,7 +1102,6 @@ input[type="range"].slider { height: 32px; }
 .cal12 i { display: block; aspect-ratio: 1; max-width: 100%; border-radius: 4px; background: var(--track); }
 .cal12 .dl { font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); }
 .cal12 .ml { font-size: calc(11 * var(--fs)); font-weight: 500; color: var(--muted); white-space: nowrap; overflow: visible; }
-.goal-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
 /* ---------- dock (tab capsule + log button) ---------- */
 .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
@@ -4205,7 +4191,9 @@ const Store = (() => {
     try {
       await Promise.all([worker(), worker(), worker()]);
       if (Object.keys(p).length) await setProfile(p);
-      await setMeta(kind === 'sync' ? { lastSync: { at: U.isoLocal(new Date()), from: res.range?.from || res.stats.from, to: res.range?.to || res.stats.to, days: res.stats.days } } : { lastImport: { at: new Date().toISOString(), ...res.stats } });
+      // a backfill of older months leaves the last-sync marker alone
+      if (kind === 'sync') await setMeta({ lastSync: { at: U.isoLocal(new Date()), from: res.range?.from || res.stats.from, to: res.range?.to || res.stats.to, days: res.stats.days } });
+      else if (kind === 'import') await setMeta({ lastImport: { at: new Date().toISOString(), ...res.stats } });
     } finally {
       demoOn = wasDemo;
       if (wasDemo) setDemo(false);
@@ -4249,7 +4237,7 @@ const Store = (() => {
     get canWrite() { return canWrite && (demoOn || mode !== 'loading'); }, get firstRun() { return firstRun; }, set firstRun(v) { firstRun = v; },
     hasRealData, setProfile, setMyFoods, addFood, updateFood, removeFood, foodItems, setBody, saveWorkout, deleteWorkout,
     setJournal, putJournal, setTraining, setHabits, addNap, removeNap, setSchedule, activityItems, putActivities,
-    applyImport, clearAll, setDemo, exportJSON, lsGet, lsSet, onError: (fn) => { onError = fn; },
+    applyImport, setMeta, clearAll, setDemo, exportJSON, lsGet, lsSet, onError: (fn) => { onError = fn; },
   };
 })();
 
@@ -5327,7 +5315,6 @@ const card = (...kids) => h('div', { class: 'card' }, ...kids);
 const cardT = (title, right, ...kids) => h('section', { class: 'card', 'aria-label': typeof title === 'string' ? title : null },
   h('div', { class: 'card-title' }, h('h2', null, title), right == null ? null : typeof right === 'string' ? h('span', { class: 'r' }, right) : right), ...kids);
 const sectionT = (title, right) => h('div', { class: 'section-title' }, h('h2', null, title), right == null ? null : typeof right === 'string' ? h('span', { class: 'r' }, right) : right);
-const linkBtn = (text, onclick, ic) => h('button', { class: 'link', onclick }, text, ic ? icon(ic) : null);
 function seg(options, value, onChange, { label, cls = '' } = {}) {
   const wrap = h('div', { class: 'seg ' + cls, role: 'group', 'aria-label': label || null });
   const btns = options.map(([v, text]) => h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: () => { for (const b of btns) b.setAttribute('aria-pressed', String(b === btns[options.findIndex((o) => o[0] === v)])); onChange(v); } }, text));
@@ -5341,7 +5328,6 @@ const field = (labelText, control, hint) => {
   const id = 'fld-' + U.uid();
   return h('div', { class: 'field', role: 'group', 'aria-labelledby': id }, h('span', { id }, text), control);
 };
-const unitInput = (attrs, unit) => h('div', { class: 'input-unit' }, h('input', { class: 'input', inputmode: 'decimal', ...attrs }), h('em', null, unit));
 const emptyState = (ic, title, text, ...actions) => h('div', { class: 'empty' }, h('div', { class: 'eic' }, icon(ic)), h('h3', null, title), text ? h('p', null, text) : null,
   actions.filter(Boolean).length ? h('div', { class: 'btn-row', style: { width: '100%', justifyContent: 'center' } }, actions) : null);
 const kv = (k, v, cls = '') => h('div', { class: 'kv ' + cls }, h('span', null, k), h('span', { class: 'v' }, v));
@@ -6396,13 +6382,6 @@ const Tabs = (() => {
   ];
   const PARTIAL_TODAY = new Set(['steps', 'stress', 'dayhrv']);
   const blFmt = (b, v) => (v == null ? '–' : b.dur ? fmtDur(v) : b.key === 'steps' ? fmtInt(v) : b.dp && !Number.isInteger(v) ? v.toFixed(b.dp) : String(Math.round(v)));
-  const blDelta = (b, dl) => (b.dur ? (dl < 0 ? '−' : '+') + Math.round(Math.abs(dl)) + 'm' : b.key === 'steps' ? fmtSigned(dl, 0).replace(/(\d)(?=(\d{3})+$)/, '$1,') : fmtSigned(dl, b.dp));
-  function blChange(b, now, then) {
-    if (now == null || then == null) return null;
-    const dl = now - then, small = Math.abs(dl) < b.thr;
-    const good = small || b.dir === 0 ? null : (dl > 0) === (b.dir > 0);
-    return { dl, good, word: small ? 'steady' : b.dir === 0 ? (dl > 0 ? 'higher' : 'lower') : good ? 'better' : 'worse', cls: good == null ? 'muted' : good ? 'up' : 'down' };
-  }
   T.BASELINES = BASELINES;
   T.healthAgeCard = (C, date) => healthAgeCard(C, date);
   function baselinesCard(C, date) {
@@ -6865,15 +6844,6 @@ const Pages = {};
       fmt: opt.fmt, caption: opt.caption || '', xEvery: range <= 7 ? 1 : range <= 31 ? 7 : 30, tipFor: opt.tipFor ? (i) => opt.tipFor(addDays(date, -(range - 1 - i)), vals[i]) : null, zones: opt.zones || null, padL: opt.padL || 32 });
   }
   const RANGES = [[7, '7D'], [30, '30D'], [90, '90D']];
-  function trendBars(C, date, range, f, color, opt = {}) {
-    const items = [];
-    for (let k = range - 1; k >= 0; k--) {
-      const d = addDays(date, -k), x = f(d);
-      items.push({ label: range <= 7 ? U.wd(d)[0] : String(U.parseYmd(d).getDate()), full: U.fmtDay(d), v: x?.v ?? null, color: x?.color || color, tip: x?.tip, strong: d === date });
-    }
-    return Charts.bars({ items, height: opt.height || 140, yMax: opt.yMax, fmt: opt.fmt || ((v) => String(Math.round(v))), caption: opt.caption || '', xEvery: range <= 7 ? 1 : range <= 30 ? 7 : 15, unit: opt.unit || '', ref: opt.ref, refLabel: opt.refLabel, levels: opt.levels });
-  }
-
   Pages.recovery = {
     render(C, args) {
       const date = args.date || App.date, r = C.recovery(date), tgt = C.strainTarget(date);
@@ -8583,12 +8553,15 @@ const HealthSync = (() => {
     busy = (async () => {
       await null; // so busy is set before the first render below
       const today = U.today(), prev = last();
-      const from = prev?.to ? U.addDays(prev.to, -1) : U.addDays(today, -180);
+      // the first sync brings in the last 30 days so Today fills in quickly; backfill() fetches the rest
+      const from = prev?.to ? U.addDays(prev.to, -1) : U.addDays(today, -(CHUNK - 1));
       try {
         const payload = await ask({ type: 'sync', from: from < U.addDays(today, -400) ? U.addDays(today, -400) : from, to: today });
         const res = HI.fromJSON(payload, { todayStr: today });
         await Store.applyImport(res, null, { kind: 'sync' });
+        if (!prev) await Store.setMeta({ syncedFrom: from });
         lastError = null;
+        setTimeout(backfill, 1500);
         S.planBedtime();
         // after the first sync, ask the few things Health can't tell (or confirm what it did)
         if (!prev && !Store.state().profile.setupDone && !Sheets.count) setTimeout(() => Sheet.aboutYou(), 700);
@@ -8603,12 +8576,35 @@ const HealthSync = (() => {
     App.render();
     return busy;
   };
+  /** Older history, 30 days at a time going back, until 180 days are in. Quiet; picks up where it left off next launch. */
+  const CHUNK = 30, HISTORY = 180;
+  let filling = false;
+  async function backfill() {
+    if (filling || !S.native() || Store.demo) return;
+    filling = true;
+    try {
+      for (;;) {
+        const today = U.today(), oldest = U.addDays(today, -(HISTORY - 1));
+        const meta = Store.state().meta || {};
+        const done = meta.syncedFrom || meta.lastSync?.from || today;
+        if (done <= oldest || busy) break;
+        const to = U.addDays(done, -1), from = U.addDays(to, -(CHUNK - 1)) < oldest ? oldest : U.addDays(to, -(CHUNK - 1));
+        const res = HI.fromJSON(await ask({ type: 'sync', from, to }), { todayStr: today });
+        await Store.applyImport(res, null, { kind: 'backfill' });
+        await Store.setMeta({ syncedFrom: from });
+        App.render();
+      }
+    } catch { /* the next launch tries again */ } finally { filling = false; }
+  }
+  S.backfill = backfill;
+  S.filling = () => filling;
   /** Quietly sync when the app opens, comes back, or the watch delivers new readings, at most every 5 minutes. */
   S.maybeSync = () => {
     if (!S.native() || busy) return;
     if (!Store.ready) { setTimeout(S.maybeSync, 1500); return; } // wait for stored data, or the first sync would look like a fresh start
     const at = last()?.at ? Date.parse(last().at) : 0;
     if (Date.now() - at > 5 * 60e3) S.sync({ quiet: true }).catch(() => {});
+    else backfill();
   };
   S.errorText = (c) => ({
     not_authorized: 'Baseline doesn’t have access to Apple Health yet. Allow it in Settings → Health → Data Access & Devices → Baseline.',
@@ -8618,7 +8614,7 @@ const HealthSync = (() => {
   /** The Settings and import-page row: when it last synced, and a button. */
   S.row = () => {
     const l = last();
-    const sub = busy ? 'Syncing…' : lastError ? S.errorText(lastError) : l ? `Last synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)} · ${plural(l.days || 0, 'day')} updated` : 'Not synced yet';
+    const sub = busy ? 'Syncing…' : filling ? 'Bringing in older months…' : lastError ? S.errorText(lastError) : l ? `Last synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)} · ${plural(l.days || 0, 'day')} updated` : 'Not synced yet';
     return h('section', { class: 'card tight' }, prow({ ic: 'heart', tone: 'hr', t: 'Apple Health', s: sub,
       right: h('button', { class: 'btn sm primary', disabled: !!busy, onclick: (e) => { e.stopPropagation(); S.sync().catch(() => {}); App.render(); } }, busy ? 'Syncing…' : 'Sync now') }));
   };
@@ -8701,7 +8697,6 @@ const Train = (() => {
 
   const FRESH = { recovered: ['Recovered', 'var(--good)'], fatigued: ['Fatigued', 'var(--warn)'], depleted: ['Depleted', 'var(--crit)'] };
   T.FRESH = FRESH;
-  T.freshFill = (o) => (!o.last ? { color: 'var(--good)', opacity: 0.85, title: 'Recovered, not trained this week' } : { color: FRESH[o.status][1], opacity: 0.88, title: `${FRESH[o.status][0]}, ${o.fresh}% fresh` });
   /** Freshness as a colour that slides from red through amber to green; muscles not trained this week are a quieter green. */
   T.freshColor = (fresh) => (fresh >= 70 ? `color-mix(in oklab, var(--good) ${Math.round(40 + (fresh - 70) * 2)}%, var(--warn))` : fresh >= 40 ? `color-mix(in oklab, var(--warn) ${Math.round((fresh - 40) / 30 * 100)}%, var(--crit))` : 'var(--crit)');
   T.partFill = (o) => (!o ? {} : !o.last ? { color: 'var(--good)', opacity: 0.45, title: `${o.name}: fresh, not trained this week` } : { color: T.freshColor(o.fresh), opacity: 0.92, title: `${o.name}: ${o.fresh}% fresh` });
@@ -10294,8 +10289,9 @@ const App = (() => {
   const jump = (y) => window.scrollTo({ top: y, behavior: 'instant' });
 
   A.ctx = () => {
-    const day = U.today();
-    if (cache.v !== Store.version || cache.day !== day || !cache.C) cache = { v: Store.version, day, C: E.context(Store.state(), new Date()) };
+    // rebuilt when the data changes, and every 10 minutes so times like "ready in 3 h" stay current
+    const day = U.today(), slot = Math.floor(Date.now() / 600e3);
+    if (cache.v !== Store.version || cache.day !== day || cache.slot !== slot || !cache.C) cache = { v: Store.version, day, slot, C: E.context(Store.state(), new Date()) };
     return cache.C;
   };
   A.top = () => A.stack[A.stack.length - 1] || null;
@@ -10465,6 +10461,7 @@ const App = (() => {
 
   // ---------- one clock for timers ----------
   function tick() {
+    if (!A.draft && !A.rest) return; // the clock only matters during a workout
     for (const el of document.querySelectorAll('[data-tick="elapsed"]')) el.textContent = fmtMMSS(A.elapsed());
     if (A.rest) {
       const left = (A.rest.end - Date.now()) / 1000;
