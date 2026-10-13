@@ -45,6 +45,8 @@ The coach normally runs through a small server you deploy (`server/`), which hol
 
 ### Installing the watch app
 
+**If Install in the Watch app on the iPhone fails:** the watch isn't in your signing profile yet, or Developer Mode is off on the watch. Do the steps below once; `run-on-iphone.sh` does steps 4 and 5 for you (it builds for the watch and installs on it directly) when Xcode can see the watch.
+
 With a personal (free) Apple ID, the watch app can't be installed from the Watch app on the iPhone until Xcode has seen your Apple Watch; Xcode adds the watch to your signing profile the first time it runs something on it. Run it on the watch from Xcode once:
 
 1. Watch on your wrist, unlocked, near the Mac, on the same Wi-Fi; iPhone connected by cable and unlocked.
