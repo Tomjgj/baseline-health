@@ -1336,9 +1336,35 @@ body.sheet-open #app ~ #toast { animation-name: toastDown; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+.bootfail { padding: calc(env(safe-area-inset-top, 0px) + 48px) 24px 24px; display: grid; gap: 14px; color: var(--ink, #fff); }
+.bootfail h1 { font-size: calc(24 * var(--fs, 1px)); font-weight: 650; margin: 0; }
+.bootfail p { color: var(--ink-2, #aaa); margin: 0; }
+.bootfail pre { white-space: pre-wrap; word-break: break-word; font-size: calc(12 * var(--fs, 1px)); background: var(--surface, #16181c); border-radius: 12px; padding: 12px; margin: 0; max-height: 40vh; overflow: auto; -webkit-user-select: text; user-select: text; }
 
 </style>
 <div id="under" aria-hidden="true" hidden></div><div id="app"><div id="ambient" aria-hidden="true"></div><main id="view"></main></div>
+<script>
+// If Baseline can't start, say so instead of leaving an empty screen. Every error also goes to the iPhone app's log.
+(function () {
+  var shown = false, sent = 0;
+  function fail(msg) {
+    var text = String(msg || 'Unknown error').slice(0, 1500);
+    // the first few errors are enough (a broken loop can repeat one many times)
+    if (sent++ < 5) try { if (window.webkit && webkit.messageHandlers && webkit.messageHandlers.baseline) webkit.messageHandlers.baseline.postMessage({ type: 'log', id: 'log', text: text }); } catch (e) {}
+    var v = document.getElementById('view');
+    if (shown || !v || v.querySelector('.view')) return;
+    shown = true;
+    v.innerHTML = '<div class="bootfail"><h1>Baseline couldn\u2019t start</h1><p>Something went wrong while opening. Try again. If it keeps happening, take a screenshot of the message below.</p><pre></pre><button type="button" class="btn primary">Try again</button></div>';
+    v.querySelector('pre').textContent = text;
+    ['dock', 'float'].forEach(function (id) { var el = document.getElementById(id); if (el) el.hidden = true; });
+    v.querySelector('button').onclick = function () { location.reload(); };
+  }
+  window.__bootFail = fail;
+  window.addEventListener('error', function (e) { fail((e.error && e.error.stack) ? e.message + '\n' + e.error.stack : e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')'); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; fail(r && r.stack ? (r.message || r) + '\n' + r.stack : r); });
+  setTimeout(function () { var v = document.getElementById('view'); if (v && !v.querySelector('.view')) fail('Nothing was drawn 15 seconds after opening.'); }, 15000);
+})();
+</script>
 <header class="minihead" id="minihead" hidden><button type="button" id="minihead-btn" aria-label="Scroll to top"></button></header>
 <div id="float"></div>
 <div class="ptr" id="ptr" aria-hidden="true"><span class="ptr-c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></span></div>
@@ -9470,7 +9496,7 @@ const HealthSync = (() => {
   /** Quietly sync when the app opens, comes back, or the watch delivers new readings, at most every 5 minutes. */
   /** First run in the app: nothing syncs until the welcome's "Connect Apple Health" (so iOS's sheet never comes unexplained). */
   S.hold = false;
-  S.status = () => ask({ type: 'healthStatus' }, 8000);
+  S.status = () => ask({ type: 'healthStatus' }, 4000);
   S.maybeSync = () => {
     if (!S.native() || busy || S.hold) return;
     if (!Store.ready) { setTimeout(S.maybeSync, 1500); return; } // wait for stored data, or the first sync would look like a fresh start

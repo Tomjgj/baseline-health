@@ -99,6 +99,7 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Selected states (chips, mini buttons, yes/no, day pickers) use `--seg-on`, never white. `.tile2` tiles inside a card lose their boxes and are split by hairlines (shared rule in the CSS).
 - Feels native, not like a web page: no text selection or long-press callouts except in fields and coach messages, no pinch or focus zoom, no link previews.
 - Keyboard: `visualViewport` sets `--kb` (keyboard height) and `body.kb-open`; sheets sit on top of the keyboard and the tab bar and floating bars step aside while typing.
+- Never a black screen: the script right after `<main id="view">` shows "Baseline couldn't start" with the error when nothing has drawn (an error, or nothing after 15 s), and sends the first errors to the app log (`{ type: 'log', text }`). The app reloads the page when iOS ends its process (`webViewWebContentProcessDidTerminate`) and when it's missing on return to the foreground.
 - Settings has an About section (`APP_VERSION`, data sources with their licences, privacy). Bump `APP_VERSION` with a release.
 
 ## Workout page

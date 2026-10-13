@@ -43,6 +43,11 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         coach.emit = { [weak self] id, ev in
             self?.webView.callAsyncJavaScript("window.BaselineBridge && window.BaselineBridge.coach && window.BaselineBridge.coach(id, ev)", arguments: ["id": id, "ev": ev], in: nil, in: .page, completionHandler: nil)
         }
+        loadPage()
+    }
+
+    private func loadPage() {
+        loaded = false
         if let url = URL(string: "baseline://app/index.html") { webView.load(URLRequest(url: url)) }
     }
 
@@ -58,16 +63,37 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         }
     }
 
+    /// iOS ends the web view's process when memory is short, often while the app is in the background. The web view then
+    /// stays empty (a black screen) until the page loads again, so load it again straight away.
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        log.error("page process ended; loading the page again")
+        loadPage()
+    }
+
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         log.error("page failed: \(error.localizedDescription, privacy: .public)")
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         log.error("page failed to load: \(error.localizedDescription, privacy: .public)")
+        // one more try a moment later (a load interrupted by the app going to the background, say)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            guard let self, !self.loaded, !self.webView.isLoading else { return }
+            self.loadPage()
+        }
     }
 
+    /// Coming back to the app: the page syncs. If the page is gone (its process ended while the app was away and nothing
+    /// reloaded it), load it again rather than leave an empty screen.
     func foreground() {
-        webView.evaluateJavaScript("window.BaselineBridge && window.BaselineBridge.foreground()", completionHandler: nil)
+        guard loaded else { return }
+        webView.evaluateJavaScript("try { window.BaselineBridge && window.BaselineBridge.foreground() } catch (e) {} !!document.getElementById('view')") { [weak self] result, error in
+            guard let self else { return }
+            if error != nil || (result as? Bool) != true {
+                log.error("page missing on return; loading it again")
+                self.loadPage()
+            }
+        }
     }
 
     /// The page asks, and the app answers by calling BaselineBridge.receive({ id, ok, payload | error }):
@@ -90,6 +116,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "coachKey", id, action: "status" | "prompt" | "clear" } → { set }; the key itself never reaches the page
     ///   { type: "coachCancel", id }                                 → stops the coach reply with that id
     ///   { type: "haptic", id, kind: "light" | "medium" | "success" } → a tap from the Taptic Engine, no answer
+    ///   { type: "log", id, text }                                   → a page error, written to the app log, no answer
     ///   { type: "coach", id, messages }                             → no answer here: the reply streams through
     ///     BaselineBridge.coach(id, { t: "text", v } … then { t: "done", message } or { t: "error", code, message }) (Coach)
     /// Requests that only hand something over get an ok reply too, except haptic and coach.
@@ -128,6 +155,11 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             return
         case "share":
             share(id: id, filename: body["filename"] as? String ?? "baseline-export.json", text: body["text"] as? String ?? "")
+            return
+        case "log":
+            // the page's errors (see the script after <main id="view"> in index.html), for Console.app
+            let text = body["text"] as? String ?? ""
+            log.error("page error: \(text, privacy: .public)")
             return
         case "haptic":
             // fire and forget: the page doesn't wait for an answer
