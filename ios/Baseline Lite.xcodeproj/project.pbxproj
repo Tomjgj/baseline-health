@@ -11,6 +11,7 @@
 		09BCE8DBC10111DE1659EF70 /* BaselineWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6867FA866805D007EE33F78E /* BaselineWatchApp.swift */; };
 		0E308EE67E246955E905A6CB /* BaselineWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B5F9FADE462E4BDFE7A13B95 /* BaselineWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		10BC9DB007EF6E348361A92B /* coach.json in Resources */ = {isa = PBXBuildFile; fileRef = 6FD309E14DF68FBDAA7DC56C /* coach.json */; };
+		1A13039BBA13756D056FDA6B /* HealthWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BF9A18BFB4521BE1C21EF3 /* HealthWriter.swift */; };
 		1C8556B784BA9797FBC4786E /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233B5E2194190D45E509ABD3 /* WebView.swift */; };
 		296BF14C372E50013CF5754D /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F50B0438C6BE04CDCA3245C /* Model.swift */; };
 		4250E60FAAD1D3811B122B52 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = D29A34F35A2DE9F6C239331D /* index.html */; };
@@ -79,6 +80,7 @@
 		B5F9FADE462E4BDFE7A13B95 /* BaselineWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BaselineWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF05787275ACF57A829361CA /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		C5920FD76CD1F6426F79281A /* RouteMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMap.swift; sourceTree = "<group>"; };
+		C9BF9A18BFB4521BE1C21EF3 /* HealthWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthWriter.swift; sourceTree = "<group>"; };
 		D29A34F35A2DE9F6C239331D /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		D7F32D8C9AE5271AD87274A5 /* BaselineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineApp.swift; sourceTree = "<group>"; };
 		E13C310AB7BFCE8F0D116711 /* LiftView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftView.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				6FD309E14DF68FBDAA7DC56C /* coach.json */,
 				F72A4D737F89FB074207E732 /* Coach.swift */,
 				0F245065038C89E104A05E2F /* HealthReader.swift */,
+				C9BF9A18BFB4521BE1C21EF3 /* HealthWriter.swift */,
 				6DAE60371921458EA5FE96C5 /* LiveWorkout.swift */,
 				BF05787275ACF57A829361CA /* Notifier.swift */,
 				C5920FD76CD1F6426F79281A /* RouteMap.swift */,
@@ -272,6 +275,7 @@
 				CB8DBFEEEF0B700BC8D7248E /* Coach.swift in Sources */,
 				A4770DDF7DAE821957FAA9E3 /* Glance.swift in Sources */,
 				AC711A29561DCD4D73F52B9C /* HealthReader.swift in Sources */,
+				1A13039BBA13756D056FDA6B /* HealthWriter.swift in Sources */,
 				60C89A01B464DB3A2174E124 /* LiveWorkout.swift in Sources */,
 				4FE558DA9041620202E545FC /* Notifier.swift in Sources */,
 				E643C0ED9E59D9E6F41E8CAE /* RouteMap.swift in Sources */,
