@@ -93,6 +93,14 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - `foods-usda.json` (next to `index.html`, bundled in the iPhone app) is USDA FoodData Central's Foundation Foods and SR Legacy, about 7,800 foods per 100 g with their portions, rows shaped like `FOODS`. It's built by `tools/foods/build-usda.mjs` in `.github/workflows/foods.yml` (CI has internet; this sandbox doesn't), which commits the file. Don't edit it by hand. `FoodDB` loads it on the first search and lists matches under "More foods", after the built-in list; ids are `'u' + fdcId`. Without the file, search works as before.
 - Barcodes: your own products first (`myFoods` entries with `code`, per 100 g, added with `Sheet.addProduct` when a scan finds nothing; `FoodNet.mine` turns them into foods), then Open Food Facts (with the pack photo). The camera screen is the app's own (`BarcodeScanner.swift`, `ScanOverlay`): a frame that limits recognition to the cut-out, a scan line, the torch and "Type the number", which comes back to the page as error `manual`. The food log's scan view opens the camera at once and always offers typing the number (the only way on the web).
 
+## Finish pass (Oct 2026)
+- First launch in the iPhone app: nothing syncs until the person taps "Connect Apple Health" on `Pages.welcome` (the Health permission sheet comes after an explanation). `HealthSync.hold` blocks `maybeSync`; `App.boot` asks the app `{ type: 'healthStatus' }` (reply `{ asked }`) and holds only on a fresh install that hasn't been asked. `welcomed` in localStorage: '1' connected, 'later' for "Not now" (the banner's Sync still works). CI's log check accepts `sync request` or `health status request`.
+- The first sync reads 35 days (`FIRST`), so the 30-day baselines are complete at once. `Store.applyImport` applies the whole import in memory before writing, so no screen draws a half-synced day.
+- Selected states (chips, mini buttons, yes/no, day pickers) use `--seg-on`, never white. `.tile2` tiles inside a card lose their boxes and are split by hairlines (shared rule in the CSS).
+- Feels native, not like a web page: no text selection or long-press callouts except in fields and coach messages, no pinch or focus zoom, no link previews.
+- Keyboard: `visualViewport` sets `--kb` (keyboard height) and `body.kb-open`; sheets sit on top of the keyboard and the tab bar and floating bars step aside while typing.
+- Settings has an About section (`APP_VERSION`, data sources with their licences, privacy). Bump `APP_VERSION` with a release.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.

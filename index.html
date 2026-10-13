@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Baseline Health</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,6 +149,9 @@ body {
 }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; -webkit-user-select: none; user-select: none; }
+/* an app, not a page: long-press doesn't select labels or pop up link menus (fields and Claude's answers still can) */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, select, [contenteditable], .msg, .msg * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 h1, h2, h3, p { margin: 0; }
 b, strong { font-weight: 600; }
@@ -370,8 +373,8 @@ a.btn { text-decoration: none; }
   transition: transform 0.12s var(--ease), background 0.2s, color 0.2s;
 }
 .chip svg { width: 16px; height: 16px; }
-.chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
-.chip.half[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.chip[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-line); }
+.chip.half[aria-pressed="true"] { background: transparent; color: var(--ink); box-shadow: none; outline: 1.5px dashed var(--ink-2); outline-offset: -1.5px; }
 .chip.claude { background: var(--claude-bg-2); color: var(--ink); box-shadow: none; }
 .chip .k { color: var(--muted); font-weight: 600; }
 .chip[aria-pressed="true"] .k { color: inherit; opacity: 0.7; }
@@ -546,6 +549,12 @@ a.btn { text-decoration: none; }
 .tile2 .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(22 * var(--fs)); font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile2 .v small { font-family: var(--font); font-size: calc(12 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 2px; }
 .tile2 .d { font-size: calc(11.5 * var(--fs)); font-weight: 500; color: var(--muted); margin-top: 1px; }
+/* inside a card, tiles sit on the card split by hairlines rather than as boxes */
+.card :is(.grid2, .grid3):has(> .tile2) { gap: 0; }
+.card :is(.grid2, .grid3) > .tile2 { background: transparent; border-radius: 0; padding: 6px 12px; }
+.card .grid2 > .tile2:nth-child(odd), .card .grid3 > .tile2:nth-child(3n+1) { padding-left: 0; }
+.card .grid2 > .tile2:nth-child(even), .card .grid3 > .tile2:not(:nth-child(3n+1)) { border-left: 1px solid var(--line); }
+.card .grid2 > .tile2:nth-child(n+3), .card .grid3 > .tile2:nth-child(n+4) { border-top: 1px solid var(--line); padding-top: 10px; }
 
 /* ---------- meters, stacks, range bars ---------- */
 .meter { position: relative; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--c) 18%, var(--surface-3)); }
@@ -701,7 +710,7 @@ a.btn { text-decoration: none; }
 .ex-head .tag { font-family: var(--font-num); display: inline-grid; place-items: center; width: 30px; height: 24px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-ink); font-size: calc(13 * var(--fs)); font-weight: 600; flex: none; }
 .mini-btn { border: 0; height: 34px; padding-inline: 10px; border-radius: 999px; background: var(--surface-3); color: var(--ink-2); font-size: calc(13 * var(--fs)); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; }
 .mini-btn svg { width: 15px; height: 15px; }
-.mini-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.mini-btn[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-line); }
 .hint-box { display: flex; gap: 8px; align-items: flex-start; padding: 9px 11px; border-radius: 12px; background: var(--hrv-bg); color: var(--hrv-ink); font-size: calc(13 * var(--fs)); line-height: 1.45; }
 .hint-box svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
 .set-grid { display: grid; gap: 4px; }
@@ -869,7 +878,7 @@ a.btn { text-decoration: none; }
 .habit-q span { display: block; font-size: calc(12.5 * var(--fs)); color: var(--muted); margin-top: 1px; }
 .yn { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); flex: none; }
 .yn button { width: 56px; min-height: 40px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font-size: calc(14 * var(--fs)); font-weight: 600; transition: background 0.2s, color 0.2s; }
-.yn button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.yn button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-line); }
 .amount { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; background: var(--surface-2); margin-bottom: 12px; }
 .amount > span { font-size: calc(14 * var(--fs)); font-weight: 500; color: var(--ink-2); }
 .progress { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
@@ -890,6 +899,20 @@ a.btn { text-decoration: none; }
 .msg.thinking { color: var(--muted); display: inline-flex; gap: 8px; align-items: center; }
 .msg.thinking::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--claude); border-right-color: transparent; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* the first-run welcome */
+.welcome { min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 40px); display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 7vh; gap: 10px; }
+.wl-mark svg { width: 104px; height: 104px; display: block; animation: wlIn 0.7s var(--ease) both; }
+.welcome h1 { font-size: calc(34 * var(--fs)); font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+.wl-sub { color: var(--ink-2); font-size: calc(17 * var(--fs)); max-width: 26ch; }
+.wl-rows { display: grid; gap: 20px; text-align: left; margin: 30px 4px 0; max-width: 360px; }
+.wl-row { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; align-items: start; }
+.wl-row b { font-weight: 600; font-size: calc(16 * var(--fs)); }
+.wl-row p { color: var(--muted); font-size: calc(14 * var(--fs)); margin-top: 2px; }
+.wl-ring { width: 30px; height: 30px; border-radius: 50%; margin-top: 2px; background: conic-gradient(var(--c) 0 72%, var(--track) 72% 100%); -webkit-mask: radial-gradient(circle, transparent 9px, #000 10px); mask: radial-gradient(circle, transparent 9px, #000 10px); }
+.wl-foot { margin-top: auto; width: 100%; display: grid; gap: 10px; padding-top: 28px; }
+.wl-foot .note { text-align: center; }
+.wl-spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--on-accent) 25%, transparent); border-top-color: var(--on-accent); animation: spin 0.7s linear infinite; }
+@keyframes wlIn { from { opacity: 0; transform: scale(0.9) rotate(-20deg); } to { opacity: 1; transform: none; } }
 .prompts { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 8px; }
 .prompts::-webkit-scrollbar { display: none; }
 .composer-wrap { display: grid; gap: 4px; }
@@ -924,11 +947,12 @@ a.btn { text-decoration: none; }
 .sheet-scrim { position: fixed; inset: 0; z-index: 60; background: var(--scrim); opacity: 0; transition: opacity 0.3s; }
 .sheet-scrim.in { opacity: 1; }
 .sheet {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 61; margin-inline: auto; max-width: 560px;
+  position: fixed; left: 0; right: 0; z-index: 61; margin-inline: auto; max-width: 560px;
   background: var(--glass-strong); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: inset 0 1px 0 var(--glass-line), var(--shadow);
   -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8);
-  max-height: calc(100% - 24px - env(safe-area-inset-top, 0px)); display: flex; flex-direction: column;
-  transform: translateY(100%); transition: transform 0.32s var(--spring);
+  max-height: calc(100% - 24px - env(safe-area-inset-top, 0px) - var(--kb, 0px)); display: flex; flex-direction: column;
+  bottom: var(--kb, 0px);
+  transform: translateY(100%); transition: transform 0.32s var(--spring), bottom 0.25s var(--ease);
 }
 .sheet.in { transform: none; }
 .sheet:focus { outline: none; }
@@ -943,6 +967,9 @@ a.btn { text-decoration: none; }
 .add-tile { border: 0; min-height: 92px; border-radius: 20px; background: var(--surface-2); color: var(--ink); padding: 12px; display: grid; align-content: space-between; justify-items: start; gap: 10px; text-align: left; font-size: calc(14.5 * var(--fs)); font-weight: 600; line-height: 1.25; transition: transform 0.12s var(--ease); }
 .add-tile .ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-2); }
 .add-tile .ic svg { width: 19px; height: 19px; }
+.add-tile .ic.food { background: var(--food-bg); color: var(--food-ink); } .add-tile .ic.strain { background: var(--strain-bg); color: var(--strain-ink); }
+.add-tile .ic.sleep { background: var(--sleep-bg); color: var(--sleep-ink); } .add-tile .ic.stress { background: var(--stress-bg); color: var(--stress-ink); }
+.add-tile .ic.water { background: var(--water-bg); color: var(--water-ink); } .add-tile .ic.hr { background: var(--hr-bg); color: var(--hr-ink); }
 .say { display: flex; align-items: center; gap: 10px; height: 52px; border-radius: 18px; padding: 0 6px 0 14px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
 .say > svg { width: 19px; height: 19px; color: var(--claude); flex: none; }
 .say input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: calc(16 * var(--fs)); color: var(--ink); }
@@ -1053,7 +1080,7 @@ input[type="range"].slider { height: 32px; }
 .plan-chip b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .daypick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .daypick button { height: 42px; border: 0; border-radius: 12px; background: var(--surface-2); color: var(--ink-2); font-size: calc(13.5 * var(--fs)); font-weight: 600; box-shadow: inset 0 0 0 1px var(--line); }
-.daypick button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.daypick button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-line); }
 
 /* ---------- baselines and factor groups (Health) ---------- */
 .grp-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0 4px; }
@@ -1141,7 +1168,7 @@ input[type="range"].slider { height: 32px; }
 .typepick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .typepick button { border: 0; min-height: 64px; border-radius: 16px; background: var(--surface-2); color: var(--ink); display: grid; justify-items: center; align-content: center; gap: 5px; font-size: calc(12.5 * var(--fs)); font-weight: 500; box-shadow: inset 0 0 0 1px var(--line); padding: 6px 4px; }
 .typepick button svg { width: 20px; height: 20px; color: var(--ink-2); }
-.typepick button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.typepick button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-line); }
 .typepick button[aria-pressed="true"] svg { color: inherit; }
 
 /* ---------- habit tracker ---------- */
@@ -1175,7 +1202,7 @@ input[type="range"].slider { height: 32px; }
 .tday .dn { font-family: var(--font-num); font-size: calc(17 * var(--fs)); font-weight: 600; font-variant-numeric: tabular-nums; }
 .tday .pg { width: 26px; height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; }
 .tday .pg i { display: block; height: 100%; background: var(--good); }
-.tday button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.tday button[aria-pressed="true"] { background: var(--seg-on); color: var(--ink); box-shadow: inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-line); }
 .tday button[aria-pressed="true"] .wd { color: inherit; opacity: 0.7; }
 .tday button:disabled { opacity: 0.3; }
 .hlog { display: flex; align-items: center; gap: 12px; padding-block: 11px; }
@@ -1201,6 +1228,12 @@ input[type="range"].slider { height: 32px; }
 /* ---------- dock (tab capsule + log button) ---------- */
 .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
 .dock[hidden] { display: none; }
+/* while the keyboard is up, the tab bar and floating bars step aside, and sheets sit on top of the keyboard */
+body.kb-open .dock, body.kb-open #float, body.kb-open .ptr { display: none; }
+.about-mark { display: flex; align-items: center; gap: 14px; }
+.about-mark svg { width: 52px; height: 52px; display: block; }
+.about-mark b { display: block; font-size: calc(17 * var(--fs)); font-weight: 600; }
+.about-mark span span, .about-mark div > span { color: var(--muted); font-size: calc(13 * var(--fs)); }
 /* scroll-edge fade: content running under the floating bar fades out instead of staying half-readable */
 .dock::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--dock-h) + 44px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--bg) 88%, transparent) 55%); pointer-events: none; z-index: -1; }
 .dock-inner { max-width: 528px; margin-inline: auto; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
@@ -4313,10 +4346,11 @@ const Store = (() => {
     demoOn = false; // imports always go to the real data
     let done = 0;
     const total = jobs.length;
+    // every change goes into memory at once, so a redraw while the writes run never shows half an import
+    for (const j of jobs) j[2]();
     const worker = async () => {
       while (jobs.length) {
-        const [path, doc, apply] = jobs.shift();
-        apply();
+        const [path, doc] = jobs.shift();
         let tries = 0;
         for (;;) {
           try { await writeDoc(path, doc); break; }
@@ -5616,6 +5650,7 @@ function mealAt(date, meal, d = new Date()) {
   return `${date}T${usual}` < now ? `${date}T${usual}` : now;
 }
 const units = () => Store.state().profile.units || 'metric';
+const APP_VERSION = '1.4';
 const mlText = (ml) => U.mlText(ml, units());
 /** Water as [number, unit] for big numbers: "1.25" "L", "750" "ml" or "25" "fl oz". */
 const mlParts = (ml) => (units() === 'imperial' ? [String(Math.round(ml / U.ML_PER_OZ)), 'fl oz'] : ml < 1000 ? [String(Math.round(ml)), 'ml'] : [String(+(ml / 1000).toFixed(2)), 'L']);
@@ -5708,7 +5743,7 @@ const Tabs = (() => {
     if (!Store.canWrite && Store.mode === 'db') return h('div', { class: 'banner' }, h('p', null, 'This is someone’s personal health app. Their data is private, so there’s nothing to show here.'));
     const last = C.allDates[C.allDates.length - 1];
     if (HealthSync.native()) {
-      const sync = () => { HealthSync.sync().catch(() => {}); App.render(); };
+      const sync = () => { HealthSync.hold = false; Store.lsSet('welcomed', '1'); HealthSync.sync().catch(() => {}); App.render(); };
       // with data in, syncs stay quiet (pull down to watch one); only the first one says what's happening
       if (HealthSync.busy() && !last) return h('div', { class: 'banner' }, h('p', null, h('b', null, 'Reading Apple Health… '), 'The first time takes up to a minute. Allow the categories iOS asks about.'));
       if (HealthSync.busy()) return null;
@@ -7286,6 +7321,41 @@ const Pages = {};
         h('p', { class: 'note' }, HealthSync.native() ? `Water other apps save to Apple Health counts too.${Store.state().profile.waterToHealth === false ? '' : ' Water you log here is saved to Apple Health as well.'}` : 'Water logged as food counts too.'));
     },
   };
+  // =============== WELCOME (first run in the iPhone app) ===============
+  // What the app does, before iOS asks for Apple Health access; the first sync runs from here.
+  const MARK = Pages.MARK = '<svg viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="50" stroke="var(--track)" stroke-width="9"/><circle cx="60" cy="60" r="34" stroke="var(--track)" stroke-width="9"/><circle cx="60" cy="60" r="18" stroke="var(--track)" stroke-width="9"/>'
+    + '<path d="M60 10a50 50 0 1 1-43.3 75" stroke="var(--good)" stroke-width="9"/><path d="M60 26a34 34 0 1 1-29.4 51" stroke="var(--strain)" stroke-width="9"/><path d="M60 42a18 18 0 1 1-15.6 27" stroke="var(--sleep)" stroke-width="9"/></svg>';
+  Pages.welcome = {
+    flow: true,
+    keep: true,
+    render() {
+      setTint('#8f7bf0', '#3b8deb');
+      const btn = h('button', { class: 'btn primary block lg', onclick: () => connect() }, icon('heart'), 'Connect Apple Health');
+      const status = h('p', { class: 'error-text', 'aria-live': 'polite', hidden: true });
+      const leave = () => { App.stack = []; App.go('today'); };
+      const connect = async () => {
+        btn.disabled = true;
+        btn.replaceChildren(h('span', { class: 'wl-spin', 'aria-hidden': 'true' }), 'Reading your last month…');
+        status.hidden = true;
+        HealthSync.hold = false;
+        Store.lsSet('welcomed', '1');
+        try { await HealthSync.sync({ quiet: true }); buzz('success'); leave(); }
+        catch (e) { btn.disabled = false; btn.replaceChildren(icon('heart'), 'Try again'); status.textContent = HealthSync.errorText(e?.code || e?.message); status.hidden = false; }
+      };
+      const row = (color, title, text) => h('div', { class: 'wl-row' }, h('span', { class: 'wl-ring', style: { '--c': color } }), h('div', null, h('b', null, title), h('p', null, text)));
+      return h('div', { class: 'view welcome' },
+        h('div', { class: 'wl-mark', 'aria-hidden': 'true', html: MARK }),
+        h('h1', null, 'Baseline'),
+        h('p', { class: 'wl-sub' }, 'Your body, measured against your own normal.'),
+        h('div', { class: 'wl-rows' },
+          row('var(--good)', 'Recovery', 'How ready you are each morning, from HRV, resting heart rate and sleep.'),
+          row('var(--strain)', 'Strain', 'How hard your day was, with a target that fits your recovery.'),
+          row('var(--sleep)', 'Sleep', 'What you got, what you needed, and when to go to bed.')),
+        h('div', { class: 'wl-foot' }, btn, status,
+          h('p', { class: 'note' }, 'Baseline reads Apple Health on this iPhone. Your data stays here.'),
+          h('button', { class: 'btn quiet block', onclick: () => { Store.lsSet('welcomed', 'later'); leave(); } }, 'Not now')));
+    },
+  };
   Pages.healthAge = { render: (C, args) => view(pageHead('Health age'), Tabs.healthAgeCard(C, args.date || C.todayStr)) };
 
   // =============== RECOVERY ===============
@@ -8246,7 +8316,15 @@ ${ctx}`;
             try { await Store.clearAll(); toast('All your data was deleted'); } catch { toast('Some items couldn’t be deleted. Try again.'); }
           } }) }, icon('trash'), 'Delete all my data'),
           h('p', { class: 'note' }, Store.mode === 'db' ? 'Your data is saved privately with this app. Only you can see it, even if you share the link.' : HealthSync.native() ? 'Your data stays on this iPhone, inside the app. Deleting the app deletes it, so export a copy now and then.' : Store.mode === 'local' ? 'This copy of the app saves data in this browser only.' : '')),
-        sec('look', 'Appearance', seg([['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], theme, (v) => App.setTheme(v), { label: 'Theme' })));
+        sec('look', 'Appearance', seg([['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], theme, (v) => App.setTheme(v), { label: 'Theme' })),
+        sec('about', 'About Baseline',
+          h('div', { class: 'about-mark' }, h('span', { 'aria-hidden': 'true', html: Pages.MARK }), h('div', null, h('b', null, 'Baseline'), h('span', null, `Version ${APP_VERSION}`))),
+          h('div', { class: 'list' },
+            prow({ ic: 'heart', tone: 'hr', t: 'Apple Health', s: 'Sleep, heart rate, HRV, activity and workouts, read on this iPhone' }),
+            prow({ ic: 'food', tone: 'food', t: 'Food database', s: 'USDA FoodData Central (public domain), about 7,700 foods' }),
+            prow({ ic: 'barcode', tone: 'food', t: 'Packaged foods', s: 'Open Food Facts, a free database anyone can add to (ODbL)' }),
+            prow({ ic: 'spark', tone: 'sleep', t: 'Claude coach', s: 'Claude by Anthropic, only when you ask it something' })),
+          h('p', { class: 'note' }, HealthSync.native() ? 'Your data stays on this iPhone. Nothing is sent anywhere unless you ask the coach, look up a barcode or search packaged foods.' : 'Your data is saved with this app. Nothing is sent anywhere unless you ask the coach or look up a packaged food.')));
       // one section on its own page, or the grouped list that leads to them, like the iPhone's Settings
       const secs = [...el.querySelectorAll(':scope > section[id^="set-"]')];
       const one = args.focus && secs.find((x) => x.id === 'set-' + args.focus);
@@ -8264,13 +8342,14 @@ ${ctx}`;
         coach: Coach.available() ? 'Ready' : 'Not set up',
         look: { system: 'Match the iPhone', light: 'Light', dark: 'Dark' }[theme],
         data: 'Export or delete',
+        about: `Version ${APP_VERSION} · data sources and privacy`,
       };
-      const META = { profile: ['user', ''], goal: ['trend', 'food'], sleep: ['moon', 'sleep'], notify: ['bell', 'stress'], health: ['heart', 'hr'], watch: ['watch', 'strain'], coach: ['spark', 'sleep'], look: ['gear', ''], data: ['download', ''] };
+      const META = { profile: ['user', ''], goal: ['trend', 'food'], sleep: ['moon', 'sleep'], notify: ['bell', 'stress'], health: ['heart', 'hr'], watch: ['watch', 'strain'], coach: ['spark', 'sleep'], look: ['gear', ''], data: ['download', ''], about: ['info', ''] };
       const row = (x) => { const id = x.id.slice(4); return prow({ ic: META[id][0], tone: META[id][1], t: x.querySelector('h2').textContent, s: SUB[id], onclick: () => App.open('settings', { focus: id }) }); };
       const group = (ids) => { const rows = ids.map((id) => secs.find((x) => x.id === 'set-' + id)).filter(Boolean).map(row); return rows.length ? h('section', { class: 'card tight set-group' }, h('div', { class: 'list' }, rows)) : null; };
       return view(pageHead('Settings', { sub: Store.demo ? 'You’re editing the sample person' : HealthSync.native() ? 'Saved on this iPhone' : 'Saved privately with this app' }),
         Store.demo ? el.querySelector('.banner') : null,
-        group(['profile', 'goal', 'sleep']), group(['notify', 'health', 'watch', 'coach']), group(['look', 'data']));
+        group(['profile', 'goal', 'sleep']), group(['notify', 'health', 'watch', 'coach']), group(['look', 'data', 'about']));
     },
   };
 
@@ -9207,7 +9286,7 @@ const HealthSync = (() => {
       await null; // so busy is set before the first render below
       const today = U.today(), prev = last();
       // the first sync brings in the last 30 days so Today fills in quickly; backfill() fetches the rest
-      const from = prev?.to ? U.addDays(prev.to, -1) : U.addDays(today, -(CHUNK - 1));
+      const from = prev?.to ? U.addDays(prev.to, -1) : U.addDays(today, -(FIRST - 1));
       try {
         const payload = await ask({ type: 'sync', from: from < U.addDays(today, -400) ? U.addDays(today, -400) : from, to: today });
         const res = HI.fromJSON(payload, { todayStr: today });
@@ -9230,7 +9309,8 @@ const HealthSync = (() => {
     return busy;
   };
   /** Older history, 30 days at a time going back, until 180 days are in. Quiet; picks up where it left off next launch. */
-  const CHUNK = 30, HISTORY = 180;
+  // the first sync brings 35 days: today's 30-day normal is then complete before the older months arrive
+  const CHUNK = 30, HISTORY = 180, FIRST = 35;
   let filling = false;
   async function backfill() {
     if (filling || !S.native() || Store.demo) return;
@@ -9252,8 +9332,11 @@ const HealthSync = (() => {
   S.backfill = backfill;
   S.filling = () => filling;
   /** Quietly sync when the app opens, comes back, or the watch delivers new readings, at most every 5 minutes. */
+  /** First run in the app: nothing syncs until the welcome's "Connect Apple Health" (so iOS's sheet never comes unexplained). */
+  S.hold = false;
+  S.status = () => ask({ type: 'healthStatus' }, 8000);
   S.maybeSync = () => {
-    if (!S.native() || busy) return;
+    if (!S.native() || busy || S.hold) return;
     if (!Store.ready) { setTimeout(S.maybeSync, 1500); return; } // wait for stored data, or the first sync would look like a fresh start
     const at = last()?.at ? Date.parse(last().at) : 0;
     if (Date.now() - at > 5 * 60e3) S.sync({ quiet: true }).catch(() => {});
@@ -11537,7 +11620,14 @@ const App = (() => {
       cl.use('downloads').then((d) => { A.downloads = d || null; }).catch(() => {});
     }
     setInterval(tick, 1000);
+    if (HealthSync.native()) HealthSync.hold = true; // until we know whether this is a first run
     await Store.init();
+    if (HealthSync.native()) {
+      const fresh = !HealthSync.last() && !Store.hasRealData();
+      const asked = fresh ? (await HealthSync.status().catch(() => ({ asked: true })))?.asked : true;
+      HealthSync.hold = fresh && !asked && Store.lsGet('welcomed') !== '1';
+      if (HealthSync.hold && Store.lsGet('welcomed') !== 'later') A.open('welcome');
+    }
     render();
     HealthSync.maybeSync();
     if (HealthSync.native()) Coach.keyAction('status').catch(() => {});
@@ -11599,6 +11689,18 @@ const App = (() => {
   };
   window.addEventListener('touchend', () => finishSwipe(false), { passive: true });
   window.addEventListener('touchcancel', () => finishSwipe(true), { passive: true });
+  // the keyboard: how much of the screen it covers, for sheets to sit above it and the tab bar to step aside
+  const vv = window.visualViewport;
+  if (vv) {
+    const kb = () => {
+      const h0 = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      document.documentElement.style.setProperty('--kb', (h0 > 80 ? h0 : 0) + 'px');
+      document.body.classList.toggle('kb-open', h0 > 80);
+    };
+    vv.addEventListener('resize', kb);
+    vv.addEventListener('scroll', kb);
+  }
+
   // pull down at the top of a screen to sync with Apple Health (in the iPhone app)
   const ptr = document.getElementById('ptr'), PULL_AT = 64;
   let pull = null, pulling = false;

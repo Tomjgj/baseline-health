@@ -77,6 +77,9 @@ final class HealthReader {
         return f
     }()
 
+    /// Whether the person has answered the Health sheet already, so the page can skip its welcome.
+    var hasAsked: Bool { UserDefaults.standard.bool(forKey: Self.askedKey) }
+
     private func authorize() async throws {
         guard HKHealthStore.isHealthDataAvailable() else { throw Failure(code: "unavailable") }
         if authorized { return }

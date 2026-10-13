@@ -27,6 +27,9 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         webView.backgroundColor = UIColor(red: 7 / 255, green: 8 / 255, blue: 11 / 255, alpha: 1)
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.allowsBackForwardNavigationGestures = false
+        // an app, not a browser: no link previews on long-press, no pinch zoom
+        webView.allowsLinkPreview = false
+        webView.scrollView.pinchGestureRecognizer?.isEnabled = false
         webView.navigationDelegate = self
         watch.deliver = { [weak self] json in
             self?.webView.callAsyncJavaScript("window.BaselineBridge && window.BaselineBridge.fromWatch && window.BaselineBridge.fromWatch(JSON.parse(json))", arguments: ["json": json], in: nil, in: .page, completionHandler: nil)
@@ -74,6 +77,7 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "notify", id, key, at: ms since 1970, title, body } and { type: "unnotify", id, key } → local reminders
     ///   { type: "watch", id, json }                                 → the context for the watch app (WatchLink)
     ///   { type: "share", id, filename, text }                       → the share sheet with that file
+    ///   { type: "healthStatus", id }                                → { asked }: whether the Health sheet was answered before
     ///   { type: "latest", id }                                      → { at, hr: [[time, bpm]], hrv: [[time, ms]] }, the last few hours
     ///   { type: "water", id, ml, at: "YYYY-MM-DDTHH:MM" }           → saved to Health as dietary water, tagged with id; { saved }
     ///   { type: "unwater", id }                                     → deletes the sample saved with that id; { saved }
@@ -182,6 +186,10 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             default:
                 reply(["id": id, "ok": true, "payload": ["set": CoachKey.read() != nil]])
             }
+            return
+        case "healthStatus":
+            log.notice("health status request")
+            reply(["id": id, "ok": true, "payload": ["asked": health.hasAsked]])
             return
         case "latest":
             Task {

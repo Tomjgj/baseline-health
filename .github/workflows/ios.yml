@@ -93,14 +93,14 @@ jobs:
           for i in $(seq 1 24); do
             sleep 5
             xcrun simctl spawn "$DEVICE" log show --last 10m --style compact --predicate 'subsystem == "com.example.baseline"' > app.log 2>/dev/null || true
-            if grep -q "page: Baseline Health | rendered" app.log && grep -q "sync request" app.log; then break; fi
+            if grep -q "page: Baseline Health | rendered" app.log && grep -Eq "sync request|health status request" app.log; then break; fi
           done
           cat app.log
           xcrun simctl io "$DEVICE" screenshot launch.png
           # the app must still be running
           xcrun simctl spawn "$DEVICE" launchctl list | grep -i baseline
           grep -q "page: Baseline Health | rendered" app.log
-          grep -q "sync request" app.log
+          grep -Eq "sync request|health status request" app.log
 
       - name: Build the watch app for the watch simulator
         run: |
