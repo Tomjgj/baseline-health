@@ -528,38 +528,15 @@ a.btn { text-decoration: none; }
 .done-tag svg { width: 15px; height: 15px; }
 
 /* ---------- training ---------- */
-.ready-card .pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.ready-card h3 { font-size: 21px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.25; margin-top: 12px; }
 .tomorrow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; text-align: left; color: inherit; background: var(--surface-2); border-radius: var(--r-md); padding: 10px 12px; margin-top: 14px; }
 .tomorrow svg.body-map { width: 46px; flex: none; }
 .tomorrow b { display: block; font-size: 15px; font-weight: 800; color: var(--ink); }
 .tomorrow .grow > span { display: block; font-size: 13px; color: var(--muted); line-height: 1.4; }
 .tomorrow > svg:last-child { width: 18px; height: 18px; color: var(--faint); flex: none; }
-.routine-card .eyebrow { color: var(--good-ink); }
-.routine-card h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
-.routine-card .meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .ex-lines { display: grid; gap: 6px; margin: 14px 0 16px; }
 .ex-lines div { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; }
 .ex-lines div span:first-child { font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ex-lines div span:last-child { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
-.routines { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px; scroll-snap-type: x mandatory; }
-.routines::-webkit-scrollbar { display: none; }
-.rcard { flex: none; width: 152px; border: 0; text-align: left; color: inherit; background: var(--surface); border-radius: var(--r-lg); padding: 14px 12px; display: grid; gap: 2px; scroll-snap-align: start;
-  box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
-.rcard .t { font-size: 15.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rcard .s { font-size: 12.5px; color: var(--muted); }
-.rcard .st { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750; margin-top: 8px; }
-.rcard.new { display: grid; place-items: center; color: var(--ink-2); font-weight: 750; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
-.rcard.new svg { width: 22px; height: 22px; }
-.wk7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.wk7 > div { display: grid; justify-items: center; gap: 4px; }
-.wk7 .dl { font-size: 11px; font-weight: 750; color: var(--muted); }
-.wk7 .bx { width: 100%; aspect-ratio: 1 / 1.06; max-width: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 10.5px; font-weight: 800; background: var(--surface-2); color: var(--muted); }
-.wk7 .bx.str { background: var(--hrv-bg); color: var(--hrv-ink); }
-.wk7 .bx.car { background: var(--strain-bg); color: var(--strain-ink); }
-.wk7 .bx.today { box-shadow: inset 0 0 0 2px var(--ink-2); }
-.wk7 .bx.future { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
-.wk7 .sv { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 750; color: var(--ink-2); }
 
 /* ---------- workout logger ---------- */
 .wk-head { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; margin-inline: -16px; padding: 10px 16px 10px; background: color-mix(in srgb, var(--bg) 78%, transparent);
@@ -571,41 +548,42 @@ a.btn { text-decoration: none; }
 .wk-top .mid .num { font-size: 14px; color: var(--muted); font-weight: 650; white-space: nowrap; }
 .wk-progress { height: 4px; border-radius: 2px; background: var(--surface-3); margin-top: 10px; overflow: hidden; }
 .wk-progress div { height: 100%; border-radius: 2px; background: var(--go); transition: width 0.35s var(--ease); }
-.ex-card { background: var(--surface); border-radius: var(--r-lg); padding: 12px; display: grid; gap: 8px; box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); min-width: 0; }
+.ex-card { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 96px); background: var(--surface); border-radius: var(--r-lg); padding: 12px; display: grid; gap: 8px; box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); min-width: 0; }
 .ex-card.ss { background: linear-gradient(var(--warn-bg), var(--warn-bg)), var(--surface); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 40%, transparent); }
 .ss-label { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 850; letter-spacing: 0.05em; color: var(--warn-ink); text-transform: uppercase; }
 .ss-label svg { width: 16px; height: 16px; }
 .ex-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .ex-head .nm { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; font-size: 17px; font-weight: 800; color: var(--strain-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ex-head .tag { font-family: var(--font-num); display: inline-grid; place-items: center; width: 30px; height: 24px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-ink); font-size: 13px; font-weight: 800; flex: none; }
-.mini-btn { border: 0; height: 34px; padding-inline: 10px; border-radius: 999px; background: var(--surface-3); color: var(--ink-2); font-size: 13px; font-weight: 750; display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; }
+.mini-btn { border: 0; height: 36px; padding-inline: 10px; border-radius: 999px; background: var(--surface-3); color: var(--ink-2); font-size: 13px; font-weight: 750; display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; }
 .mini-btn svg { width: 15px; height: 15px; }
 .mini-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 .hint-box { display: flex; gap: 8px; align-items: flex-start; padding: 9px 11px; border-radius: 12px; background: var(--hrv-bg); color: var(--hrv-ink); font-size: 13px; line-height: 1.45; }
 .hint-box svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
 .set-grid { display: grid; gap: 4px; }
-.set-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 60px 50px 42px 44px; gap: 6px; align-items: center; min-height: 46px; padding: 0 2px; border-radius: 12px; transition: background 0.25s; }
-.set-row.head { min-height: 0; font-size: 10.5px; font-weight: 850; letter-spacing: 0.05em; color: var(--muted); }
+.set-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 62px 50px 44px 46px; gap: 6px; align-items: center; min-height: 48px; padding: 0 2px; border-radius: 12px; transition: background 0.25s; }
+.set-grid.no-rpe .set-row { grid-template-columns: 40px minmax(0, 1fr) 74px 60px 50px; }
+.set-row.head { min-height: 0; font-size: 11px; font-weight: 850; letter-spacing: 0.05em; color: var(--muted); }
 .set-row.head span { text-align: center; }
 .set-row.head span:nth-child(2) { text-align: left; }
 .set-row.done { background: var(--good-bg); }
-.set-type { height: 34px; border: 0; border-radius: 10px; background: var(--surface-3); color: var(--ink); font-family: var(--font-num); font-size: 15px; font-weight: 800; }
+.set-type { height: 44px; border: 0; border-radius: 10px; background: var(--surface-3); color: var(--ink); font-family: var(--font-num); font-size: 15px; font-weight: 800; }
 .set-type.W { background: var(--warn-bg); color: var(--warn-ink); }
 .set-type.D { background: var(--strain-bg); color: var(--strain-ink); }
 .set-type.F { background: var(--crit-bg); color: var(--crit-ink); }
-.set-prev { border: 0; background: none; padding: 0; text-align: left; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 14.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 40px; }
-.set-in { width: 100%; height: 40px; border: 0; border-radius: 10px; background: var(--surface-3); color: var(--ink); text-align: center; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 750; padding: 0 2px; -moz-appearance: textfield; }
+.set-prev { border: 0; background: none; padding: 0; text-align: left; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 14.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 44px; }
+.set-in { width: 100%; height: 44px; border: 0; border-radius: 10px; background: var(--surface-3); color: var(--ink); text-align: center; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 750; padding: 0 2px; -moz-appearance: textfield; }
 .set-in::placeholder { color: var(--faint); }
 .set-in.rpe { font-size: 15px; color: var(--ink-2); }
 .set-in:focus { outline: 2px solid var(--strain); outline-offset: -2px; }
 .set-row.done .set-in { background: transparent; }
-.set-ok { height: 40px; border: 0; border-radius: 10px; background: var(--surface-3); color: var(--muted); display: grid; place-items: center; transition: background 0.2s, color 0.2s, transform 0.12s; }
+.set-ok { height: 44px; border: 0; border-radius: 10px; background: var(--surface-3); color: var(--muted); display: grid; place-items: center; transition: background 0.2s, color 0.2s, transform 0.12s; }
 .set-ok svg { width: 20px; height: 20px; stroke-width: 2.6; }
 .set-ok[aria-pressed="true"] { background: var(--go); color: var(--on-go); animation: pop 0.32s var(--spring); }
 @keyframes pop { 0% { transform: scale(0.82); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
 .set-row.done { animation: rowDone 0.5s ease-out; }
 @keyframes rowDone { from { background: color-mix(in srgb, var(--go) 35%, transparent); } }
-.add-set { height: 40px; border: 0; border-radius: 12px; background: var(--surface-2); color: var(--ink-2); font-size: 14px; font-weight: 750; }
+.add-set { height: 44px; border: 0; border-radius: 12px; background: var(--surface-2); color: var(--ink-2); font-size: 14px; font-weight: 750; }
 .plates { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; background: var(--surface-2); font-size: 13px; line-height: 1.45; }
 .plates svg { flex: none; }
 .plates b { font-weight: 800; }
@@ -847,13 +825,13 @@ input[type="range"].slider { height: 32px; }
 .cal > button.is-today .dd { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
 .cal > button[aria-pressed="true"] .dd { background: var(--accent); color: var(--on-accent); box-shadow: none; }
 .cal .bx { position: relative; width: 100%; max-width: 50px; min-height: 48px; border-radius: 12px; display: grid; place-items: center; align-content: center; gap: 1px; padding: 4px 2px; background: var(--surface-2); color: var(--faint);
-  font-size: 10.5px; font-weight: 800; line-height: 1.15; text-align: center; overflow: hidden; border: 1.5px solid transparent; }
+  font-size: 11px; font-weight: 800; line-height: 1.15; text-align: center; overflow: hidden; border: 1.5px solid transparent; }
 .cal .bx.str { background: var(--hrv-bg); color: var(--hrv-ink); }
 .cal .bx.car { background: var(--strain-bg); color: var(--strain-ink); }
 .cal .bx.plan { background: transparent; border: 1.5px dashed color-mix(in srgb, var(--c) 70%, transparent); color: var(--c); }
 .cal .bx.missed { background: transparent; border: 1.5px dashed var(--line); color: var(--faint); }
-.cal .bx small { display: block; font-family: var(--font-num); font-size: 9.5px; font-weight: 750; opacity: 0.85; }
-.cal .bx .more { position: absolute; top: 2px; right: 3px; font-size: 9px; font-weight: 850; opacity: 0.8; }
+.cal .bx small { display: block; font-family: var(--font-num); font-size: 11px; font-weight: 750; opacity: 0.85; }
+.cal .bx .more { position: absolute; top: 2px; right: 3px; font-size: 11px; font-weight: 850; opacity: 0.8; }
 .cal .bx .tick { width: 13px; height: 13px; margin: 0 auto 1px; display: block; stroke-width: 2.8; }
 .cal .sv { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 750; color: var(--strain-ink); min-height: 16px; }
 .cal-day { margin-top: 12px; padding-top: 4px; border-top: 1px solid var(--line); }
@@ -872,6 +850,56 @@ input[type="range"].slider { height: 32px; }
 .daypick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .daypick button { height: 42px; border: 0; border-radius: 12px; background: var(--surface-2); color: var(--ink-2); font-size: 13.5px; font-weight: 800; box-shadow: inset 0 0 0 1px var(--line); }
 .daypick button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+
+/* ---------- fitness: today card, week stats, progress rows, volume bars ---------- */
+.today-card .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.today-card > .eyebrow:first-child, .today-card > .row:first-child .eyebrow { margin-top: 0; }
+.today-card .eyebrow { margin-top: 16px; }
+.today-card h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin-top: 3px; }
+.today-card .meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.today-card .ex-lines { margin: 14px 0 0; }
+.today-card .btn.lg { margin-top: 16px; }
+.today-card .btn.quiet.block { margin-top: 4px; height: 44px; }
+.today-card .tomorrow { margin-top: 12px; }
+.advice { display: flex; gap: 9px; align-items: flex-start; margin-top: 12px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.advice svg { width: 17px; height: 17px; flex: none; margin-top: 2px; color: var(--strain-ink); }
+.swap-hint { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 10px 10px 12px; border-radius: var(--r-md); background: var(--warn-bg); }
+.swap-hint .grow b { display: block; font-size: 14.5px; font-weight: 800; }
+.swap-hint .grow span { display: block; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+.wk-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.wk-stats .tile2 .ok { color: var(--good-ink); }
+.conf { display: inline-flex; align-items: center; height: 22px; padding-inline: 8px; border-radius: 999px; font-family: var(--font); font-size: 11.5px; font-weight: 800; white-space: nowrap; vertical-align: middle; }
+.conf.clear { background: color-mix(in srgb, var(--ink) 15%, transparent); color: var(--ink); }
+.conf.likely { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-2); }
+.conf.unclear, .conf.steady { color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
+.lift-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px auto; gap: 12px; align-items: center; width: 100%; min-height: 58px; padding-block: 10px; border: 0; background: none; color: inherit; text-align: left; }
+.lift-row b { display: block; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lift-row .s { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 750; color: var(--muted); margin-top: 3px; }
+.lift-row .spark { width: 64px; height: 28px; }
+.lift-row .v { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 750; white-space: nowrap; }
+.lift-row .v small { font-family: var(--font); font-size: 12px; color: var(--muted); font-weight: 650; margin-left: 2px; }
+.vol-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) 38px; gap: 12px; align-items: center; min-height: 34px; font-size: 14px; font-weight: 700; }
+.vol-row .v { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 750; }
+.vbar { position: relative; height: 10px; border-radius: 999px; background: var(--surface-3); }
+.vbar .gd { position: absolute; top: -4px; bottom: -4px; border-radius: 5px; background: color-mix(in srgb, var(--good) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--good) 50%, transparent); }
+.vbar .fl { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--hrv); }
+.vbar .fl.under { background: color-mix(in srgb, var(--hrv) 45%, var(--surface-3)); }
+.vbar .fl.over { background: var(--warn); }
+.vbar .av { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink); }
+.mix-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.mix-legend > div { font-size: 12px; font-weight: 700; color: var(--muted); display: grid; gap: 1px; }
+.mix-legend .k { display: flex; align-items: center; gap: 6px; }
+.mix-legend .k i { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+.mix-legend b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 750; color: var(--ink); }
+.prog-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.prog-head .s { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; font-weight: 750; margin-top: 4px; }
+button.hint-box { width: 100%; border: 0; text-align: left; font: inherit; font-size: 13px; }
+.hint-box .more { display: block; margin-top: 4px; color: var(--ink-2); }
+.rm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+/* small controls keep their look but get a 44 px touch area */
+.mini-btn, .qty button, .cal-nav .icon-btn { position: relative; }
+.mini-btn::after, .qty button::after, .cal-nav .icon-btn::after { content: ""; position: absolute; inset: -5px; }
+.cal-nav .icon-btn::after { inset: -6px; }
 
 /* ---------- baselines and factor groups (Health) ---------- */
 .grp-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0 4px; }
@@ -1029,16 +1057,20 @@ body.sheet-open #app ~ #toast { animation-name: toastDown; }
 @media (min-width: 600px) {
   body { padding-inline: 24px; }
   .phead, .wk-head, .stickyfoot { margin-inline: -24px; padding-inline: 24px; }
-  .chips, .routines, .picks { margin-inline: -24px; padding-inline: 24px; }
+  .chips, .picks { margin-inline: -24px; padding-inline: 24px; }
 }
 @media (max-width: 370px) {
   .thead h1 { font-size: 30px; }
   .ring-v { font-size: 24px; }
   .ring:not(.hero) .ring-v.long { font-size: 21px; }
-  .set-row { grid-template-columns: 32px minmax(0, 1fr) 54px 46px 38px 40px; gap: 5px; }
+  .set-row { grid-template-columns: 32px minmax(0, 1fr) 56px 46px 40px 42px; gap: 5px; }
+  .set-grid.no-rpe .set-row { grid-template-columns: 36px minmax(0, 1fr) 66px 54px 46px; }
+  .lift-row { grid-template-columns: minmax(0, 1fr) 52px auto; gap: 10px; }
+  .lift-row .spark { width: 52px; }
+  .vol-row { grid-template-columns: 76px minmax(0, 1fr) 34px; gap: 10px; }
   .add-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pager button { font-size: 12px; }
-  .cal .bx { font-size: 9.5px; }
+  .cal .bx { font-size: 11px; letter-spacing: -0.02em; }
   .hrow { grid-template-columns: minmax(0, 1fr) 58px 40px 12px; gap: 8px; }
   .hrow svg.spark { width: 58px; }
   .bl-row { grid-template-columns: minmax(0, 1fr) 50px 76px; gap: 8px; }
@@ -1296,28 +1328,42 @@ const FOODS = (() => {
       .filter(Boolean).sort((a, b) => a.s - b.s).map((x) => x.f).slice(0, 40);
   }
 
-  // name | group shown in the picker | primary muscles | secondary muscles (count as half a set) | bodyweight
+  // name | group shown in the picker | primary muscles | secondary muscles (count as half a set) | kit
+  // kit: bb barbell (plates), db dumbbell, cb cable, mc machine, bw bodyweight (weight is added load), ot other; " t" marks a timed hold (reps are seconds)
+  const KIT = { bb: 'Barbell', db: 'Dumbbell', cb: 'Cable', mc: 'Machine', bw: 'Bodyweight', ot: 'Other' };
   const EXERCISES = [
-    ['Bench press', 'Chest', 'Chest', 'Triceps Shoulders'], ['Incline bench press', 'Chest', 'Chest', 'Shoulders Triceps'],
-    ['Dumbbell bench press', 'Chest', 'Chest', 'Triceps Shoulders'], ['Incline dumbbell press', 'Chest', 'Chest', 'Shoulders Triceps'],
-    ['Push-up', 'Chest', 'Chest', 'Triceps Shoulders Core', 1], ['Cable fly', 'Chest', 'Chest', ''], ['Dips', 'Chest', 'Chest Triceps', 'Shoulders', 1],
-    ['Deadlift', 'Back', 'Hamstrings Glutes Back', 'Quads Core'], ['Pull-up', 'Back', 'Back', 'Biceps', 1], ['Chin-up', 'Back', 'Back Biceps', '', 1],
-    ['Lat pulldown', 'Back', 'Back', 'Biceps'], ['Barbell row', 'Back', 'Back', 'Biceps Shoulders'], ['Dumbbell row', 'Back', 'Back', 'Biceps'],
-    ['Seated cable row', 'Back', 'Back', 'Biceps'], ['T-bar row', 'Back', 'Back', 'Biceps'], ['Face pull', 'Shoulders', 'Shoulders', 'Back'],
-    ['Overhead press', 'Shoulders', 'Shoulders', 'Triceps'], ['Dumbbell shoulder press', 'Shoulders', 'Shoulders', 'Triceps'],
-    ['Lateral raise', 'Shoulders', 'Shoulders', ''], ['Rear delt fly', 'Shoulders', 'Shoulders', 'Back'],
-    ['Back squat', 'Legs', 'Quads Glutes', 'Hamstrings Core'], ['Front squat', 'Legs', 'Quads', 'Glutes Core'], ['Goblet squat', 'Legs', 'Quads', 'Glutes'],
-    ['Hack squat', 'Legs', 'Quads', 'Glutes'], ['Leg press', 'Legs', 'Quads', 'Glutes'], ['Romanian deadlift', 'Legs', 'Hamstrings', 'Glutes Back'],
-    ['Bulgarian split squat', 'Legs', 'Quads Glutes', ''], ['Walking lunge', 'Legs', 'Quads Glutes', 'Hamstrings'], ['Leg extension', 'Legs', 'Quads', ''],
-    ['Leg curl', 'Legs', 'Hamstrings', ''], ['Hip thrust', 'Legs', 'Glutes', 'Hamstrings'], ['Calf raise', 'Legs', 'Calves', ''],
-    ['Barbell curl', 'Arms', 'Biceps', ''], ['Dumbbell curl', 'Arms', 'Biceps', ''], ['Hammer curl', 'Arms', 'Biceps', ''], ['Preacher curl', 'Arms', 'Biceps', ''],
-    ['Triceps pushdown', 'Arms', 'Triceps', ''], ['Overhead triceps extension', 'Arms', 'Triceps', ''], ['Skull crusher', 'Arms', 'Triceps', ''],
-    ['Close-grip bench press', 'Arms', 'Triceps', 'Chest'],
-    ['Hanging leg raise', 'Core', 'Core', '', 1], ['Cable crunch', 'Core', 'Core', ''], ['Ab wheel rollout', 'Core', 'Core', '', 1],
-    ['Russian twist', 'Core', 'Core', ''], ['Plank (seconds)', 'Core', 'Core', '', 1],
-  ].map(([name, muscle, p, sec, bw]) => ({ name, muscle, p: p.split(' ').filter(Boolean), s: sec.split(' ').filter(Boolean), bodyweight: !!bw }));
+    ['Bench press', 'Chest', 'Chest', 'Triceps Shoulders', 'bb'], ['Incline bench press', 'Chest', 'Chest', 'Shoulders Triceps', 'bb'],
+    ['Dumbbell bench press', 'Chest', 'Chest', 'Triceps Shoulders', 'db'], ['Incline dumbbell press', 'Chest', 'Chest', 'Shoulders Triceps', 'db'],
+    ['Machine chest press', 'Chest', 'Chest', 'Triceps Shoulders', 'mc'], ['Pec deck', 'Chest', 'Chest', '', 'mc'],
+    ['Push-up', 'Chest', 'Chest', 'Triceps Shoulders Core', 'bw'], ['Cable fly', 'Chest', 'Chest', '', 'cb'], ['Dips', 'Chest', 'Chest Triceps', 'Shoulders', 'bw'],
+    ['Deadlift', 'Back', 'Hamstrings Glutes Back', 'Quads Core', 'bb'], ['Trap bar deadlift', 'Back', 'Quads Glutes Hamstrings', 'Back Core', 'bb'],
+    ['Pull-up', 'Back', 'Back', 'Biceps', 'bw'], ['Chin-up', 'Back', 'Back Biceps', '', 'bw'], ['Inverted row', 'Back', 'Back', 'Biceps', 'bw'],
+    ['Lat pulldown', 'Back', 'Back', 'Biceps', 'cb'], ['Barbell row', 'Back', 'Back', 'Biceps Shoulders', 'bb'], ['Dumbbell row', 'Back', 'Back', 'Biceps', 'db'],
+    ['Seated cable row', 'Back', 'Back', 'Biceps', 'cb'], ['Chest-supported row', 'Back', 'Back', 'Biceps Shoulders', 'mc'], ['T-bar row', 'Back', 'Back', 'Biceps', 'bb'],
+    ['Back extension', 'Back', 'Glutes Hamstrings', 'Back', 'bw'],
+    ['Face pull', 'Shoulders', 'Shoulders', 'Back', 'cb'], ['Overhead press', 'Shoulders', 'Shoulders', 'Triceps', 'bb'], ['Dumbbell shoulder press', 'Shoulders', 'Shoulders', 'Triceps', 'db'],
+    ['Arnold press', 'Shoulders', 'Shoulders', 'Triceps', 'db'], ['Machine shoulder press', 'Shoulders', 'Shoulders', 'Triceps', 'mc'],
+    ['Lateral raise', 'Shoulders', 'Shoulders', '', 'db'], ['Cable lateral raise', 'Shoulders', 'Shoulders', '', 'cb'], ['Rear delt fly', 'Shoulders', 'Shoulders', 'Back', 'db'],
+    ['Back squat', 'Legs', 'Quads Glutes', 'Hamstrings Core', 'bb'], ['Front squat', 'Legs', 'Quads', 'Glutes Core', 'bb'], ['Goblet squat', 'Legs', 'Quads', 'Glutes', 'db'],
+    ['Hack squat', 'Legs', 'Quads', 'Glutes', 'mc'], ['Leg press', 'Legs', 'Quads', 'Glutes', 'mc'], ['Smith machine squat', 'Legs', 'Quads Glutes', '', 'mc'],
+    ['Romanian deadlift', 'Legs', 'Hamstrings', 'Glutes Back', 'bb'], ['Sumo deadlift', 'Legs', 'Glutes Quads Hamstrings', 'Back', 'bb'], ['Good morning', 'Legs', 'Hamstrings', 'Glutes Back', 'bb'],
+    ['Bulgarian split squat', 'Legs', 'Quads Glutes', '', 'db'], ['Walking lunge', 'Legs', 'Quads Glutes', 'Hamstrings', 'db'], ['Reverse lunge', 'Legs', 'Quads Glutes', 'Hamstrings', 'db'],
+    ['Step-up', 'Legs', 'Quads Glutes', '', 'db'], ['Leg extension', 'Legs', 'Quads', '', 'mc'],
+    ['Leg curl', 'Legs', 'Hamstrings', '', 'mc'], ['Nordic curl', 'Legs', 'Hamstrings', '', 'bw'], ['Hip thrust', 'Legs', 'Glutes', 'Hamstrings', 'bb'], ['Glute bridge', 'Legs', 'Glutes', 'Hamstrings', 'bw'],
+    ['Hip abduction', 'Legs', 'Glutes', '', 'mc'], ['Calf raise', 'Legs', 'Calves', '', 'mc'], ['Seated calf raise', 'Legs', 'Calves', '', 'mc'],
+    ['Barbell curl', 'Arms', 'Biceps', '', 'bb'], ['Dumbbell curl', 'Arms', 'Biceps', '', 'db'], ['Hammer curl', 'Arms', 'Biceps', '', 'db'], ['Preacher curl', 'Arms', 'Biceps', '', 'ot'],
+    ['Incline dumbbell curl', 'Arms', 'Biceps', '', 'db'], ['Cable curl', 'Arms', 'Biceps', '', 'cb'], ['EZ-bar curl', 'Arms', 'Biceps', '', 'ot'],
+    ['Triceps pushdown', 'Arms', 'Triceps', '', 'cb'], ['Overhead triceps extension', 'Arms', 'Triceps', '', 'cb'], ['Skull crusher', 'Arms', 'Triceps', '', 'ot'],
+    ['Close-grip bench press', 'Arms', 'Triceps', 'Chest', 'bb'],
+    ['Hanging leg raise', 'Core', 'Core', '', 'bw'], ['Cable crunch', 'Core', 'Core', '', 'cb'], ['Ab wheel rollout', 'Core', 'Core', '', 'bw'], ['Dead bug', 'Core', 'Core', '', 'bw'],
+    ['Pallof press', 'Core', 'Core', '', 'cb'], ['Russian twist', 'Core', 'Core', '', 'ot'], ['Plank (seconds)', 'Core', 'Core', '', 'bw t'], ['Side plank (seconds)', 'Core', 'Core', '', 'bw t'],
+    ['Farmer carry (seconds)', 'Core', 'Core', 'Back', 'db t'],
+  ].map(([name, muscle, p, sec, kit = 'ot']) => {
+    const [equip, flag] = kit.split(' ');
+    return { name, muscle, p: p.split(' ').filter(Boolean), s: sec.split(' ').filter(Boolean), equip, bodyweight: equip === 'bw', timed: flag === 't' };
+  });
 
-  return { list, byName, portion, search, EXERCISES };
+  return { list, byName, portion, search, EXERCISES, KIT };
 })();
 
 /* ===== engine.js — every score in the app, as pure functions over the stored data =====
@@ -1404,10 +1450,19 @@ const E = (() => {
   // ---------- strength: muscles and muscular load ----------
   const MUSC_PER_SET = 2.5;   // load points per hard set at RPE 8 (a 20-set session ≈ a 45-min steady run)
   const MUSCLES = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Core'];
-  const BW_FACTOR = { 'Pull-up': 1, 'Chin-up': 1, 'Dips': 0.9, 'Push-up': 0.65, 'Hanging leg raise': 0.35, 'Ab wheel rollout': 0.4 };
+  // hard sets a muscle a week that suit most people building muscle; arms, calves and core also get helper sets from other moves
+  const VOLUME_GUIDE = { Biceps: [6, 14], Triceps: [6, 14], Calves: [6, 16], Core: [6, 16] };
+  const volumeGuide = (g) => VOLUME_GUIDE[g] || [10, 20];
+  const REP_MAXES = [1, 3, 5, 8, 10, 12];
+  const isLift = (s) => (s.sets || 0) > 0 || /strength/i.test(s.type || '');
+  const BW_FACTOR = { 'Pull-up': 1, 'Chin-up': 1, 'Dips': 0.9, 'Push-up': 0.65, 'Inverted row': 0.6, 'Hanging leg raise': 0.35, 'Ab wheel rollout': 0.4 };
+  let exIndex = null;
+  /** Muscles, equipment and flags for an exercise; names not in the library (your own) get none, and "(seconds)" in a name marks a timed hold. */
   function exerciseInfo(name) {
-    const ex = typeof FOODS !== 'undefined' ? FOODS.EXERCISES.find((e) => e.name === name) : null;
-    return ex ? { p: ex.p || [], s: ex.s || [], bw: ex.bodyweight } : { p: [], s: [], bw: false };
+    if (!exIndex && typeof FOODS !== 'undefined') exIndex = new Map(FOODS.EXERCISES.map((e) => [e.name, e]));
+    const ex = exIndex?.get(name);
+    return ex ? { p: ex.p || [], s: ex.s || [], bw: ex.bodyweight, equip: ex.equip, timed: ex.timed, known: true }
+      : { p: [], s: [], bw: false, equip: null, timed: /seconds/i.test(name || ''), known: false };
   }
   function liftStats(w, bw) {
     let sets = 0, volume = 0;
@@ -1416,7 +1471,7 @@ const E = (() => {
       for (const st of ex.sets || []) {
         if (!(+st.r > 0) || st.done === false) continue;
         if (st.t !== 'W') sets++;
-        if (/seconds/i.test(ex.name)) continue;
+        if (info.timed) continue;
         const eff = (+st.w || 0) + (info.bw ? (BW_FACTOR[ex.name] ?? 0.5) * bw : 0);
         volume += eff * +st.r;
       }
@@ -1939,7 +1994,7 @@ const E = (() => {
       return out;
     });
 
-    // ---------- muscle freshness: recent hard sets, fading with a ~36 h time constant ----------
+    // ---------- muscle freshness: recent hard sets, fading with a 48 h time constant ----------
     const muscleState = m('mstate', (d) => {
       const ref = d === todayStr ? now.getTime() : U.isoToDate(d + 'T23:59').getTime();
       const out = {};
@@ -2049,7 +2104,7 @@ const E = (() => {
       let vo2 = null;
       for (let i = 0; i < 180 && vo2 == null; i++) vo2 = days[addDays(d, -i)]?.vo2 ?? null;
       if (vo2) {
-        const norm = P.sex === 'female' ? 37.6 - 0.42 * (ac - 25) : 48 - 0.5 * (ac - 25);
+        const norm = vo2Norm(age, P.sex);
         F.push({ key: 'vo2', label: 'Cardio fitness', value: vo2, unit: 'VO₂ max', norm, years: clamp(-0.43 * (vo2 - norm), -6, 6) });
       }
       const rhr = win(30, (x) => x.rhr ?? null);
@@ -2098,7 +2153,7 @@ const E = (() => {
       const ss = sleepScore(d);
       if (ss?.bedDev != null && Math.abs(ss.bedDev) >= 60) out.push({ p: 2.2, kind: 'sleep', text: `Last night's bedtime was ${Math.round(Math.abs(ss.bedDev))} min ${ss.bedDev > 0 ? 'later' : 'earlier'} than your weekly average.` });
       const l = load(d);
-      if (l && l.ratio > 1.5) out.push({ p: 3.5, kind: 'load', text: `Training load this week is ${l.ratio.toFixed(1)}× your 4-week average. Jumps this big raise injury risk.` });
+      if (l && l.ratio > 1.5) out.push({ p: 3.5, kind: 'load', text: `Training load this week is ${l.ratio.toFixed(1)}× your 4-week average. After a jump this big, keep the next few days easier and back off if anything aches.` });
       const st = stress(d);
       if (st?.avg != null && st.avg >= 50) out.push({ p: 2.4, kind: 'stress', text: `Stress has run high today${st.peak != null ? `, mostly around ${U.pad(Math.floor(st.peak / 2))}:${st.peak % 2 ? '30' : '00'}` : ''}. A short walk or a few slow breaths can bring it down.` });
       if (d === todayStr && now.getHours() >= 17) {
@@ -2114,11 +2169,13 @@ const E = (() => {
     const workoutsSorted = Object.values(workouts).filter((w) => w.exercises?.length).sort((a, b) => (b.start || b.date).localeCompare(a.start || a.date));
     const exSettings = (name) => {
       const t = (training.exercises || {})[name] || {};
-      const info = typeof FOODS !== 'undefined' ? FOODS.EXERCISES.find((e) => e.name === name) : null;
-      const iso = /raise|fly|curl|pushdown|extension|calf|face pull|crunch|twist|rear delt/i.test(name);
-      const barbell = /barbell|bench press|squat|deadlift|overhead press|hip thrust|close-grip/i.test(name) && !/dumbbell|goblet|hack|bulgarian/i.test(name);
+      const info = exerciseInfo(name);
+      const iso = /raise|fly|curl|pushdown|extension|calf|face pull|crunch|twist|rear delt|pec deck|abduction/i.test(name) && !/nordic/i.test(name);
+      // your own exercises have no library entry, so their kit is guessed from the name
+      const barbell = info.known ? info.equip === 'bb' : /barbell|bench press|squat|deadlift|overhead press|hip thrust|close-grip/i.test(name) && !/dumbbell|goblet|hack|bulgarian|smith/i.test(name);
       return { rest: t.rest ?? (barbell ? 150 : iso ? 60 : 90), range: t.range || (iso ? [10, 15] : barbell ? [5, 8] : [8, 12]),
-        step: t.step ?? (barbell ? 2.5 : 2), bar: t.bar ?? 20, barbell, bodyweight: !!info?.bodyweight, timed: /seconds/i.test(name) };
+        // defaults follow the units you load in: 2.5 kg steps on a 20 kg bar, or 5 lb steps on a 45 lb bar
+        step: t.step ?? (P.units === 'imperial' ? 5 * U.KG_PER_LB : barbell ? 2.5 : 2), bar: t.bar ?? (P.units === 'imperial' ? 45 * U.KG_PER_LB : 20), barbell, bodyweight: !!info.bw, timed: info.timed, equip: info.equip };
     };
     const routineInfo = (r, d) => {
       const mst = muscleState(d);
@@ -2321,7 +2378,8 @@ const E = (() => {
       return null;
     };
     const records = m('records', (name) => {
-      const out = { e1: null, heavy: null, vol: null, reps: null, sessions: 0, history: [] };
+      // repMax[n]: the heaviest weight lifted for at least n reps
+      const out = { e1: null, heavy: null, vol: null, reps: null, sessions: 0, history: [], repMax: {} };
       for (const w of workoutsSorted.slice().reverse()) {
         const ex = w.exercises.find((e) => e.name === name);
         if (!ex) continue;
@@ -2333,6 +2391,7 @@ const E = (() => {
           const wg = +x.w || 0, r = +x.r;
           vol += wg * r; reps += r;
           if (wg > 0) {
+            for (const n of REP_MAXES) if (r >= n && (!out.repMax[n] || wg > out.repMax[n].w)) out.repMax[n] = { w: wg, r, date: w.date };
             const e = e1rm(wg, r);
             if (bestE == null || e > bestE) { bestE = e; best = x; }
             if (!heavy || wg > heavy.w || (wg === heavy.w && r > heavy.r)) heavy = { w: wg, r };
@@ -2396,7 +2455,126 @@ const E = (() => {
       return { ...base, kind: 'reps', w: top, reps: reps.map((r) => Math.min(hi, r + 1)) };
     };
 
+    // ---------- progress: lifts ----------
+    /** One point per session over `days` to d (best estimated 1-rep max, or best reps or seconds for unweighted moves) and the fitted trend. */
+    const liftTrendM = m('liftTrend', (k) => {
+      const [name, d, w] = k.split('\u0001'), days = +w, from = addDays(d, -days);
+      const hist = records(name).history.filter((x) => x.date > from && x.date <= d);
+      const metric = hist.some((x) => x.e1 != null) ? 'e1' : 'reps';
+      const pts = hist.map((x) => ({ x: U.daysBetween(from, x.date), date: x.date, v: metric === 'e1' ? x.e1 : x.best ? +x.best.r : null })).filter((p) => p.v != null);
+      const cur = pts.length ? pts[pts.length - 1].v : null;
+      // over the window, a change inside about 1% (half a rep for unweighted moves) counts as holding steady
+      const fit = trendFit(pts, days, cur == null ? null : metric === 'e1' ? Math.max(0.5, cur * 0.01) : 0.5);
+      const info = exerciseInfo(name);
+      return { name, metric, pts, cur, fit, days, sessions: pts.length, last: pts.length ? pts[pts.length - 1].date : null, timed: info.timed, equip: info.equip };
+    });
+    const liftTrend = (name, d, days = 56) => liftTrendM([name, d, days].join('\u0001'));
+    /** Lifts done at least twice in the last `days`: barbell lifts first, then weighted ones, then the most trained. */
+    const strengthM = m('strength', (k) => {
+      const [d, w] = k.split('@'), days = +w, from = addDays(d, -days);
+      const names = new Set();
+      for (const wo of workoutsSorted) if (wo.date > from && wo.date <= d) for (const ex of wo.exercises) names.add(ex.name);
+      return [...names].map((n) => liftTrend(n, d, days)).filter((l) => l.sessions >= 2)
+        .sort((a, b) => (b.equip === 'bb') - (a.equip === 'bb') || (b.metric === 'e1') - (a.metric === 'e1') || b.sessions - a.sessions || (b.cur || 0) - (a.cur || 0));
+    });
+    const strengthSummary = (d, days = 56) => strengthM(d + '@' + days);
+
+    // ---------- cardio: minutes per heart-rate zone ----------
+    /** Minutes in zones 1–5 (50, 60, 70, 80, 90% of max) for one session. Time under zone 1 counts as zone 1; a session without heart rate counts as `none`. */
+    const sessionZones = (s, d) => {
+      const z = [0, 0, 0, 0, 0], max = hrParams(d).max;
+      const hm = histMinutes(s.hist);
+      if (hm > 0) {
+        zonesFromHist(s.hist, max).forEach((v, i) => { z[i] += v; });
+        z[0] += Math.max(0, hm - U.sum(z));
+        return { z, none: 0 };
+      }
+      if (s.avgHr > 0) { const f = s.avgHr / max; z[f < 0.6 ? 0 : f < 0.7 ? 1 : f < 0.8 ? 2 : f < 0.9 ? 3 : 4] += s.min || 0; return { z, none: 0 }; }
+      return { z, none: s.min || 0 };
+    };
+
+    // ---------- weeks of training, Monday to Sunday ----------
+    const monOf = (d) => addDays(d, -((U.parseYmd(d).getDay() + 6) % 7));
+    const weekM = m('week', (mon) => {
+      const o = { mon, sessions: 0, lifts: 0, cardio: 0, hardSets: 0, volume: 0, min: 0, cardioMin: 0, zones: [0, 0, 0, 0, 0], noHr: 0, runKm: 0, runs: 0, planned: 0, plannedDone: 0 };
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(mon, i);
+        for (const p of planOn(d)) { o.planned++; if (p.status === 'done') o.plannedDone++; }
+        if (d > todayStr) continue;
+        for (const s of sessions(d)) {
+          o.sessions++; o.min += s.min || 0;
+          if (isLift(s)) { o.lifts++; o.hardSets += s.sets || 0; o.volume += s.volume || 0; continue; }
+          o.cardio++; o.cardioMin += s.min || 0;
+          const zs = sessionZones(s, d);
+          zs.z.forEach((v, k) => { o.zones[k] += v; });
+          o.noHr += zs.none;
+          if (/run/i.test(s.type || '') && s.km > 0) { o.runKm += s.km; o.runs++; }
+        }
+      }
+      return o;
+    });
+    /** The n weeks up to the one holding d, oldest first. */
+    const trainingWeeks = (d, n = 12) => { const mon = monOf(d); return Array.from({ length: n }, (_, k) => weekM(addDays(mon, -7 * (n - 1 - k)))); };
+    /**
+     * Sessions a week to aim for (your own goal, else your weekly plan up to 5, else 3) and a forgiving streak of weeks that met it:
+     * one missed week in any six is a rest week and doesn't break the run. This week counts once it's met and never breaks it.
+     */
+    const weekGoal = m('wgoal', (d) => {
+      const perWeek = PLAN.filter((p) => !p.date && Array.isArray(p.days) && (!p.from || p.from <= d) && (!p.until || p.until >= d)).reduce((a, p) => a + p.days.length, 0);
+      const custom = +training.weeklyGoal > 0;
+      const goal = custom ? Math.round(+training.weeklyGoal) : perWeek ? Math.min(perWeek, 5) : 3;
+      const mon = monOf(d), cur = weekM(mon);
+      let streak = cur.sessions >= goal ? 1 : 0, rest = 0, missAt = null;
+      for (let k = 1; k <= 156; k++) {
+        if (weekM(addDays(mon, -7 * k)).sessions >= goal) { streak++; continue; }
+        if (missAt == null || k - missAt >= 6) { missAt = k; rest++; continue; }
+        // the rest week just before the run started isn't part of it
+        if (missAt === k - 1) rest--;
+        break;
+      }
+      return { goal, perWeek, custom, done: cur.sessions, left: Math.max(0, goal - cur.sessions), week: cur, streak, rest: streak ? Math.max(0, rest) : 0 };
+    });
+
+    // ---------- muscle volume against the guide and your own normal ----------
+    /** Hard sets per muscle in the 7 days to d, the weekly average over the 4 weeks before, and the general guide range. */
+    const muscleVolume = m('mvol', (d) => {
+      const now = muscleSets(d), prev = [1, 2, 3, 4].map((k) => muscleSets(addDays(d, -7 * k)));
+      const rows = MUSCLES.map((g) => {
+        const [lo, hi] = volumeGuide(g), sets = now[g] || 0, avg4 = mean(prev.map((x) => x[g] || 0));
+        return { g, sets, avg4, lo, hi, status: sets < lo ? 'under' : sets > hi ? 'over' : 'in' };
+      });
+      return { rows, any: rows.some((r) => r.sets > 0 || r.avg4 > 0) };
+    });
+
+    // ---------- cardio fitness ----------
+    /** VO₂ max over 6 months, running efficiency over 13 weeks, and how your cardio minutes split by intensity over 4 weeks. */
+    const cardioFitness = m('cfit', (d) => {
+      const vpts = [];
+      for (let i = 182; i >= 0; i--) { const x = addDays(d, -i), v = days[x]?.vo2; if (v != null) vpts.push({ x: 182 - i, v, date: x }); }
+      const vl = vpts[vpts.length - 1];
+      const vo2 = vl ? { cur: vl.v, date: vl.date, pts: vpts, fit: trendFit(vpts, 182, 0.4), norm: vo2Norm(ageOn(d), P.sex) } : null;
+      // running efficiency: metres covered per heartbeat, on runs of 12 minutes or more with distance and heart rate
+      const runs = [];
+      for (let i = 90; i >= 0; i--) {
+        const x = addDays(d, -i);
+        for (const s of sessions(x)) {
+          if (isLift(s) || !/run/i.test(s.type || '') || !(s.km > 0) || !(s.min >= 12) || !(s.avgHr > 0)) continue;
+          runs.push({ x: 90 - i, date: x, ef: (s.km * 1000) / s.min / s.avgHr, pace: s.min / s.km, km: s.km, min: s.min, avgHr: s.avgHr, s });
+        }
+      }
+      const runFit = trendFit(runs.map((r) => ({ x: r.x, v: r.ef })), 90, 0.01);
+      const z = [0, 0, 0, 0, 0];
+      let none = 0, sessionsN = 0;
+      for (let i = 0; i < 28; i++) {
+        const x = addDays(d, -i);
+        for (const s of sessions(x)) { if (isLift(s)) continue; sessionsN++; const zs = sessionZones(s, x); zs.z.forEach((v, k) => { z[k] += v; }); none += zs.none; }
+      }
+      const mix = { z, none, sessions: sessionsN, easy: z[0] + z[1], moderate: z[2], hard: z[3] + z[4], total: U.sum(z) };
+      return { vo2, runs, runFit, mix };
+    });
+
     return {
+      liftTrend, strengthSummary, sessionZones, monOf, week: weekM, trainingWeeks, weekGoal, muscleVolume, cardioFitness,
       training, routines, routineInfo, suggestRoutine, lastSets, records, prCheck, prsOf, progression, exSettings, workoutsSorted,
       dayStates, hrvDayBase, sleepWindows, activeWindows,
       P, todayStr, days, food, body, workouts, allDates, bodyDates,
@@ -2411,6 +2589,42 @@ const E = (() => {
 
   function stressLevel(v) { return v == null ? null : v < 25 ? 'Low' : v < 50 ? 'Moderate' : v < 75 ? 'High' : 'Very high'; }
   function e1rm(w, r) { return r <= 1 ? w : w * (1 + r / 30); }
+  /** Typical VO₂ max for an age and sex (the reference health age uses). */
+  function vo2Norm(age, sex) {
+    if (age == null || !sex) return null;
+    const ac = clamp(age, 20, 80);
+    return sex === 'female' ? 37.6 - 0.42 * (ac - 25) : 48 - 0.5 * (ac - 25);
+  }
+
+  // ---------- honest trends: a fitted line, and how sure the change is ----------
+  // two-sided t quantiles for 1–15 degrees of freedom
+  const T95 = [12.71, 4.3, 3.18, 2.78, 2.57, 2.45, 2.36, 2.31, 2.26, 2.23, 2.2, 2.18, 2.16, 2.14, 2.13];
+  const T80 = [3.08, 1.89, 1.64, 1.53, 1.48, 1.44, 1.41, 1.4, 1.38, 1.37, 1.36, 1.36, 1.35, 1.35, 1.34];
+  const tq = (tab, df, big) => (df < 1 ? Infinity : df <= tab.length ? tab[df - 1] : big);
+  /**
+   * Least-squares line through points [{x, v}], x in days. Returns the change over `span` days with its 80% range and a label:
+   * 'clear' when the 95% range of the change leaves out zero, 'likely' when the 80% range does, 'steady' when the 80% range
+   * sits inside ±tol (given enough points), otherwise 'unclear'. Fewer than four points are always 'unclear'.
+   */
+  function trendFit(pts, span, tol = null) {
+    const P = (pts || []).filter((p) => p.v != null && isFinite(p.v) && isFinite(p.x));
+    const n = P.length;
+    const none = { n, label: 'unclear', change: null, lo: null, hi: null, slope: null, dir: 0, at: () => null };
+    if (n < 3) return none;
+    const mx = mean(P.map((p) => p.x)), mv = mean(P.map((p) => p.v));
+    let sxx = 0, sxy = 0;
+    for (const p of P) { sxx += (p.x - mx) ** 2; sxy += (p.x - mx) * (p.v - mv); }
+    if (!(sxx > 0)) return none;
+    const b = sxy / sxx, a = mv - b * mx;
+    let sse = 0;
+    for (const p of P) sse += (p.v - a - b * p.x) ** 2;
+    const df = n - 2, se = Math.sqrt(sse / df / sxx);
+    const z = se > 0 ? Math.abs(b) / se : b !== 0 ? Infinity : 0;
+    const t80 = tq(T80, df, 1.28), w80 = t80 * se * span;
+    let label = n >= 4 && z >= tq(T95, df, 1.96) ? 'clear' : n >= 4 && z >= t80 ? 'likely' : 'unclear';
+    if (label === 'unclear' && tol != null && n >= 6 && Math.abs(b * span) + w80 <= tol) label = 'steady';
+    return { n, slope: b, at: (x) => a + b * x, change: b * span, lo: b * span - w80, hi: b * span + w80, label, dir: b > 0 ? 1 : b < 0 ? -1 : 0 };
+  }
 
   // ---------- how habits and health-age factors are grouped on screen ----------
   const HABIT_GROUPS = [
@@ -2428,6 +2642,7 @@ const E = (() => {
   ];
 
   return { context, strainFromTrimp, trimpFromHist, zonesFromHist, histMinutes, mifflin, stressLevel, e1rm, DEFAULT_PROFILE, srpeTrimp, defaultRpe,
+    trendFit, vo2Norm, volumeGuide, REP_MAXES, isLift,
     MUSCLES, exerciseInfo, liftStats, HABIT_CATALOG, DEFAULT_HABITS, DEFAULT_ROUTINES, HABIT_GROUPS, habitGroup, AGE_GROUPS,
     ACTIVITY_TYPES, actType, actKey, habitMeta, habitSuccess };
 })();
@@ -3829,6 +4044,52 @@ const Charts = (() => {
     return wrap;
   }
 
+  // ---------- stacked vertical bars. items: [{label, full, parts: [{v, color, name}]}], parts bottom to top ----------
+  function stackBars({ items, height = 140, fmt = (v) => U.fmtInt(v), caption, xEvery = 1, unit = '', ref = null, refLabel = '' }) {
+    const W = 340, padL = 30, padR = 6, padT = 12, padB = 22;
+    const H = height, n = items.length, plotW = W - padL - padR, plotH = H - padT - padB;
+    const totals = items.map((it) => it.parts.reduce((a, p) => a + (p.v || 0), 0));
+    const vmax = niceMax(Math.max(1, ...totals, ref || 0));
+    const y = (v) => padT + plotH - (Math.min(v, vmax) / vmax) * plotH;
+    const slot = plotW / n, bw = Math.max(3, Math.min(26, slot * 0.64));
+    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart-svg', role: 'img', 'aria-label': caption || '' });
+    [0, vmax / 2, vmax].forEach((v, k) => {
+      svg.append(s('line', { x1: padL, x2: W - padR, y1: y(v), y2: y(v), class: k ? 'grid' : 'axis' }));
+      svg.append(s('text', { x: padL - 6, y: y(v) + 3.5, class: 'tick', 'text-anchor': 'end' }, fmt(v)));
+    });
+    const marks = [];
+    items.forEach((it, i) => {
+      const x = padL + slot * i + (slot - bw) / 2;
+      const segs = it.parts.filter((p) => p.v > 0);
+      if (!segs.length) svg.append(s('rect', { x, y: padT + plotH - 2, width: bw, height: 2, rx: 1, class: 'bar-empty' }));
+      else {
+        const g = s('g', { class: 'bar' });
+        let acc = 0;
+        segs.forEach((p, k) => {
+          const top = y(acc + p.v), bot = y(acc), last = k === segs.length - 1;
+          // a hairline gap between parts; the top part gets the rounded cap
+          const hh = Math.max(0, bot - top - (k ? 1.2 : 0));
+          g.append(last ? s('path', { d: roundedTop(x, top, bw, hh, Math.min(5, bw / 2)), fill: p.color }) : s('rect', { x, y: top, width: bw, height: hh, fill: p.color }));
+          acc += p.v;
+        });
+        svg.append(g); marks[i] = g;
+      }
+      if ((n - 1 - i) % xEvery === 0) svg.append(s('text', { x: padL + slot * (i + 0.5), y: H - 6, class: 'tick', 'text-anchor': 'middle' }, it.label));
+    });
+    if (ref != null) {
+      svg.append(s('line', { x1: padL, x2: W - padR, y1: y(ref), y2: y(ref), class: 'ref' }));
+      if (refLabel) svg.append(s('text', { x: W - padR, y: y(ref) - 5, class: 'tick ref-label', 'text-anchor': 'end' }, refLabel));
+    }
+    const names = [...new Set(items.flatMap((it) => it.parts.map((p) => p.name)))];
+    const wrap = wrapChart(svg, [srTable(caption || '', [['', ...names, 'Total'], ...items.map((it, i) => [it.full || it.label, ...names.map((nm) => fmt(it.parts.find((p) => p.name === nm)?.v || 0) + unit), fmt(totals[i]) + unit])])]);
+    interact(wrap, svg, n, padL, slot, W, (i) => {
+      if (!totals[i]) return null;
+      const rows = items[i].parts.filter((p) => p.v > 0).slice().reverse().map((p) => `<span style="color:${p.color}">●</span> ${U.esc(p.name)} ${fmt(p.v)}${unit}`);
+      return `<b>${U.esc(items[i].full || items[i].label)}</b><br>${rows.join('<br>')}<br>Total ${fmt(totals[i])}${unit}`;
+    }, (hi) => marks.forEach((m, i) => m && m.classList.toggle('dim', hi >= 0 && i !== hi)));
+    return wrap;
+  }
+
   // ---------- line over days with an optional normal-range band. points: [{label, v, full}] ----------
   function line({ points, height = 130, color = 'var(--ink)', band, fmt = (v) => U.fmt1(v), caption, unit = '', yPad = 0.15, xEvery = 7, invert = false, ref = null, refLabel = '', tipFmt = null, step = null, area = true, dots = false }) {
     const W = 340, padL = 34, padR = 10, padT = 14, padB = 22, H = height;
@@ -4364,7 +4625,7 @@ const Charts = (() => {
     return d;
   }
 
-  return { scoreRing, segGauge, bars, line, trend, niceTicks, dayLine, hypnogram, windows, nightVitals, bodyMap, meter, stack, sparkline, miniDay, diverge, rangeBar, emptyChart, hideTip, STAGES, firstTime };
+  return { scoreRing, segGauge, bars, stackBars, line, trend, niceTicks, dayLine, hypnogram, windows, nightVitals, bodyMap, meter, stack, sparkline, miniDay, diverge, rangeBar, emptyChart, hideTip, STAGES, firstTime };
 })();
 
 /* ===== live.js — simulated live heart rate for the mock-up (the iPhone app will stream from the Watch) ===== */
@@ -5266,7 +5527,7 @@ const Tabs = (() => {
   };
 
   // ---------- TRAIN ----------
-  const LOAD_STATUS = (r) => (r == null ? null : r < 0.8 ? ['Detraining', 'var(--warn-ink)'] : r < 1.0 ? ['Maintaining', 'var(--ink-2)'] : r <= 1.3 ? ['Building', 'var(--good-ink)'] : ['Overreaching', 'var(--crit-ink)']);
+  const LOAD_STATUS = (r) => (r == null ? null : r < 0.8 ? ['Lighter', 'var(--ink-2)'] : r < 1.0 ? ['Maintaining', 'var(--ink-2)'] : r <= 1.3 ? ['Building', 'var(--good-ink)'] : r <= 1.5 ? ['High', 'var(--warn-ink)'] : ['Spike', 'var(--crit-ink)']);
   T.LOAD_STATUS = LOAD_STATUS;
   function loadGauge(title, key, x, color, date) {
     const st = LOAD_STATUS(x?.ratio);
@@ -5304,6 +5565,208 @@ const Tabs = (() => {
   const STATUS_TXT = (info) => info.status === 'ready' ? [`${info.groups.slice(0, 2).join(' and ') || 'All'} ready`, 'var(--good)']
     : info.status === 'partly' ? ['Partly ready', 'var(--warn)'] : [`${info.tired[0] || 'Muscles'} not ready`, 'var(--crit)'];
   T.STATUS_TXT = STATUS_TXT;
+
+  // ---------- progress: shared by the Train tab and the Strength, Cardio and Exercise pages ----------
+  const CONF = { clear: 'Clear', likely: 'Likely', unclear: 'Not clear yet', steady: 'Holding steady' };
+  const CONF_HELP = {
+    clear: 'The change is bigger than the session-to-session noise: its 95% range leaves out zero.',
+    likely: 'Probably a real change: its 80% range leaves out zero, the 95% range doesn’t yet.',
+    unclear: 'Day-to-day noise is still as big as the change. More sessions will tell.',
+    steady: 'No real change: even the likely range is small.',
+  };
+  const confPill = (fit) => h('span', { class: 'conf ' + fit.label, title: CONF_HELP[fit.label] }, CONF[fit.label]);
+  /** Colour a change only when the trend is clear or likely; `better` is the direction that counts as progress. */
+  const changeInk = (fit, better = 1) => ((fit.label === 'clear' || fit.label === 'likely') && fit.dir ? (fit.dir === better ? 'var(--good-ink)' : 'var(--crit-ink)') : 'var(--muted)');
+  const spanTxt = (days) => (days >= 170 && days <= 190 ? '6 months' : days % 7 === 0 ? plural(days / 7, 'week') : plural(days, 'day'));
+  /** A lift's latest value, fitted change and its likely range, in the person's units. */
+  function liftFmt(l) {
+    const reps = l.metric !== 'e1', unit = reps ? (l.timed ? 's' : 'reps') : wU();
+    const val = (x) => (reps ? fmtSigned(x, 0) : fmtSigned(U.kgTo(x, units()), 1));
+    return { cur: l.cur == null ? '–' : reps ? String(Math.round(l.cur)) : fmtW(l.cur), unit,
+      change: l.fit.change == null ? null : `${val(l.fit.change)} ${unit}`, range: l.fit.lo == null ? null : `${val(l.fit.lo)} to ${val(l.fit.hi)} ${unit}` };
+  }
+  function liftRow(l) {
+    const f = liftFmt(l);
+    return h('button', { class: 'lift-row tap', onclick: () => App.open('exercise', { name: l.name }), 'aria-label': `${l.name}: ${f.cur} ${f.unit}${f.change ? `, ${f.change} over ${spanTxt(l.days)}` : ''}, ${CONF[l.fit.label]}. Open` },
+      h('span', { style: { minWidth: 0 } }, h('b', null, l.name), h('span', { class: 's' }, f.change ? h('span', { style: { color: changeInk(l.fit) } }, f.change) : null, confPill(l.fit))),
+      Charts.sparkline(l.pts.map((p) => p.v), { color: 'var(--hrv)', w: 64, h: 28, end: true }),
+      h('span', { class: 'v' }, f.cur, h('small', null, f.unit)));
+  }
+  const fmtPace = (min) => { const sec = Math.round(min * 60); return `${Math.floor(sec / 60)}:${U.pad(sec % 60)}`; };
+  /** Running efficiency read as the pace you hold at your usual running heart rate: one point per run and the fitted change over 13 weeks. */
+  function runPace(cf) {
+    const runs = cf.runs;
+    if (runs.length < 3) return null;
+    const ref = Math.round(U.mean(runs.map((r) => r.avgHr)) / 5) * 5;
+    const imp = units() === 'imperial', per = imp ? 1609.344 : 1000;
+    const pace = (ef) => per / (ef * ref);
+    const f = cf.runFit, now = f.at(90), then = f.at(0);
+    return { ref, fit: f, unit: imp ? '/mi' : '/km', cur: pace(now ?? runs[runs.length - 1].ef), chSec: now != null && then != null ? (pace(now) - pace(then)) * 60 : null,
+      runs: runs.map((r) => ({ ...r, paceAtRef: pace(r.ef) })), at: (x) => (f.at(x) == null ? null : pace(f.at(x))) };
+  }
+  const paceChange = (rp) => (rp.chSec == null || Math.round(rp.chSec) === 0 ? null : `${Math.abs(Math.round(rp.chSec))} s${rp.unit} ${rp.chSec < 0 ? 'faster' : 'slower'}`);
+  const MIX = [['easy', 'Easy', 'zones 1–2', 'var(--z2)'], ['moderate', 'Moderate', 'zone 3', 'var(--z3)'], ['hard', 'Hard', 'zones 4–5', 'var(--z5)']];
+  function mixBlock(mix) {
+    const t = mix.total || 1;
+    return h('div', null, Charts.stack(MIX.map(([k, n, , c]) => ({ v: mix[k], color: c, label: n })), { h: 12 }),
+      h('div', { class: 'mix-legend' }, MIX.map(([k, n, z, c]) => h('div', { 'aria-label': `${n}, ${z}: ${Math.round((mix[k] / t) * 100)}%, ${fmtDur(mix[k])}` },
+        h('span', { class: 'k' }, h('i', { style: { background: c } }), n), h('b', null, `${Math.round((mix[k] / t) * 100)}%`), h('span', null, fmtDur(mix[k]))))));
+  }
+  function mixText(mix) {
+    if (!mix.total) return null;
+    const e = mix.easy / mix.total, hd = mix.hard / mix.total;
+    if (hd >= 0.4) return `${Math.round(hd * 100)}% of your cardio time was hard. Endurance plans usually keep most minutes easy and save hard efforts for one or two sessions a week.`;
+    if (e >= 0.7) return 'Mostly easy, with some hard work on top: the mix most endurance plans aim for.';
+    return `${e >= 0.5 ? 'Just over half' : 'Less than half'} of your cardio time was easy. Easy minutes build endurance with little fatigue, so most plans keep them in the majority.`;
+  }
+  Object.assign(T, { CONF, CONF_HELP, confPill, changeInk, spanTxt, liftFmt, liftRow, fmtPace, runPace, paceChange, MIX, mixBlock, mixText });
+
+  function strengthCard(C, date) {
+    const lifts = C.strengthSummary(date);
+    return cardT('Strength', h('button', { class: 'link', onclick: () => App.open('strength', { date }) }, lifts.length > 3 ? `All ${lifts.length}` : 'More', icon('chevR')),
+      h('p', { class: 'small muted', style: { marginTop: '-8px' } }, 'Best estimated 1-rep max per session, last 8 weeks'),
+      lifts.length ? h('div', { class: 'list' }, lifts.slice(0, 3).map(liftRow))
+        : h('p', { class: 'small ink2', style: { marginTop: '10px' } }, 'Log a lift in two workouts and its trend shows here, with how sure the change is.'));
+  }
+  function cardioCard(C, date) {
+    const cf = C.cardioFitness(date), rp = runPace(cf), rows = [];
+    if (cf.vo2) {
+      const f = cf.vo2.fit;
+      rows.push(h('button', { class: 'lift-row tap', onclick: () => App.open('cardio', { date }), 'aria-label': `VO₂ max ${cf.vo2.cur.toFixed(1)}, ${CONF[f.label]}. Open` },
+        h('span', { style: { minWidth: 0 } }, h('b', null, 'VO₂ max'), h('span', { class: 's' }, f.change != null ? h('span', { style: { color: changeInk(f) } }, `${fmtSigned(f.change, 1)} in 6 months`) : null, confPill(f))),
+        Charts.sparkline(cf.vo2.pts.map((p) => p.v), { color: 'var(--strain)', w: 64, h: 28, end: true }),
+        h('span', { class: 'v' }, cf.vo2.cur.toFixed(1))));
+    }
+    if (rp) {
+      const ch = paceChange(rp);
+      rows.push(h('button', { class: 'lift-row tap', onclick: () => App.open('cardio', { date }), 'aria-label': `Running pace at ${rp.ref} bpm: ${fmtPace(rp.cur)} ${rp.unit}, ${CONF[rp.fit.label]}. Open` },
+        h('span', { style: { minWidth: 0 } }, h('b', null, `Pace at ${rp.ref} bpm`), h('span', { class: 's' }, ch ? h('span', { style: { color: changeInk(rp.fit) } }, ch) : null, confPill(rp.fit))),
+        Charts.sparkline(rp.runs.map((r) => -r.paceAtRef), { color: 'var(--strain)', w: 64, h: 28, end: true }),
+        h('span', { class: 'v' }, fmtPace(rp.cur), h('small', null, rp.unit))));
+    }
+    if (cf.mix.total > 0) rows.push(h('button', { class: 'tap', style: { display: 'block', width: '100%', border: 0, background: 'none', color: 'inherit', textAlign: 'left', padding: '12px 0 4px' }, onclick: () => App.open('cardio', { date }), 'aria-label': 'Intensity over the last 4 weeks. Open' },
+      h('span', { class: 'row', style: { justifyContent: 'space-between', marginBottom: '8px' } }, h('b', { style: { fontSize: '15px', fontWeight: 750 } }, 'Intensity'), h('span', { class: 'xs muted', style: { fontWeight: 700 } }, 'last 4 weeks')), mixBlock(cf.mix)));
+    return cardT('Cardio fitness', h('button', { class: 'link', onclick: () => App.open('cardio', { date }) }, 'More', icon('chevR')),
+      rows.length ? h('div', { class: 'list', style: { marginTop: '-6px' } }, rows)
+        : h('p', { class: 'small ink2' }, 'Cardio from your watch shows up here: VO₂ max, running pace at the same heart rate, and how your minutes split between easy and hard.'));
+  }
+
+  // ---------- today: one decision, one button ----------
+  const listAnd = (a) => (a.length <= 1 ? a[0] || '' : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
+  T.listAnd = listAnd;
+  const LIGHT_RE = /walk|yoga|stretch|mobility|pilates/i;
+  const zone2 = (C, date) => { const mx = C.hrParams(date).max; return `${Math.round(mx * 0.6)}–${Math.round(mx * 0.7)} bpm`; };
+  function cardioAdvice(C, date, r, p) {
+    const what = `${p.name || ''} ${p.type || ''}`;
+    if (LIGHT_RE.test(what)) return 'Easy movement like this helps recovery on any day.';
+    const z2 = zone2(C, date);
+    if (!r || r.calibrating) return `Zone 2 for you is ${z2}.`;
+    if (r.band === 'low') return `Recovery is low. Go shorter and easy, about ${Math.max(15, Math.round((planMin(C, p) * 0.6) / 5) * 5)} min in zone 2 (${z2}), or swap it for a walk.`;
+    if (r.band === 'mid') return `Recovery is moderate, so keep it conversational: mostly zone 2, ${z2}.`;
+    return /easy|recovery|zone 2|z2/i.test(what) ? `Recovery is high, but keep easy days easy: zone 2 is ${z2}.` : 'Recovery is high. A good day to push the pace.';
+  }
+  function liftAdvice(C, date, r, info) {
+    const mst = C.muscleState(date), parts = [];
+    if (info.tired.length) parts.push(`${listAnd(info.tired.slice(0, 2).map((g) => `${g} (${mst[g].fresh}%)`))} ${info.tired.length === 1 ? 'is' : 'are'} still recovering.`);
+    else if (info.groups.length) parts.push(`${listAnd(info.groups.slice(0, 3))} ${info.groups.length === 1 ? 'is' : 'are'} fresh.`);
+    if (r && !r.calibrating) parts.push(r.band === 'high' ? (info.tired.length ? 'Go lighter on the moves that load them.' : 'Recovery is high: aim for the top of your rep ranges.')
+      : r.band === 'mid' ? 'Recovery is moderate: stop each set a rep or two short of failure.' : 'Recovery is low: do one set fewer per exercise and keep last time’s weights.');
+    return parts.join(' ');
+  }
+  const advice = (text) => (text ? h('p', { class: 'advice' }, icon('info'), h('span', null, text)) : null);
+  function exLines(C, rt, max = 4) {
+    const lines = [];
+    let shown = 0;
+    for (let i = 0; i < rt.exercises.length && lines.length < max; i++) {
+      const ex = rt.exercises[i];
+      if (ex.group && rt.exercises[i + 1]?.group === ex.group) {
+        const nx = rt.exercises[i + 1];
+        lines.push(h('div', null, h('span', null, `${ex.name} + ${nx.name}`), h('span', null, `superset ${ex.sets} × ${ex.reps}`)));
+        i++; shown += 2;
+      } else { lines.push(h('div', null, h('span', null, ex.name), h('span', null, routineLine(C, ex)))); shown++; }
+    }
+    return h('div', { class: 'ex-lines' }, lines, rt.exercises.length > shown ? h('div', { class: 'muted' }, h('span', null, `+ ${rt.exercises.length - shown} more`)) : null);
+  }
+  function muscleRow(C, date) {
+    const mst = C.muscleState(date);
+    if (!E.MUSCLES.some((g) => mst[g].last)) return null;
+    const tired = E.MUSCLES.filter((g) => mst[g].last && mst[g].status !== 'recovered').sort((a, b) => mst[a].fresh - mst[b].fresh);
+    return h('button', { class: 'tomorrow tap', onclick: () => App.open('muscles', { date }) },
+      Charts.bodyMap((g) => Train.freshFill(mst[g]), { compact: true, height: 70 }),
+      h('span', { class: 'grow' }, h('b', null, 'Muscles'), h('span', null, tired.length ? `${listAnd(tired.slice(0, 3).map((g) => `${g} ${mst[g].fresh}%`))} still recovering. The other ${E.MUSCLES.length - tired.length} groups are fresh.` : `All ${E.MUSCLES.length} muscle groups are fresh.`)),
+      icon('chevR'));
+  }
+  function sessionRow(C, d, s, { day = false } = {}) {
+    const prs = s.source === 'app' && s.exercises ? C.prsOf(s.id).length : 0;
+    return prow({ ic: isStrength(s) ? 'train' : 'run', tone: isStrength(s) ? 'good' : 'strain', t: s.name || s.type, s: [day ? U.fmtDay(d) : s.start ? U.fmtClock(s.start) : null, sessionSub(s)].filter(Boolean).join(' · '),
+      right: h('span', { style: { display: 'grid', justifyItems: 'end' } }, h('span', { class: 'val', style: { color: isStrength(s) ? 'var(--hrv-ink)' : 'var(--strain-ink)' } }, s.strain?.toFixed(1) ?? '–'),
+        prs ? h('span', { class: 'xs', style: { fontWeight: 800, color: 'var(--warn-ink)' } }, plural(prs, 'PR')) : null),
+      onclick: () => App.open('session', { s, date: d }), chevron: false });
+  }
+  T.sessionRow = sessionRow;
+  /** Readiness, the session to do today (planned, else the best fit), advice tuned to recovery and muscles, and one button. */
+  function todayCard(C, date) {
+    const isToday = date === C.todayStr;
+    const r = C.recovery(date), st = C.strain(date), tgt = C.strainTarget(date), v = st?.value ?? 0;
+    const recOk = r && !r.calibrating;
+    const pills = recOk || st ? h('div', { class: 'pills' }, recOk ? pill(`Recovery ${r.score}%`, RECOVERY_BAND[r.band].pill) : null, pill(`Strain ${v.toFixed(1)} · target ${tgt[0]}–${tgt[1]}`, 'strain')) : null;
+    const card0 = (...kids) => h('section', { class: 'card today-card', 'aria-label': 'Today’s training' }, pills, kids);
+    const eyebrow = (text, color) => h('span', { class: 'eyebrow', style: { color } }, text);
+    const other = (text = 'Choose something else') => h('button', { class: 'btn quiet block', onclick: () => Sheet.chooseWorkout(date) }, text);
+    if (App.draft) {
+      const d = App.draft;
+      return card0(eyebrow('In progress', 'var(--good-ink)'), h('h3', null, d.name),
+        h('p', { class: 'meta' }, h('span', { 'data-tick': 'elapsed' }, fmtMMSS(App.elapsed())), ` · ${plural(d.exercises.length, 'exercise')}`),
+        h('button', { class: 'btn go block lg', onclick: () => App.open('workout') }, icon('play'), 'Resume workout'));
+    }
+    if (!isToday) {
+      const ss = C.sessions(date);
+      return card0(eyebrow(U.fmtDayLong(date)), h('h3', null, ss.length ? plural(ss.length, 'session') : 'Rest day'),
+        ss.length ? h('div', { class: 'list', style: { marginTop: '6px' } }, ss.map((s) => sessionRow(C, date, s))) : h('p', { class: 'meta' }, 'Nothing was logged or recorded.'));
+    }
+    const open = C.planOn(date).filter((p) => p.status === 'today' && (p.kind !== 'routine' || p.routine));
+    // done for today: over the target, or inside it with nothing left on the plan
+    if (st && (v > tgt[1] || (v >= tgt[0] && !open.length))) {
+      const next = C.planNext(addDays(date, 1), 1)[0];
+      const rows = C.sessions(date).map((s) => sessionRow(C, date, s));
+      if (next) rows.push(prow({ ic: 'calendar', t: `${next.on === addDays(date, 1) ? 'Tomorrow' : U.fmtDay(next.on)}: ${next.name}${next.time ? ` at ${next.time}` : ''}`, s: `Planned · about ${planMin(C, next)} min`, onclick: () => Sheet.planItem(next, next.on) }));
+      return card0(eyebrow('Done for today', 'var(--good-ink)'), h('h3', null, v > tgt[1] ? 'Easy walking or mobility only.' : 'Target reached. Anything more is a bonus.'),
+        h('p', { class: 'meta' }, `${v.toFixed(1)} strain against a ${tgt[0]}–${tgt[1]} target.${v > tgt[1] ? ' More today would cost tomorrow’s recovery.' : ''}`),
+        rows.length ? h('div', { class: 'list', style: { marginTop: '6px' } }, rows) : null, other('Log or start something else'));
+    }
+    const p = open[0] || null;
+    if (p && p.kind !== 'routine') {
+      return card0(h('div', { class: 'row top' }, h('div', { class: 'grow' }, eyebrow(`Planned · ${p.time || 'today'}`, 'var(--strain-ink)'), h('h3', null, p.name),
+          h('p', { class: 'meta' }, `${p.type || 'Cardio'} · about ${planMin(C, p)} min${p.repeats ? ' · ' + repeatLower(p.days) : ''}`)),
+          h('button', { class: 'icon-btn sm', style: { marginTop: '12px' }, 'aria-label': `${p.name} options`, onclick: () => Sheet.planItem(p, date) }, icon('dots'))),
+        advice(cardioAdvice(C, date, r, p)),
+        h('button', { class: 'btn primary block lg', onclick: () => startPlan(C, p) }, icon('pulse'), `Log ${p.name.toLowerCase()}`),
+        h('p', { class: 'note', style: { marginTop: '8px', textAlign: 'center' } }, 'Recorded on your watch? It ticks itself off.'),
+        other(), muscleRow(C, date));
+    }
+    const sg = p ? { r: p.routine, info: C.routineInfo(p.routine, date), planned: p } : recOk && r.band === 'low' ? null : C.suggestRoutine(date);
+    if (!sg) {
+      return card0(eyebrow('Suggested', 'var(--strain-ink)'), h('h3', null, 'An easy day: a walk or mobility'),
+        h('p', { class: 'meta' }, `Recovery is ${r.score}%. Light movement helps more than a hard session today.`),
+        h('button', { class: 'btn primary block lg', onclick: () => Sheet.cardio(date, { type: 'Walking', min: 30 }) }, icon('pulse'), 'Log a walk'),
+        other('Train anyway'), muscleRow(C, date));
+    }
+    const rt = sg.r, info = sg.info;
+    // a planned routine whose muscles aren't ready: offer the best-suited one instead
+    let swap = null;
+    if (sg.planned && info.status === 'not') { const alt = C.suggestRoutine(date); if (alt && alt.r.id !== rt.id && alt.info.status === 'ready') swap = alt; }
+    const tip = [liftAdvice(C, date, r, info), !st && !recOk ? 'Import your watch data and this adapts to your recovery each day.' : null].filter(Boolean).join(' ');
+    return card0(
+      h('div', { class: 'row top' }, h('div', { class: 'grow' }, eyebrow(sg.planned ? `Planned · ${sg.planned.time || 'today'}` : 'Suggested', 'var(--good-ink)'), h('h3', null, rt.name),
+        h('p', { class: 'meta' }, `${plural(rt.exercises.length, 'exercise')} · about ${info.min} min${info.last ? ` · last ${U.fmtShort(info.last.date)}` : ''}`)),
+        h('button', { class: 'icon-btn sm', style: { marginTop: '12px' }, 'aria-label': `${rt.name} options`, onclick: () => (sg.planned ? Sheet.planItem(sg.planned, date) : Sheet.routine(rt)) }, icon('dots'))),
+      advice(tip),
+      swap ? h('div', { class: 'swap-hint' }, h('div', { class: 'grow' }, h('b', null, `${swap.r.name} suits today better`), h('span', null, `${listAnd(swap.info.groups.slice(0, 3))} ${swap.info.groups.length === 1 ? 'is' : 'are'} fresh.`)),
+        h('button', { class: 'btn sm', onclick: () => startRoutine(C, swap.r) }, 'Start')) : null,
+      exLines(C, rt),
+      h('button', { class: 'btn primary block lg', onclick: () => startRoutine(C, rt) }, icon('play'), `Start ${rt.name}`),
+      other(), muscleRow(C, date));
+  }
 
   // ---------- schedule: a week of done and planned sessions, tap a day for details ----------
   let calWeek = 0, calSel = null;
@@ -5364,10 +5827,15 @@ const Tabs = (() => {
       const detail = h('div', { class: 'cal-day' }, h('div', { class: 'hd' }, h('b', null, dSel === C.todayStr ? `Today, ${U.fmtShort(dSel)}` : U.fmtDayLong(dSel)), add), rows.length ? h('div', { class: 'list' }, rows) : empty);
       const lg = h('div', { class: 'legend', style: { marginTop: '10px' } }, h('span', null, h('i', { style: { background: 'var(--hrv)' } }), 'Strength'), h('span', null, h('i', { style: { background: 'var(--strain)' } }), 'Cardio'),
         h('span', null, h('i', { style: { background: 'transparent', border: '1.5px dashed var(--muted)' } }), 'Planned'));
-      const weekly = C.plan.filter((p) => !p.date && p.days?.length).length;
-      put(el, h('div', { class: 'card-title' }, h('h2', null, 'Schedule'), nav), h('div', { class: 'cal', role: 'group', 'aria-label': 'Days of the week' }, cells), lg, detail,
-        h('div', { class: 'divider', style: { marginBottom: 0 } }),
-        prow({ ic: 'calendar', t: 'Weekly plan', s: weekly ? `${plural(weekly, 'session')} a week · add to your calendar` : 'Plan the sessions you repeat every week', onclick: () => App.open('plan') }));
+      // the week at a glance: sessions against the goal, hard sets, cardio time
+      const wk = C.week(mon), goal = C.weekGoal(C.todayStr).goal, fut = mon > C.todayStr, cur = calWeek === 0;
+      const met = !fut && wk.sessions >= goal;
+      const stats = h('div', { class: 'wk-stats' },
+        tile2('Sessions', fut ? String(wk.planned) : String(wk.sessions), fut ? 'planned' : `/ ${goal}`,
+          fut ? null : h('span', { class: met ? 'ok' : null }, met ? 'goal met' : cur ? `${goal - wk.sessions} to go` : wk.planned ? `${wk.plannedDone} of ${wk.planned} planned` : 'below goal')),
+        tile2('Hard sets', fut ? '–' : String(wk.hardSets), null, fut ? null : plural(wk.lifts, 'lift')),
+        tile2('Cardio', fut ? '–' : fmtDur(wk.cardioMin), null, fut ? null : wk.runKm ? `${fmt1(units() === 'imperial' ? wk.runKm / 1.609344 : wk.runKm)} ${units() === 'imperial' ? 'mi' : 'km'} run` : plural(wk.cardio, 'session')));
+      put(el, h('div', { class: 'card-title' }, h('h2', null, 'Schedule'), nav), stats, h('div', { class: 'cal', role: 'group', 'aria-label': 'Days of the week' }, cells), lg, detail);
     };
     draw();
     return el;
@@ -5376,122 +5844,24 @@ const Tabs = (() => {
 
   T.train = (C, date) => {
     setTint('#3b8deb', '#1aa394');
-    const r = C.recovery(date), st = C.strain(date), tgt = C.strainTarget(date);
-    const isToday = date === C.todayStr;
-    const wdIdx = (U.parseYmd(date).getDay() + 6) % 7, mon = addDays(date, -wdIdx);
-    let wkN = 0, wkStrain = 0;
-    for (let i = 0; i < 7; i++) { const d = addDays(mon, i); if (d > C.todayStr) break; wkN += C.sessions(d).length; wkStrain += C.strain(d)?.value || 0; }
-    const out = [tabHead('Train', `This week: ${plural(wkN, 'session')} · ${fmt1(wkStrain)} strain`, askBtn('What should I train today?'), settingsBtn())];
-    // readiness
-    const v = st?.value ?? 0;
-    const recOk = r && !r.calibrating;
-    let headline;
-    if (!recOk && !st) headline = 'Import your watch data to get daily training guidance.';
-    else if (isToday && v > tgt[1]) headline = 'Today is done. Easy walking or mobility only.';
-    else if (isToday && v >= tgt[0]) headline = 'You’ve reached today’s target. Anything more is a bonus.';
-    else if (recOk && r.band === 'high') headline = 'Good day to push. Your body handled recent load well.';
-    else if (recOk && r.band === 'mid') headline = 'Train, but keep it controlled.';
-    else if (recOk) headline = 'Keep it light today: a walk, mobility or an easy ride.';
-    else headline = `Aim for ${tgt[0]}–${tgt[1]} strain until recovery has a baseline.`;
-    const slot = nextSlot(C, date);
-    const tm = C.suggestRoutine(slot.d);
-    const mstT = C.muscleState(slot.d);
-    let mTitle = null, mSub = null;
-    if (slot.today) {
-      // the routine itself is suggested just below, so this row is about the muscles
-      const tired = E.MUSCLES.filter((g) => mstT[g].last && mstT[g].status !== 'recovered').sort((a, b) => mstT[a].fresh - mstT[b].fresh);
-      mTitle = 'Muscles today';
-      mSub = tired.length ? `${tired.slice(0, 3).map((g) => `${g} ${mstT[g].fresh}%`).join(', ')} still recovering. The other ${E.MUSCLES.length - tired.length} groups are fresh.` : `All ${E.MUSCLES.length} muscle groups are fresh.`;
-    } else if (tm) {
-      mTitle = `${slot.label} suits ${tm.r.name}`;
-      mSub = tm.info.tired.length ? `${tm.info.groups.filter((g) => !tm.info.tired.includes(g)).slice(0, 2).map((g) => `${g} ${mstT[g].fresh}%`).join(' and ')} fresh. ${tm.info.tired.slice(0, 3).join(', ')} still recovering.` : `${tm.info.groups.slice(0, 3).map((g) => `${g} ${mstT[g].fresh}%`).join(', ')} fresh.`;
-    }
-    out.push(h('section', { class: 'card ready-card', 'aria-label': 'Readiness' },
-      h('div', { class: 'pills' }, recOk ? pill(`Recovery ${r.score}%`, RECOVERY_BAND[r.band].pill) : null, pill(`Strain ${v.toFixed(1)} / ${tgt[0]}–${tgt[1]}`, 'strain')),
-      h('h3', null, headline),
-      mTitle ? h('button', { class: 'tomorrow tap', onclick: () => App.open('muscles', { date }) },
-        Charts.bodyMap((g) => Train.freshFill(mstT[g]), { compact: true, height: 70 }),
-        h('span', { class: 'grow' }, h('b', null, mTitle), h('span', null, mSub)),
-        icon('chevR')) : null));
-    // start a workout
-    out.push(sectionT('Start a workout'));
-    if (App.draft) {
-      const d = App.draft;
-      out.push(h('section', { class: 'card routine-card' }, h('span', { class: 'eyebrow' }, 'In progress'), h('h3', null, d.name),
-        h('p', { class: 'meta' }, h('span', { 'data-tick': 'elapsed' }, fmtMMSS(App.elapsed())), ` · ${plural(d.exercises.length, 'exercise')}`),
-        h('button', { class: 'btn go block lg', style: { marginTop: '14px' }, onclick: () => App.open('workout') }, icon('play'), 'Resume workout')));
-    } else {
-      const todays = isToday ? C.planOn(date).filter((p) => p.status === 'today') : [];
-      const plannedRoutine = todays.find((p) => p.kind === 'routine' && p.routine);
-      const plannedCardio = todays.find((p) => p.kind !== 'routine');
-      if (plannedCardio && !plannedRoutine) {
-        out.push(h('section', { class: 'card routine-card', 'aria-label': 'Planned for today' },
-          h('div', { class: 'row top' }, h('div', { class: 'grow' }, h('span', { class: 'eyebrow', style: { color: 'var(--strain-ink)' } }, `Planned for today${plannedCardio.time ? ' · ' + plannedCardio.time : ''}`), h('h3', null, plannedCardio.name),
-            h('p', { class: 'meta' }, `${plannedCardio.type || 'Cardio'} · about ${planMin(C, plannedCardio)} min${plannedCardio.repeats ? ' · ' + repeatLower(plannedCardio.days) : ''}`)),
-            h('button', { class: 'icon-btn sm', 'aria-label': `${plannedCardio.name} options`, onclick: () => Sheet.planItem(plannedCardio, date) }, icon('dots'))),
-          h('p', { class: 'small ink2', style: { margin: '12px 0 16px', lineHeight: 1.5 } }, 'Record it on your Apple Watch and it’s ticked off when your data comes in, or log it here when you’re done.'),
-          h('button', { class: 'btn primary block lg', onclick: () => startPlan(C, plannedCardio) }, icon('pulse'), `Log ${plannedCardio.name.toLowerCase()}`)));
-      }
-      const sg = plannedRoutine ? { r: plannedRoutine.routine, info: C.routineInfo(plannedRoutine.routine, date), planned: plannedRoutine } : plannedCardio ? null : C.suggestRoutine(date);
-      if (plannedCardio && !plannedRoutine) {
-        out.push(h('div', { class: 'routines', role: 'list', 'aria-label': 'Your routines' },
-          C.routines.map((x) => { const inf = C.routineInfo(x, date), s0 = STATUS_TXT(inf); return h('button', { class: 'rcard tap', role: 'listitem', onclick: () => Sheet.routine(x) },
-            h('span', { class: 't' }, x.name), h('span', { class: 's' }, `${plural(x.exercises.length, 'exercise')} · ${inf.min} min`),
-            h('span', { class: 'st' }, h('i', { class: 'status-dot', style: { background: s0[1] } }), s0[0])); }),
-          h('button', { class: 'rcard new tap', role: 'listitem', onclick: () => App.open('routine', {}) }, icon('plus'), 'New routine')));
-      }
-      if (sg) {
-        const rt = sg.r, info = sg.info;
-        const lines = [];
-        for (let i = 0; i < rt.exercises.length && lines.length < 4; i++) {
-          const ex = rt.exercises[i];
-          if (ex.group && rt.exercises[i + 1]?.group === ex.group) {
-            const nx = rt.exercises[i + 1];
-            lines.push(h('div', null, h('span', null, `${ex.name} + ${nx.name}`), h('span', null, `superset ${ex.sets} × ${ex.reps}`)));
-            i++;
-          } else lines.push(h('div', null, h('span', null, ex.name), h('span', null, routineLine(C, ex))));
-        }
-        const shown = lines.length + rt.exercises.filter((ex, i) => ex.group && rt.exercises[i - 1]?.group === ex.group).length;
-        out.push(h('section', { class: 'card routine-card', 'aria-label': 'Suggested workout' },
-          h('div', { class: 'row top' }, h('div', { class: 'grow' }, h('span', { class: 'eyebrow' }, sg.planned ? `Planned for today${sg.planned.time ? ' · ' + sg.planned.time : ''}` : 'Suggested'), h('h3', null, rt.name),
-            h('p', { class: 'meta' }, `${plural(rt.exercises.length, 'exercise')} · about ${info.min} min${info.last ? ` · last ${U.fmtShort(info.last.date)}` : ''}`)),
-            h('button', { class: 'icon-btn sm', 'aria-label': `${rt.name} options`, onclick: () => Sheet.routine(rt) }, icon('dots'))),
-          h('div', { class: 'ex-lines' }, lines, rt.exercises.length > shown ? h('div', { class: 'muted' }, h('span', null, `+ ${rt.exercises.length - shown} more`)) : null),
-          h('button', { class: 'btn primary block lg', onclick: () => startRoutine(C, rt) }, icon('play'), `Start ${rt.name}`)));
-        const others = C.routines.filter((x) => x.id !== rt.id);
-        out.push(h('div', { class: 'routines', role: 'list', 'aria-label': 'Your routines' },
-          others.map((x) => { const inf = C.routineInfo(x, date), s0 = STATUS_TXT(inf); return h('button', { class: 'rcard tap', role: 'listitem', onclick: () => Sheet.routine(x) },
-            h('span', { class: 't' }, x.name), h('span', { class: 's' }, `${plural(x.exercises.length, 'exercise')} · ${inf.min} min`),
-            h('span', { class: 'st' }, h('i', { class: 'status-dot', style: { background: s0[1] } }), s0[0])); }),
-          h('button', { class: 'rcard new tap', role: 'listitem', onclick: () => App.open('routine', {}) }, icon('plus'), 'New routine')));
-      }
-      out.push(h('div', { class: 'btn-row' },
-        h('button', { class: 'btn', onclick: () => startEmpty(C) }, icon('plus'), 'Empty workout'),
-        h('button', { class: 'btn', onclick: () => Sheet.cardio(date) }, icon('pulse'), 'Log cardio')));
-    }
-    // schedule: this week's sessions, done and planned
-    out.push(scheduleCard(C, date));
-    // training load
+    const g = C.weekGoal(date), thisWeek = C.monOf(date) === C.monOf(C.todayStr);
+    const sub = thisWeek ? `${g.left ? `${plural(g.left, 'session')} to go this week` : 'Weekly goal met'}${g.streak >= 2 ? ` · ${g.streak}-week streak` : ''}` : `Week of ${U.fmtShort(C.monOf(date))}: ${plural(g.done, 'session')}`;
+    const out = [tabHead('Train', sub, askBtn('What should I train today?'), settingsBtn()), todayCard(C, date), scheduleCard(C, date)];
+    // progress, measured against your own last weeks
+    out.push(sectionT('Progress'), strengthCard(C, date), cardioCard(C, date));
     const ld = C.load(date);
     out.push(sectionT('Training load', '7 days vs your 4-week normal'));
     out.push(h('div', { class: 'gauges' }, loadGauge('Cardio', 'cardio', ld?.cardio, 'var(--strain)', date), loadGauge('Muscular', 'muscular', ld?.muscular, 'var(--hrv)', date)));
-    // recent
-    const recent = [];
-    for (let k = 0; k <= 21 && recent.length < 5; k++) { const d = addDays(date, -k); for (const s of C.sessions(d).slice().reverse()) if (recent.length < 5) recent.push([d, s]); }
-    if (recent.length) {
-      out.push(cardT('Recent', h('button', { class: 'link', onclick: () => App.open('history') }, 'All', icon('chevR')), h('div', { class: 'list' }, recent.map(([d, s]) => {
-        const prs = s.source === 'app' && s.exercises ? C.prsOf(s.id).length : 0;
-        return prow({ t: s.name || s.type, s: `${U.fmtDay(d)} · ${sessionSub(s)}`,
-          right: h('span', { style: { display: 'grid', justifyItems: 'end' } }, h('span', { class: 'val', style: { color: isStrength(s) ? 'var(--hrv-ink)' : 'var(--strain-ink)' } }, s.strain?.toFixed(1) ?? '–'),
-            prs ? h('span', { class: 'xs', style: { fontWeight: 800, color: 'var(--warn-ink)' } }, plural(prs, 'PR')) : null),
-          onclick: () => App.open('session', { s, date: d }), chevron: false });
-      }))));
-    }
-    const best = C.workoutsSorted.length ? C.records('Back squat') : null;
+    let last = null;
+    for (let k = 0; k <= 56 && !last; k++) { const d = addDays(date, -k), ss = C.sessions(d); if (ss.length) last = [d, ss[ss.length - 1]]; }
+    const best = C.strengthSummary(date).find((l) => l.metric === 'e1');
+    const weekly = C.plan.filter((p) => !p.date && p.days?.length && (!p.until || p.until >= C.todayStr));
     out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
-      prow({ ic: 'trophy', tone: 'stress', t: 'Exercises and records', s: best?.e1 ? `Squat ${fmtW(best.e1.v)} ${wU()} estimated 1-rep max` : 'Progress, history and personal records', onclick: () => App.open('exercises') }),
-      prow({ ic: 'train', tone: 'good', t: 'Muscle freshness', s: 'Which muscles are ready to train', onclick: () => App.open('muscles', { date }) }),
-      prow({ ic: 'history', t: 'Routines', s: `${plural(C.routines.length, 'routine')} · edit or add your own`, onclick: () => App.open('routines') }))));
+      prow({ ic: 'history', tone: 'strain', t: 'Workout history', s: last ? `Last: ${last[1].name || last[1].type}, ${last[0] === C.todayStr ? 'today' : U.fmtDay(last[0])}` : 'Every session you log or record', onclick: () => App.open('history') }),
+      prow({ ic: 'calendar', t: 'Weekly plan', s: weekly.length ? `${plural(weekly.reduce((a, p) => a + p.days.length, 0), 'session')} a week · goal ${g.goal}` : 'Plan the sessions you repeat each week', onclick: () => App.open('plan') }),
+      prow({ ic: 'trophy', tone: 'stress', t: 'Exercises and records', s: best ? `${best.name} ${fmtW(best.cur)} ${wU()} estimated 1-rep max` : 'Progress, history and personal records', onclick: () => App.open('exercises') }),
+      prow({ ic: 'train', tone: 'good', t: 'Muscles', s: 'Freshness and weekly volume', onclick: () => App.open('muscles', { date }) }),
+      prow({ ic: 'edit', t: 'Routines', s: `${plural(C.routines.length, 'routine')} · edit or add your own`, onclick: () => App.open('routines') }))));
     return h('div', { class: 'view' }, out);
   };
 
@@ -6469,6 +6839,13 @@ const Pages = {};
     const mfs = C.muscleState(d);
     if (E.MUSCLES.some((g) => mfs[g].last)) L.push('Muscle freshness now (100% = recovered): ' + E.MUSCLES.map((g) => `${g} ${mfs[g].fresh}%`).join(', ') + '.');
     L.push('Routines: ' + C.routines.map((r) => { const i = C.routineInfo(r, d); return `${r.name} (${r.exercises.map((e) => e.name).join(', ')}; ${i.status}${i.last ? `, last ${i.last.date}` : ''})`; }).join('; ') + '.');
+    // training progress, with how sure each trend is (clear, likely, unclear or steady); say so when you talk about progress
+    const wg = C.weekGoal(C.todayStr), lifts = C.strengthSummary(C.todayStr).slice(0, 8), cf = C.cardioFitness(C.todayStr), mv = C.muscleVolume(C.todayStr);
+    L.push(`Weekly goal: ${wg.goal} sessions, ${wg.done} done this week, ${wg.streak}-week streak.`);
+    if (lifts.length) L.push('Strength over 8 weeks (latest, fitted change with 80% range, how sure): ' + lifts.map((l) => `${l.name} ${l.metric === 'e1' ? U.round(l.cur, 1) + ' kg est. 1RM' : Math.round(l.cur) + (l.timed ? ' s' : ' reps')}, ${l.fit.change != null ? `${U.round(l.fit.change, 1)} (${U.round(l.fit.lo, 1)} to ${U.round(l.fit.hi, 1)})` : 'no trend yet'}, ${l.fit.label}`).join('; ') + '.');
+    if (mv.any) L.push('Hard sets per muscle, last 7 days (4-week weekly average; guide): ' + mv.rows.map((r) => `${r.g} ${r.sets} (${U.round(r.avg4, 1)}; ${r.lo}-${r.hi})`).join(', ') + '.');
+    if (cf.vo2) L.push(`VO2 max ${cf.vo2.cur}, ${cf.vo2.fit.change != null ? `${U.round(cf.vo2.fit.change, 1)} over 6 months (${cf.vo2.fit.label})` : 'no trend yet'}; typical for age and sex ${cf.vo2.norm != null ? U.round(cf.vo2.norm, 1) : 'unknown'}.`);
+    if (cf.mix.total) L.push(`Cardio intensity, last 4 weeks: easy (zones 1-2) ${Math.round(cf.mix.easy)} min, moderate (zone 3) ${Math.round(cf.mix.moderate)} min, hard (zones 4-5) ${Math.round(cf.mix.hard)} min. Max heart rate ${Math.round(C.hrParams(C.todayStr).max)} bpm.`);
     const items = C.food[d]?.items || [];
     if (items.length) L.push('Food logged on the selected day: ' + MEALS.map(([m, n]) => { const mi = items.filter((x) => x.meal === m); return mi.length ? `${n}: ` + mi.map((x) => `${x.name} (${x.qty ?? ''} ${x.unit ?? ''}, ${Math.round(x.kcal)} kcal, P${Math.round(x.p)} C${Math.round(x.c)} F${Math.round(x.f)})`).join(', ') : null; }).filter(Boolean).join('. '));
     const en = C.energy(d);
@@ -6950,13 +7327,22 @@ const Train = (() => {
     return Math.abs(u - l) > 8 ? `Everything is recovered. ${u > l ? 'Upper body' : 'Lower body'} has rested a little longer.` : 'Every muscle group is recovered and ready to train.';
   };
 
-  /** A fresh exercise for the logger, pre-filled from last time and the progression rule. */
+  /** Loads on the bar keep two decimals (1.25 kg plates), so the input, "previous" and the hints always agree. */
+  const fmtL = (kg) => fmtW(kg, 2);
+  T.fmtL = fmtL;
+  /** A fresh exercise for the logger, pre-filled from last time and the progression rule; a heavy first barbell lift gets a warm-up ramp. */
   T.draftExercise = (C, name, o = {}) => {
     const cfg = C.exSettings(name), pr = C.progression(name), ls = C.lastSets(name);
     const n = o.sets || (ls ? ls.sets.filter((x) => x.t !== 'W').length : 3) || 3;
     const top = pr ? pr.w : ls ? Math.max(0, ...ls.sets.map((x) => +x.w || 0)) : null;
     const sets = [];
-    if (o.warmup && cfg.barbell && top > 30) sets.push({ t: 'W', w: Math.round((top * 0.6) / 2.5) * 2.5, r: '', ph: 10, rpe: '', done: false });
+    if (o.warmup && cfg.barbell && top > 30) {
+      // round to a pair of the smallest plates you'd load: 2.5 kg, or 5 lb
+      const inc = units() === 'imperial' ? 5 * U.KG_PER_LB : 2.5;
+      const at = (f) => Math.max(cfg.bar, Math.round((top * f) / inc) * inc);
+      const ramp = top >= 60 ? [[0.5, 8], [0.75, 3]] : [[0.6, 8]];
+      for (const [f, r] of ramp) sets.push({ t: 'W', w: at(f), r: '', ph: r, rpe: '', done: false });
+    }
     for (let k = 0; k < n; k++) {
       const ph = pr?.reps?.length ? pr.reps[Math.min(k, pr.reps.length - 1)] : typeof o.reps === 'number' ? o.reps : '';
       sets.push({ t: 'N', w: top != null && top > 0 ? top : cfg.bodyweight ? 0 : '', r: '', ph, rpe: '', done: false });
@@ -6964,24 +7350,36 @@ const Train = (() => {
     return { id: U.uid(), name, rest: o.rest ?? cfg.rest, group: o.group || null, sets };
   };
   const wDisp = (kg) => (kg === '' || kg == null ? '' : String(U.round(U.kgTo(+kg, units()), 2)));
-  const setStr = (x) => `${+x.w > 0 ? fmtW(+x.w) : 'BW'} × ${x.r}`;
+  const setStr = (x) => `${+x.w > 0 ? fmtL(+x.w) : 'BW'} × ${x.r}`;
   T.setStr = setStr;
   function progressionText(pr) {
     if (!pr) return null;
     const last = pr.last.sets.filter((x) => x.t !== 'W');
-    const lastTxt = `${+last[0].w > 0 ? fmtW(pr.top) + ' ' + wU() + ' × ' : ''}${pr.lastReps.join(', ')}${pr.rpe ? ` at RPE ${pr.rpe}` : ''}`;
+    const lastTxt = `${+last[0].w > 0 ? fmtL(pr.top) + ' ' + wU() + ' × ' : ''}${pr.lastReps.join(', ')}${pr.rpe ? ` at RPE ${pr.rpe}` : ''}`;
     switch (pr.kind) {
-      case 'weight': return `Last time ${lastTxt}: every set reached ${pr.hi}. Go up to ${fmtW(pr.w)} ${wU()} and start again at ${pr.lo}.`;
-      case 'easy': return `Last time ${lastTxt}. That was comfortable, so go up to ${fmtW(pr.w)} ${wU()} today.`;
+      case 'weight': return `Last time ${lastTxt}: every set reached ${pr.hi}. Go up to ${fmtL(pr.w)} ${wU()} and start again at ${pr.lo}.`;
+      case 'easy': return `Last time ${lastTxt}. That was comfortable, so go up to ${fmtL(pr.w)} ${wU()} today.`;
       case 'bw': return `Last time ${pr.lastReps.join(', ')} reps. Aim for one more rep on each set.`;
       case 'time': return `Last time ${pr.lastReps.join(', ')} seconds. Add five seconds a set.`;
-      default: return `Last time ${lastTxt}. Add a rep per set until you reach ${pr.hi}, then go up ${fmtW(pr.step)} ${wU()}.`;
+      default: return `Last time ${lastTxt}. Add a rep per set until you reach ${pr.hi}, then go up ${fmtL(pr.step)} ${wU()}.`;
     }
   }
   T.progressionText = progressionText;
-  function plates(kg) {
+  /** Today's target in one line; progressionText says why. */
+  function progressionShort(pr) {
+    if (!pr) return null;
+    const u = wU();
+    switch (pr.kind) {
+      case 'weight': return `Today ${fmtL(pr.w)} ${u} × ${pr.lo}: up a step`;
+      case 'easy': return `Today ${fmtL(pr.w)} ${u} × ${pr.reps.join(', ')}: up a step`;
+      case 'bw': return `Today ${pr.reps.join(', ')} reps: one more each set`;
+      case 'time': return `Today ${pr.reps.join(', ')} s: five more each hold`;
+      default: return `Today ${fmtL(pr.w)} ${u} × ${pr.reps.join(', ')}: a rep more a set`;
+    }
+  }
+  function plates(kg, barKg) {
     const imp = units() === 'imperial';
-    const total = imp ? U.kgTo(kg, 'imperial') : kg, bar = imp ? 45 : 20;
+    const total = imp ? U.kgTo(kg, 'imperial') : kg, bar = U.round(U.kgTo(barKg ?? (imp ? 45 * U.KG_PER_LB : 20), units()), 1);
     const sizes = imp ? [45, 35, 25, 10, 5, 2.5] : [25, 20, 15, 10, 5, 2.5, 1.25];
     const colors = imp ? ['#e5534b', '#c99a1e', '#3b8deb', '#2ea866', '#b9bfca', '#8b919d'] : ['#e5534b', '#3b8deb', '#c99a1e', '#2ea866', '#e8e9ec', '#e5534b', '#b9bfca'];
     let side = (total - bar) / 2;
@@ -6992,7 +7390,7 @@ const Train = (() => {
     let x = 70;
     for (const i of out) { const hh = 44 - i * 5; svg.append(s('rect', { x, y: 25 - hh / 2, width: 7, height: hh, rx: 2.5, fill: colors[i] })); x += 8; }
     svg.append(s('rect', { x: 62, y: 16, width: 6, height: 18, rx: 2, fill: 'var(--ink-2)' }));
-    return h('div', { class: 'plates' }, svg, h('div', null, h('b', null, `${fmtW(kg)} ${wU()}`), h('div', { class: 'ink2' }, out.length ? `${bar} ${wU()} bar + each side ${out.map((i) => sizes[i]).join(' · ')}` : side < 0 ? 'Lighter than the bar' : 'Just the bar')));
+    return h('div', { class: 'plates' }, svg, h('div', null, h('b', null, `${fmtL(kg)} ${wU()}`), h('div', { class: 'ink2' }, out.length ? `${bar} ${wU()} bar + each side ${out.map((i) => sizes[i]).join(' · ')}` : side < 0 ? 'Lighter than the bar' : 'Just the bar')));
   }
 
   // =============== LOGGER ===============
@@ -7006,6 +7404,8 @@ const Train = (() => {
       if (!d) return view(pageHead('Workout'), card(emptyState('train', 'No workout in progress', 'Start one from a routine on the Train tab, or begin an empty workout.',
         h('button', { class: 'btn primary', onclick: () => Tabs.startEmpty(App.ctx()) }, 'Empty workout'), h('button', { class: 'btn', onclick: () => App.go('train') }, 'Routines'))));
       const save = () => App.saveDraft();
+      // the per-set effort column shows when you've used it lately, or when you turn it on
+      let showRpe = App.ui.rpeCol ?? C.workoutsSorted.slice(0, 3).some((w) => w.exercises.some((e) => (e.sets || []).some((x) => +x.rpe > 0)));
       const statsEl = h('span', { class: 'num' });
       const bar = h('div');
       const list = h('div', { class: 'col', style: { gap: '12px' } });
@@ -7028,7 +7428,7 @@ const Train = (() => {
             const x = ex.sets[j];
             if (x.done) continue;
             const num = ex.sets.slice(0, j + 1).filter((y) => y.t !== 'W').length;
-            return `${ex.name} · ${x.t === 'W' ? 'warm-up' : 'set ' + num} · ${x.w !== '' ? fmtW(+x.w) + ' ' + wU() : ''}${x.r || x.ph ? ` × ${x.r || x.ph}` : ''}`;
+            return `${ex.name} · ${x.t === 'W' ? 'warm-up' : 'set ' + num} · ${x.w !== '' ? fmtL(+x.w) + ' ' + wU() : ''}${x.r || x.ph ? ` × ${x.r || x.ph}` : ''}`;
           }
         }
         return 'Last set done. Tap Finish when you’re ready.';
@@ -7050,24 +7450,24 @@ const Train = (() => {
         const head = h('div', { class: 'ex-head' },
           gi ? h('span', { class: 'tag' }, gi.letter + (gi.k + 1)) : null,
           h('button', { class: 'nm', onclick: () => App.open('exercise', { name: ex.name }) }, ex.name),
-          h('button', { class: 'mini-btn', 'aria-label': `Rest timer ${restLbl}. Tap to change`, onclick: () => {
-            const opts = [0, 60, 90, 120, 150, 180, 240];
-            ex.rest = opts[(opts.indexOf(ex.rest) + 1) % opts.length] ?? 90; save(); redraw();
-          } }, icon('timer'), restLbl),
+          h('button', { class: 'mini-btn', 'aria-label': `Rest timer ${restLbl}. Change`, onclick: () => Sheet.restPicker(ex.name, ex.rest, (sec) => { ex.rest = sec; save(); redraw(); }) }, icon('timer'), restLbl),
           cfg.barbell ? h('button', { class: 'mini-btn', 'aria-pressed': String(!!ex.showPlates), onclick: () => { ex.showPlates = !ex.showPlates; save(); redraw(); } }, 'Plates') : null,
           h('button', { class: 'icon-btn plain sm', 'aria-label': `${ex.name} options`, onclick: () => Sheet.exMenu(ei, () => drawList()) }, icon('dots')));
         if (gi?.first) card0.append(h('div', { class: 'ss-label' }, icon('link'), `Superset ${gi.letter} · no rest between, ${gi.restAfter ? fmtMMSS(gi.restAfter) : 'no rest'} after the last`));
         card0.append(head);
-        const hint = progressionText(pr);
-        if (hint && !ex.sets.some((x) => x.done)) card0.append(h('div', { class: 'hint-box' }, icon('trend'), h('span', null, hint)));
-        if (ex.showPlates) { const w = +(ex.sets.find((x) => !x.done && x.t !== 'W')?.w || ex.sets[ex.sets.length - 1]?.w || 0); card0.append(plates(w)); }
-        const grid = h('div', { class: 'set-grid' }, h('div', { class: 'set-row head', 'aria-hidden': 'true' }, h('span', null, 'SET'), h('span', null, 'PREVIOUS'),
-          h('span', null, (cfg.bodyweight ? '+' : '') + wU().toUpperCase()), h('span', null, cfg.timed ? 'SEC' : 'REPS'), h('span', null, 'RPE'), h('span', null, 'DONE')));
-        let n = 0;
+        // today's target in one line; tap for why
+        if (pr && !ex.sets.some((x) => x.done)) card0.append(h('button', { class: 'hint-box', 'aria-expanded': String(!!ex.why), onclick: () => { ex.why = !ex.why; save(); redraw(); } },
+          icon('trend'), h('span', null, progressionShort(pr), ex.why ? h('span', { class: 'more' }, progressionText(pr)) : null)));
+        if (ex.showPlates) { const w = +(ex.sets.find((x) => !x.done && x.t !== 'W')?.w || ex.sets[ex.sets.length - 1]?.w || 0); card0.append(plates(w, cfg.bar)); }
+        const grid = h('div', { class: 'set-grid' + (showRpe ? '' : ' no-rpe') }, h('div', { class: 'set-row head', 'aria-hidden': 'true' }, h('span', null, 'SET'), h('span', null, 'PREVIOUS'),
+          h('span', null, (cfg.bodyweight ? '+' : '') + wU().toUpperCase()), h('span', null, cfg.timed ? 'SEC' : 'REPS'), showRpe ? h('span', null, 'RPE') : null, h('span', null, 'DONE')));
+        // warm-ups line up with last time's warm-ups, work sets with work sets
+        const prevW = (prev?.sets || []).filter((y) => y.t === 'W'), prevN = (prev?.sets || []).filter((y) => y.t !== 'W');
+        let n = 0, nw = 0;
         ex.sets.forEach((x, si) => {
-          if (x.t !== 'W') n++;
+          if (x.t !== 'W') n++; else nw++;
           const label = x.t === 'N' ? String(n) : x.t;
-          const pv = prev?.sets?.[si];
+          const pv = x.t === 'W' ? prevW[nw - 1] : prevN[n - 1];
           const row = h('div', { class: 'set-row' + (x.done ? ' done' : '') });
           const kg = h('input', { class: 'set-in', inputmode: 'decimal', 'aria-label': `${ex.name} set ${si + 1} weight in ${wU()}`, value: wDisp(x.w), placeholder: cfg.bodyweight ? '+0' : '–',
             onchange: (e) => { x.w = e.target.value === '' ? '' : U.toKg(U.num(e.target.value), units()); save(); stats(); } });
@@ -7086,6 +7486,8 @@ const Train = (() => {
               const rest = g2 && !g2.last ? 0 : g2 ? g2.restAfter : ex.rest;
               if (x.t !== 'W' && rest > 0) App.startRest(rest, nextUp(ei, si));
               else if (x.t === 'W') App.startRest(Math.min(60, ex.rest || 60), nextUp(ei, si));
+              // the exercise is finished: bring the next one into view
+              if (ex.sets.every((y) => y.done) && ei < d.exercises.length - 1 && !(g2 && !g2.last)) setTimeout(() => list.children[ei + 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 260);
             } else x.done = false;
             save(); redraw();
           } }, icon('check'));
@@ -7094,7 +7496,7 @@ const Train = (() => {
               const order = ['N', 'W', 'D', 'F']; x.t = order[(order.indexOf(x.t) + 1) % 4]; save(); redraw();
             } }, label),
             h('button', { class: 'set-prev', 'aria-label': pv ? `Copy previous ${setStr(pv)}` : 'No previous set', disabled: !pv, onclick: () => { if (!pv) return; x.w = +pv.w || 0; x.r = +pv.r; save(); redraw(); } }, pv ? setStr(pv) : '–'),
-            kg, reps, rpe, ok);
+            kg, reps, ...(showRpe ? [rpe] : []), ok);
           grid.append(row);
         });
         card0.append(grid, h('button', { class: 'add-set', onclick: () => {
@@ -7119,10 +7521,14 @@ const Train = (() => {
             h('button', { class: 'btn go sm', style: { height: '44px', paddingInline: '18px' }, onclick: () => App.open('summary') }, 'Finish')),
           h('div', { class: 'wk-progress' }, bar)),
         list,
-        h('p', { class: 'note', style: { marginInline: '4px' } }, 'Tap a set number to switch it between normal, warm-up (W), drop set (D) and failure (F). Tap a previous value to copy it. RPE is how hard the set felt, 10 being all-out.'),
+        h('button', { class: 'btn block', onclick: () => Sheet.exercisePicker((name) => { d.exercises.push(T.draftExercise(App.ctx(), name)); save(); drawList(); setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }), 60); }) }, icon('plus'), 'Add exercise'),
         h('div', { class: 'grid2' },
-          h('button', { class: 'btn', onclick: () => Sheet.exercisePicker((name) => { d.exercises.push(T.draftExercise(App.ctx(), name)); save(); drawList(); setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }), 60); }) }, icon('plus'), 'Add exercise'),
-          h('button', { class: 'btn', onclick: () => Sheet.notes(d.notes || '', (t) => { d.notes = t; save(); }) }, icon('notes'), 'Notes')),
+          h('button', { class: 'btn', onclick: () => Sheet.notes(d.notes || '', (t) => { d.notes = t; save(); }) }, icon('notes'), 'Notes'),
+          h('button', { class: 'btn', 'aria-pressed': String(showRpe), onclick: (e) => {
+            showRpe = !showRpe; App.ui.rpeCol = showRpe; App.saveUi(); drawList();
+            e.currentTarget.setAttribute('aria-pressed', String(showRpe)); e.currentTarget.replaceChildren(icon('pulse'), showRpe ? 'Hide RPE' : 'Rate sets (RPE)');
+          } }, icon('pulse'), showRpe ? 'Hide RPE' : 'Rate sets (RPE)')),
+        h('p', { class: 'note', style: { marginInline: '4px' } }, 'Tap a set number to switch it between normal, warm-up (W), drop set (D) and failure (F). Tap a previous value to copy it. RPE is how hard a set felt, 10 being all-out.'),
         h('button', { class: 'btn quiet', style: { color: 'var(--crit-ink)', justifySelf: 'center' }, onclick: () => confirmSheet({ title: 'Discard this workout?', text: 'The sets you entered will be lost.', confirm: 'Discard', danger: true,
           onConfirm: () => { App.draft = null; App.saveDraft(); App.stopRest(); App.go('train'); toast('Workout discarded'); } }) }, 'Discard workout'));
       return el;
@@ -7153,6 +7559,16 @@ const Train = (() => {
       for (const ex of done) { const info = E.exerciseInfo(ex.name), n = ex.sets.filter((x) => x.t !== 'W').length; for (const g of info.p) sets[g] = (sets[g] || 0) + n; for (const g of info.s) sets[g] = (sets[g] || 0) + n * 0.5; }
       const top = Object.entries(sets).sort((a, b) => b[1] - a[1]);
       const maxS = top.length ? top[0][1] : 1;
+      // each exercise's best work set against the best one last time: estimated 1-rep max, or reps when unweighted
+      const bestOf = (list) => { let b = null; for (const x of list || []) { if (x.t === 'W' || !(+x.r > 0) || x.done === false) continue; const e = +x.w > 0 ? E.e1rm(+x.w, +x.r) : null, key = e ?? +x.r; if (!b || key > b.key) b = { key, e, x }; } return b; };
+      const cmp = done.map((ex) => { const ls = C.lastSets(ex.name, d.id), t = bestOf(ex.sets), p = ls ? bestOf(ls.sets) : null; return t ? { name: ex.name, t, p, date: ls?.date } : null; }).filter(Boolean);
+      const cmpDelta = (c) => {
+        if (!c.p) return [h('span', { class: 'pill' }, 'First time'), null];
+        const dv = c.t.e != null && c.p.e != null ? U.kgTo(c.t.e - c.p.e, units()) : c.t.e == null && c.p.e == null ? +c.t.x.r - +c.p.x.r : null;
+        if (dv == null) return [h('span', { class: 'muted small' }, '–'), null];
+        const txt = c.t.e != null ? `${fmtSigned(dv, 1)} ${wU()}` : `${fmtSigned(dv, 0)} reps`;
+        return [h('span', { class: 'num', style: { fontWeight: 800, fontSize: '16px', color: Math.abs(dv) < 0.05 ? 'var(--muted)' : dv > 0 ? 'var(--good-ink)' : 'var(--crit-ink)' } }, txt), dv];
+      };
       const strainEl = h('div', { class: 'v', style: { color: 'var(--strain-ink)' } }), strainSub = h('div', { class: 'k' });
       const rpeLbl = h('span');
       const drawRpe = () => { const st = strainOf(rpe); strainEl.textContent = st.v.toFixed(1); strainSub.textContent = `muscular ${Math.round(st.musc)} · cardio ${Math.round(st.card0)}`; rpeLbl.textContent = ''; rpeLbl.append(h('b', { class: 'num', style: { fontSize: '26px' } }, rpe), ` · ${RPE_WORDS[rpe]}`); };
@@ -7177,6 +7593,9 @@ const Train = (() => {
             h('span', null, h('b', { style: { display: 'block', color: 'var(--ink)', fontSize: '15px' } }, p.name), h('span', { class: 'xs' }, p.kind === 'e1' ? `Best estimated 1-rep max: ${fmtW(p.v)} ${wU()}` : 'Most volume in one session')),
             h('span', { style: { textAlign: 'right', color: 'var(--warn-ink)' } }, h('b', { class: 'num', style: { display: 'block', fontSize: '17px' } }, p.kind === 'e1' ? setStr(p.set) : `${fmtInt(U.kgTo(p.v, units()))} ${wU()}`),
               h('span', { class: 'xs', style: { fontWeight: 800 } }, `${fmtSigned(U.kgTo(p.v - p.prev, units()), 1)} ${wU()}`)))))) : null,
+        cmp.length ? cardT('Compared with last time', 'best set', h('div', { class: 'list' }, cmp.map((c) => prow({ t: c.name,
+          s: `${setStr(c.t.x)}${c.p ? ` · last time ${setStr(c.p.x)}, ${U.fmtShort(c.date)}` : ''}`, right: cmpDelta(c)[0] }))),
+          h('p', { class: 'note', style: { marginTop: '6px' } }, 'Change in estimated 1-rep max from your best set. One session up or down is normal; the trend on each exercise’s page tells you more.')) : null,
         top.length ? h('section', { class: 'card' }, h('div', { class: 'row top', style: { gap: '16px' } },
           h('div', { style: { width: '92px', flex: 'none' } }, Charts.bodyMap((g) => ({ color: 'var(--hrv)', opacity: sets[g] ? 0.25 + 0.75 * (sets[g] / maxS) : 0.06, title: `${g}: ${sets[g] || 0} sets` }), { compact: true, height: 130 })),
           h('div', { class: 'grow' }, h('h2', { style: { fontSize: '17px', fontWeight: 800, marginBottom: '6px' } }, 'Muscles worked'),
@@ -7246,39 +7665,57 @@ const Train = (() => {
       const weighted = hist.some((x) => x.e1);
       if (tab === 'progress') {
         const metric = weighted ? App.ui.exMetric || 'e1' : 'reps';
-        const val = (x) => (metric === 'e1' ? x.e1 : metric === 'best' ? (x.heavy ? x.heavy.w : null) : metric === 'vol' ? x.vol : x.reps);
-        const pts = hist.slice(-16).map((x) => ({ label: U.fmtShort(x.date), full: U.fmtDay(x.date), v: val(x) != null ? (metric === 'reps' ? val(x) : U.kgTo(val(x), units())) : null }));
-        const cur = pts[pts.length - 1]?.v, first8 = hist.find((x) => x.date >= addDays(C.todayStr, -56));
-        const delta = first8 && val(first8) != null && cur != null ? cur - (metric === 'reps' ? val(first8) : U.kgTo(val(first8), units())) : null;
+        const repU = cfg.timed ? 's' : 'reps', unitTxt = metric === 'reps' ? ' ' + repU : ' ' + wU(), dp = metric === 'vol' || metric === 'reps' ? 0 : 1;
+        // unweighted moves follow the best set, so adding a set doesn't look like getting stronger
+        const val = (x) => (metric === 'e1' ? x.e1 : metric === 'best' ? (x.heavy ? x.heavy.w : null) : metric === 'vol' ? x.vol : x.best ? +x.best.r : null);
+        const disp = (v) => (v == null ? null : metric === 'reps' ? v : U.kgTo(v, units()));
+        const pts = hist.slice(-16).map((x) => ({ label: U.fmtShort(x.date), full: U.fmtDay(x.date), date: x.date, v: disp(val(x)) }));
+        const cur = [...pts].reverse().find((p) => p.v != null)?.v ?? null;
+        // the change over 8 weeks comes from a line through every session, with how sure it is
+        const from = addDays(C.todayStr, -56);
+        const fit = E.trendFit(hist.filter((x) => x.date > from).map((x) => ({ x: U.daysBetween(from, x.date), v: disp(val(x)) })), 56,
+          cur == null ? null : metric === 'reps' ? 0.5 : Math.max(metric === 'vol' ? 1 : 0.25, Math.abs(cur) * 0.01));
+        const fmtV = (v) => (metric === 'vol' ? fmtInt(v) : metric === 'reps' ? String(Math.round(v)) : fmt1(v));
         const pr = C.progression(name);
         out.push(h('section', { class: 'card' },
           weighted ? h('div', { class: 'chips wrap', style: { marginBottom: '12px' } }, [['e1', 'Est. 1-rep max'], ['best', 'Heaviest'], ['vol', 'Volume']].map(([k, n]) => h('button', { class: 'chip', 'aria-pressed': String(k === metric), onclick: () => { App.ui.exMetric = k; App.saveUi(); App.render(); } }, n))) : null,
-          h('div', { class: 'big-num' }, cur != null ? (metric === 'vol' ? fmtInt(cur) : metric === 'reps' ? cur : fmt1(cur)) : '–', h('small', null, metric === 'reps' ? 'reps' : wU())),
-          delta != null ? h('div', { class: 'small ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : 'muted'), style: { fontWeight: 800, marginTop: '2px' } }, `${fmtSigned(delta, metric === 'vol' || metric === 'reps' ? 0 : 1)}${metric === 'reps' ? ' reps' : ' ' + wU()} in 8 weeks`) : null,
-          h('div', { style: { marginTop: '10px' } }, Charts.line({ points: pts, height: 140, color: 'var(--strain)', fmt: (v) => (metric === 'vol' ? fmtInt(v) : metric === 'reps' ? String(Math.round(v)) : v.toFixed(0)), unit: metric === 'reps' ? ' reps' : ' ' + wU(), caption: `${name} progress`, xEvery: Math.max(1, Math.ceil(pts.length / 3)), dots: true }))));
+          h('div', { class: 'big-num' }, cur != null ? fmtV(cur) : '–', h('small', null, metric === 'reps' ? `${repU}, best set` : wU())),
+          h('div', { class: 'prog-head' }, h('div', { class: 's' }, fit.change != null ? h('span', { style: { color: Tabs.changeInk(fit) } }, `${fmtSigned(fit.change, dp)}${unitTxt} in 8 weeks`) : h('span', { class: 'muted' }, 'A few more sessions and a trend shows here'), Tabs.confPill(fit))),
+          fit.lo != null ? h('p', { class: 'xs muted', style: { marginTop: '4px', fontWeight: 650 } }, `80% range: ${fmtSigned(fit.lo, dp)} to ${fmtSigned(fit.hi, dp)}${unitTxt}`) : null,
+          h('div', { style: { marginTop: '10px' } }, Charts.trend({ labels: pts, height: 150, gap: 99, xEvery: Math.max(1, Math.ceil(pts.length / 3)), fmt: fmtV, tickFmt: (v) => (metric === 'vol' ? fmtInt(v) : String(Math.round(v))), caption: `${name} progress`,
+            series: [{ values: pts.map((p) => p.v), color: 'var(--strain)', dots: 'all', name: metric === 'reps' ? 'Best set' : 'Session' },
+              { values: pts.map((p) => (p.date > from ? fit.at(U.daysBetween(from, p.date)) : null)), color: 'var(--ink-2)', width: 1.4, dash: '4 4', name: 'Trend', noTip: true }] })),
+          h('div', { style: { marginTop: '8px' } }, legend(['Each session', 'var(--strain)', 'dot'], fit.change != null ? ['8-week trend', 'var(--ink-2)', 'ln'] : null))));
         if (pr) out.push(h('section', { class: 'card', style: { background: 'linear-gradient(160deg, var(--hrv-bg), transparent 80%), var(--surface)' } },
           h('div', { class: 'eyebrow', style: { color: 'var(--hrv-ink)' } }, 'Next time'),
-          h('div', { class: 'mid-num', style: { marginTop: '4px' } }, pr.kind === 'bw' || pr.kind === 'time' ? `${pr.reps.join(', ')} ${pr.kind === 'time' ? 's' : 'reps'}` : `${fmtW(pr.w)} ${wU()} × ${pr.reps.join(', ')}`),
+          h('div', { class: 'mid-num', style: { marginTop: '4px' } }, pr.kind === 'bw' || pr.kind === 'time' ? `${pr.reps.join(', ')} ${pr.kind === 'time' ? 's' : 'reps'}` : `${fmtL(pr.w)} ${wU()} × ${pr.reps.join(', ')}`),
           h('p', { class: 'small ink2', style: { marginTop: '6px' } }, progressionText(pr))));
         const setT = (patch) => { const ex = { ...(C.training.exercises || {}) }; ex[name] = { ...(ex[name] || {}), ...patch }; Store.setTraining({ exercises: ex }); };
+        const imp = units() === 'imperial', lb = U.KG_PER_LB;
+        const RR = [[5, 8], [6, 10], [8, 12], [10, 15]];
+        const rangeSeg = seg(RR.map((r) => [r, `${r[0]}–${r[1]}`]), cfg.range, (v) => setT({ range: v }), { label: 'Rep range', cls: 'small' });
+        // the seg matches values by identity, so mark the current range by its numbers
+        rangeSeg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(RR[i][0] === cfg.range[0] && RR[i][1] === cfg.range[1])));
+        const qty = (label, text, down, up) => h('div', { class: 'qty' }, h('button', { 'aria-label': `Less ${label}`, onclick: down }, '−'), h('span', null, text), h('button', { 'aria-label': `More ${label}`, onclick: up }, '+'));
+        const stepInc = imp ? 2.5 * lb : 0.5, barInc = imp ? 5 * lb : 2.5;
         out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
-          prow({ t: 'Rest timer', right: h('div', { class: 'qty' }, h('button', { 'aria-label': 'Shorter rest', onclick: () => setT({ rest: Math.max(0, cfg.rest - 15) }) }, '−'), h('span', null, cfg.rest ? fmtMMSS(cfg.rest) : 'Off'), h('button', { 'aria-label': 'Longer rest', onclick: () => setT({ rest: Math.min(300, cfg.rest + 15) }) }, '+')) }),
-          prow({ t: 'Rep range', s: 'add reps, then weight', right: seg([[[5, 8], '5–8'], [[6, 10], '6–10'], [[8, 12], '8–12'], [[10, 15], '10–15']], cfg.range, (v) => setT({ range: v }), { label: 'Rep range', cls: 'small' }) }),
-          cfg.barbell ? prow({ t: 'Bar weight', right: h('span', { class: 'val' }, `${fmtW(cfg.bar)} ${wU()}`) }) : null,
-          prow({ t: 'Weight steps', right: h('div', { class: 'qty' }, h('button', { 'aria-label': 'Smaller steps', onclick: () => setT({ step: Math.max(0.5, cfg.step - 0.5) }) }, '−'), h('span', null, `${fmtW(cfg.step)} ${wU()}`), h('button', { 'aria-label': 'Bigger steps', onclick: () => setT({ step: Math.min(10, cfg.step + 0.5) }) }, '+')) }))));
-        const segInRow = out[out.length - 1].querySelector('.seg');
-        if (segInRow) { const same = (a, b) => a[0] === b[0] && a[1] === b[1]; segInRow.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(same([[5, 8], [6, 10], [8, 12], [10, 15]][i], cfg.range)))); }
+          prow({ t: 'Rest timer', right: qty('rest', cfg.rest ? fmtMMSS(cfg.rest) : 'Off', () => setT({ rest: Math.max(0, cfg.rest - 15) }), () => setT({ rest: Math.min(300, cfg.rest + 15) })) }),
+          h('div', { style: { padding: '12px 0 14px' } }, h('div', { class: 'row', style: { justifyContent: 'space-between', marginBottom: '10px' } }, h('span', { style: { fontSize: '15.5px', fontWeight: 750 } }, 'Rep range'), h('span', { class: 'xs muted', style: { fontWeight: 650 } }, 'add reps, then weight')), rangeSeg),
+          cfg.barbell ? prow({ t: 'Bar weight', s: 'for the plate calculator', right: qty('bar weight', `${fmtW(cfg.bar)} ${wU()}`, () => setT({ bar: Math.max(barInc, cfg.bar - barInc) }), () => setT({ bar: Math.min(30, cfg.bar + barInc) })) }) : null,
+          prow({ t: 'Weight steps', right: qty('weight per step', `${fmtL(cfg.step)} ${wU()}`, () => setT({ step: Math.max(stepInc, cfg.step - stepInc) }), () => setT({ step: Math.min(10, cfg.step + stepInc) })) }))));
       } else if (tab === 'history') {
         out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' }, hist.slice().reverse().map((x) => prow({ t: U.fmtDay(x.date), s: x.sets.map(setStr).join('  ·  '),
           right: h('span', { class: 'val' }, x.vol ? fmtInt(U.kgTo(x.vol, units())) : x.reps, h('small', null, x.vol ? wU() : 'reps')), onclick: () => { const s0 = C.sessions(x.date).find((y) => y.id === x.workoutId); if (s0) App.open('session', { s: s0, date: x.date }); }, chevron: false })))));
       } else {
         const rows = [];
-        if (rec.e1) rows.push(['Best estimated 1-rep max', `${fmtW(rec.e1.v)} ${wU()}`, `${fmtW(rec.e1.w)} × ${rec.e1.r} on ${U.fmtShort(rec.e1.date)}`]);
-        if (rec.heavy) rows.push(['Heaviest weight', `${fmtW(rec.heavy.w)} ${wU()}`, `× ${rec.heavy.r} on ${U.fmtShort(rec.heavy.date)}`]);
+        if (rec.e1) rows.push(['Best estimated 1-rep max', `${fmtW(rec.e1.v)} ${wU()}`, `${fmtL(rec.e1.w)} × ${rec.e1.r} on ${U.fmtShort(rec.e1.date)}`]);
+        if (rec.heavy) rows.push(['Heaviest weight', `${fmtL(rec.heavy.w)} ${wU()}`, `× ${rec.heavy.r} on ${U.fmtShort(rec.heavy.date)}`]);
         if (rec.vol) rows.push(['Most volume in a session', `${fmtInt(U.kgTo(rec.vol.v, units()))} ${wU()}`, U.fmtShort(rec.vol.date)]);
         if (rec.reps) rows.push(['Most reps in a session', `${rec.reps.v}`, U.fmtShort(rec.reps.date)]);
         rows.push(['Sessions', String(rec.sessions), `since ${U.fmtShort(hist[0].date)}`]);
         out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' }, rows.map(([t, v, s0]) => prow({ ic: 'trophy', tone: 'stress', t, s: s0, right: h('span', { class: 'val' }, v) })))));
+        const rm = E.REP_MAXES.filter((n) => rec.repMax[n]);
+        if (rm.length) out.push(cardT('Rep maxes', 'heaviest for at least', h('div', { class: 'rm-grid' }, rm.map((n) => tile2(plural(n, 'rep'), fmtL(rec.repMax[n].w), wU(), U.fmtShort(rec.repMax[n].date))))));
         out.push(h('p', { class: 'note' }, 'Estimated 1-rep max uses the Epley formula: weight × (1 + reps ÷ 30). Warm-up sets don’t count.'));
       }
       return view(out);
@@ -7393,7 +7830,15 @@ const Train = (() => {
       const up = [];
       for (let k = 0; k < 10; k++) { const d = addDays(C.todayStr, k); for (const p of C.planOn(d)) if (p.status !== 'missed') up.push([d, p]); }
       const links = [...weekly, ...once];
+      const g = C.weekGoal(C.todayStr);
+      const setGoal = (n) => Store.setTraining({ weeklyGoal: n });
       return view(pageHead('Weekly plan', { sub: perWeek ? `${plural(perWeek, 'session')} · about ${fmtDur(minWeek)} a week` : 'The sessions you repeat each week' }),
+        h('section', { class: 'card', 'aria-label': 'Weekly goal' },
+          h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { style: { display: 'block', fontSize: '17px', fontWeight: 800 } }, 'Weekly goal'),
+            h('span', { class: 'small muted' }, g.custom ? 'Sessions a week, any kind' : perWeek ? 'From your plan, up to 5. Change it to set your own.' : 'Sessions a week, any kind')),
+            h('div', { class: 'qty' }, h('button', { 'aria-label': 'Fewer sessions a week', onclick: () => setGoal(Math.max(1, g.goal - 1)) }, '−'), h('span', null, String(g.goal)), h('button', { 'aria-label': 'More sessions a week', onclick: () => setGoal(Math.min(14, g.goal + 1)) }, '+'))),
+          h('p', { class: 'small ink2', style: { marginTop: '10px' } }, `${g.streak >= 2 ? `${g.streak} weeks in a row at goal${g.rest ? `, with ${plural(g.rest, 'rest week')}` : ''}. ` : ''}One missed week in any six doesn’t break your streak, so a holiday or a sick week won’t reset it.`),
+          g.custom ? h('button', { class: 'link', style: { marginTop: '4px' }, onclick: () => setGoal(null) }, 'Use my plan instead') : null),
         cardT('Every week', h('button', { class: 'link', onclick: () => Sheet.planWorkout({}) }, icon('plus'), 'Plan'), h('div', null, rows),
           h('p', { class: 'note', style: { marginTop: '6px' } }, 'Tap a session to change its day, time or routine. A workout you log or record on your watch that day ticks it off.')),
         cardT('Coming up', 'next 10 days', up.length ? h('div', { class: 'list' }, up.slice(0, 8).map(([d, p]) => {
@@ -7414,7 +7859,7 @@ const Train = (() => {
     render(C, args, entry) {
       setTint('#2ea866', '#3b8deb');
       const d = entry.d || args.date || App.date;
-      const mode = App.ui.muscleMode || 'fresh', filter = entry.filter || 'all';
+      const mode = entry.mode || args.mode || App.ui.muscleMode || 'fresh', filter = entry.filter || 'all';
       const mst = C.muscleState(d);
       const maxSets = Math.max(10, ...E.MUSCLES.map((g) => mst[g].sets7));
       const fillFor = (g) => {
@@ -7435,7 +7880,7 @@ const Train = (() => {
       const trained = E.MUSCLES.some((g) => mst[g].last);
       const reDraw = () => { entry.el = null; App.render(); };
       return view(pageHead('Muscles', { sub: `${d === C.todayStr ? 'Today' : U.fmtDay(d)} · from logged sets` }),
-        seg([['fresh', 'Freshness'], ['sets', 'Weekly sets']], mode, (v) => { App.ui.muscleMode = v; App.saveUi(); entry.filter = 'all'; reDraw(); }, { label: 'Measure', cls: 'solid' }),
+        seg([['fresh', 'Freshness'], ['sets', 'Weekly volume']], mode, (v) => { App.ui.muscleMode = v; entry.mode = v; App.saveUi(); entry.filter = 'all'; reDraw(); }, { label: 'Measure', cls: 'solid' }),
         h('section', { class: 'card' }, Charts.bodyMap(fillFor, { height: 300, onPick: (g) => toast(`${g}: ${mode === 'fresh' ? mst[g].fresh + '% fresh' : mst[g].sets7 + ' sets this week'}`) }),
           mode === 'fresh' ? h('div', { class: 'chips wrap small', style: { justifyContent: 'center', marginTop: '12px' } },
             // each status is a toggle: tap to show only those muscles, tap again to show all
@@ -7447,8 +7892,11 @@ const Train = (() => {
             h('button', { class: 'icon-btn sm', 'aria-label': 'Next day', disabled: d >= C.todayStr, onclick: () => { entry.d = addDays(d, 1); reDraw(); } }, icon('chevR')))),
         trained ? h('section', { class: 'card claude' }, h('p', { style: { lineHeight: 1.55 } }, T.muscleInsight(mst)),
           App.sample ? h('button', { class: 'btn sm tint', style: { marginTop: '12px' }, onclick: () => App.open('coach', { q: 'Based on my muscle freshness and recent training, plan my next 3 sessions.' }) }, icon('spark'), 'Plan my next 3 sessions') : null) : h('p', { class: 'note' }, 'Log strength sets to see which muscles are fresh and which need rest.'),
-        h('section', { class: 'card flush' }, h('div', { class: 'list' }, rows)),
-        h('p', { class: 'note' }, mode === 'fresh' ? 'Freshness drops with the hard sets you log and recovers over two to three days. Helper muscles count as half a set.' : 'Hard sets in the last 7 days. Helper muscles count as half a set; warm-ups don’t count.'));
+        mode === 'fresh' ? h('section', { class: 'card flush' }, h('div', { class: 'list' }, rows)) : (() => {
+          const mv = C.muscleVolume(d);
+          return cardT('Hard sets, last 7 days', 'vs the guide', T.volumeRows(mv), T.volumeLegend(), mv.any ? h('p', { class: 'small ink2', style: { marginTop: '12px' } }, T.volumeText(mv)) : null);
+        })(),
+        h('p', { class: 'note' }, mode === 'fresh' ? 'Freshness drops with the hard sets you log and recovers over two to three days. Helper muscles count as half a set.' : 'Helper muscles count as half a set; warm-ups don’t count. The guide of about 10–20 sets a week (6–16 for arms, calves and core) suits most people building muscle; the tick is your own 4-week average.'));
     },
   };
 
@@ -7474,8 +7922,136 @@ const Train = (() => {
             : h('p', { class: 'small muted', style: { textAlign: 'center' } }, key === 'muscular' ? 'Log strength workouts with sets to build muscular load.' : 'Needs two weeks of heart-rate data.')),
         cardT('Daily load, last 28 days', null, Charts.bars({ items, height: 130, fmt: (v) => String(Math.round(v)), caption: 'Daily load', xEvery: 7 })),
         cardT('7-day average', 'shaded: optimal range', Charts.line({ points: avg7, color, band: x ? [x.chronic * 0.8, x.chronic * 1.3] : null, fmt: (v) => String(Math.round(v)), caption: '7-day average load', xEvery: 7 })),
-        cardT('What the labels mean', null, kv('Below 0.8×', 'Detraining'), kv('0.8–1.0×', 'Maintaining'), kv('1.0–1.3×', 'Building'), kv('Above 1.3×', 'Overreaching'),
-          h('p', { class: 'note', style: { marginTop: '6px' } }, key === 'cardio' ? 'Cardio load is heart-rate training load: time in higher zones counts more.' : 'Muscular load counts the hard sets you log, weighted by how hard the session felt.')));
+        cardT('What the labels mean', null, kv('Below 0.8×', 'Lighter'), kv('0.8–1.0×', 'Maintaining'), kv('1.0–1.3×', 'Building'), kv('1.3–1.5×', 'High'), kv('Above 1.5×', 'Spike'),
+          h('p', { class: 'note', style: { marginTop: '6px' } }, `${key === 'cardio' ? 'Cardio load is heart-rate training load: time in higher zones counts more.' : 'Muscular load counts the hard sets you log, weighted by how hard the session felt.'} The ratio compares your last 7 days with your last 4 weeks. A lighter week now and then is part of training. After a spike, keep the next few days easier and build back up gradually.`)));
+    },
+  };
+
+  // =============== MUSCLE VOLUME (shared by Strength and Muscles) ===============
+  const fmtSets = (n) => (n % 1 ? n.toFixed(1) : String(n));
+  const expander = (title, ...paras) => h('details', { class: 'card expander' }, h('summary', null, title, icon('plus')), h('div', { class: 'body' }, paras.map((p) => (typeof p === 'string' ? h('p', null, p) : p))));
+  /** Hard sets per muscle in the last 7 days as bars, the general guide as a bracket, your 4-week average as a tick. */
+  function volumeRows(mv) {
+    const max = Math.max(24, ...mv.rows.map((r) => Math.max(r.sets, r.avg4, r.hi) + 2));
+    const pct = (v) => `${Math.min(100, (v / max) * 100).toFixed(2)}%`;
+    return h('div', { class: 'col', style: { gap: '8px' } }, mv.rows.map((r) => h('div', { class: 'vol-row', role: 'img',
+      'aria-label': `${r.g}: ${fmtSets(r.sets)} hard sets in the last 7 days. Guide ${r.lo} to ${r.hi}. Your 4-week average ${fmtSets(U.round(r.avg4, 1))}.` },
+      h('span', null, r.g),
+      h('div', { class: 'vbar' }, h('i', { class: 'gd', style: { left: pct(r.lo), width: pct(r.hi - r.lo) } }), h('b', { class: 'fl ' + r.status, style: { width: pct(r.sets) } }),
+        r.avg4 > 0 ? h('em', { class: 'av', style: { left: pct(r.avg4) } }) : null),
+      h('span', { class: 'v' }, fmtSets(r.sets)))));
+  }
+  const volumeLegend = () => h('div', { style: { marginTop: '12px' } }, legend(['Last 7 days', 'var(--hrv)'], ['Guide', 'color-mix(in srgb, var(--good) 30%, transparent)'], ['Your 4-week average', 'var(--ink)', 'ln']));
+  function volumeText(mv) {
+    const under = mv.rows.filter((r) => r.status === 'under' && r.avg4 < r.lo).map((r) => r.g), over = mv.rows.filter((r) => r.status === 'over').map((r) => r.g);
+    const parts = [];
+    if (under.length) parts.push(`${Tabs.listAnd(under.slice(0, 4))} ${under.length === 1 ? 'usually gets' : 'usually get'} fewer hard sets than the guide. Fine if that’s on purpose; for building muscle, most people need about 10 a week.`);
+    if (over.length) parts.push(`${Tabs.listAnd(over)} ${over.length === 1 ? 'is' : 'are'} above the guide this week. More sets add fatigue faster than they add muscle.`);
+    return parts.length ? parts.join(' ') : 'Every muscle sits in or near the guide.';
+  }
+  T.volumeRows = volumeRows; T.volumeLegend = volumeLegend; T.volumeText = volumeText;
+
+  // =============== STRENGTH ===============
+  const WINDOWS = [[56, '8 weeks'], [112, '16 weeks'], [182, '6 months']];
+  const sure = (l) => l.fit.label === 'clear' || l.fit.label === 'likely';
+  Pages.strength = {
+    render(C, args) {
+      setTint('#1aa394', '#3b8deb');
+      const date = args.date || App.date, days = App.ui.strWin || 56;
+      const lifts = C.strengthSummary(date, days), weeks = C.trainingWeeks(date, 12), mv = C.muscleVolume(date);
+      const done = weeks.slice(0, -1).filter((w) => w.hardSets > 0).slice(-4);
+      const avg = done.length ? U.mean(done.map((w) => w.hardSets)) : null;
+      const up = lifts.filter((l) => sure(l) && l.fit.dir > 0).length, down = lifts.filter((l) => sure(l) && l.fit.dir < 0).length;
+      const out = [pageHead('Strength', { sub: lifts.length ? `${plural(lifts.length, 'lift')} · last ${Tabs.spanTxt(days)}` : 'Your lifts over time' }),
+        seg(WINDOWS, days, (v) => { App.ui.strWin = v; App.saveUi(); App.render(); }, { label: 'Time window', cls: 'solid' })];
+      if (!lifts.length && !weeks.some((w) => w.hardSets)) {
+        out.push(card(emptyState('train', 'No lifts yet', 'Log strength workouts and each lift’s trend shows here, with how sure the change is.', h('button', { class: 'btn primary', onclick: () => Sheet.chooseWorkout(App.ctx().todayStr) }, 'Start a workout'))));
+        return view(out);
+      }
+      if (lifts.length) out.push(h('section', { class: 'card' }, h('div', { class: 'grid3' }, stat(up, 'going up', 'up'), stat(lifts.length - up - down, 'no clear change'), stat(down, 'going down', down ? 'down' : '')),
+        h('p', { class: 'small ink2', style: { marginTop: '10px' } }, up && !down ? `${plural(up, 'lift')} ${up === 1 ? 'is' : 'are'} clearly or likely moving up.` : down ? `${plural(down, 'lift')} ${down === 1 ? 'is' : 'are'} slipping. A lighter week or more sleep often turns that round.` : 'Nothing has moved beyond the session-to-session noise yet.')));
+      out.push(cardT('Hard sets per week', avg != null ? `4-week avg ${Math.round(avg)}` : null,
+        Charts.bars({ items: weeks.map((w, i) => ({ label: U.fmtShort(w.mon), full: `Week of ${U.fmtShort(w.mon)}${i === weeks.length - 1 ? ' (so far)' : ''}`, v: w.hardSets, color: 'var(--hrv)', faint: i === weeks.length - 1 })),
+          ref: avg, height: 130, xEvery: 4, caption: 'Hard sets per week, last 12 weeks', unit: ' sets' }),
+        h('p', { class: 'note', style: { marginTop: '6px' } }, 'Warm-ups don’t count. This week is shown lighter until it’s over.')));
+      if (lifts.length) out.push(cardT('Lifts', null, h('p', { class: 'small muted', style: { marginTop: '-8px' } }, 'Estimated 1-rep max, or best reps for unweighted moves'), h('div', { class: 'list' }, lifts.map(Tabs.liftRow))));
+      if (mv.any) out.push(cardT('Muscle balance', h('button', { class: 'link', onclick: () => App.open('muscles', { date, mode: 'sets' }) }, 'Muscles', icon('chevR')),
+        h('p', { class: 'small muted', style: { marginTop: '-8px', marginBottom: '10px' } }, 'Hard sets in the last 7 days; helper muscles count half'), volumeRows(mv), volumeLegend(),
+        h('p', { class: 'small ink2', style: { marginTop: '12px' } }, volumeText(mv))));
+      out.push(expander('How progress is judged',
+        'Each point is your best set in a session, turned into an estimated 1-rep max: weight × (1 + reps ÷ 30). A straight line through the points gives the change over the window.',
+        'Clear: even the 95% range of that change stays on one side of zero. Likely: the 80% range does. Not clear yet: session-to-session noise (sleep, food, which day you trained) is still as big as the change. Holding steady: the change is tiny either way.',
+        'The guide of about 10–20 hard sets a muscle a week (6–16 for arms, calves and core, which also get helper sets) comes from training studies. It’s a starting point, not a target everyone has to hit.'));
+      return view(out);
+    },
+  };
+
+  // =============== CARDIO FITNESS ===============
+  const fmtH = (v) => (v === 0 ? '0' : v < 60 ? `${Math.round(v)}m` : `${U.round(v / 60, 1)}h`);
+  const ZONES = [['Z1', 50, 60], ['Z2', 60, 70], ['Z3', 70, 80], ['Z4', 80, 90], ['Z5', 90, 100]];
+  Pages.cardio = {
+    render(C, args) {
+      setTint('#3b8deb', '#8f7bf0');
+      const date = args.date || App.date, cf = C.cardioFitness(date), rp = Tabs.runPace(cf), mx = C.hrParams(date).max, imp = units() === 'imperial';
+      const weeks = C.trainingWeeks(date, 12);
+      const out = [pageHead('Cardio fitness', { sub: 'From your watch and the cardio you log' })];
+      if (!cf.vo2 && !cf.runs.length && !weeks.some((w) => w.cardioMin)) {
+        out.push(card(emptyState('run', 'No cardio yet', 'Import your Apple Health data or log a run, ride or swim. VO₂ max, heart-rate zones and running pace show up here.',
+          h('button', { class: 'btn primary', onclick: () => Sheet.cardio(App.ctx().todayStr) }, 'Log cardio'), h('button', { class: 'btn', onclick: () => App.open('import') }, 'Import'))));
+        return view(out);
+      }
+      // VO2 max: every estimate over 6 months with the fitted line
+      if (cf.vo2) {
+        const v = cf.vo2, f = v.fit, from = addDays(date, -182);
+        const dd = U.range(from, date), byDay = new Map(v.pts.map((p) => [p.date, p.v]));
+        const diff = v.norm != null ? v.cur - v.norm : null;
+        out.push(h('section', { class: 'card', 'aria-label': 'VO₂ max' },
+          h('div', { class: 'card-title' }, h('h2', null, 'VO₂ max'), Tabs.confPill(f)),
+          h('div', { class: 'big-num' }, v.cur.toFixed(1), h('small', null, 'ml/kg/min')),
+          h('p', { class: 'small', style: { fontWeight: 750, marginTop: '4px', color: Tabs.changeInk(f) } }, f.change != null ? `${fmtSigned(f.change, 1)} in 6 months${f.lo != null ? ` · likely ${fmtSigned(f.lo, 1)} to ${fmtSigned(f.hi, 1)}` : ''}` : 'Needs a few more estimates for a trend'),
+          h('div', { style: { marginTop: '10px' } }, Charts.trend({ labels: dd.map((d) => ({ label: U.fmtShort(d), full: U.fmtDay(d) })), height: 150, gap: 400, xEvery: 61, fmt: (x) => x.toFixed(1), caption: 'VO₂ max, last 6 months',
+            refs: v.norm != null ? [{ v: v.norm, label: 'typical' }] : [],
+            series: [{ values: dd.map((d) => byDay.get(d) ?? null), color: 'var(--strain)', dots: 'all', name: 'VO₂ max' },
+              { values: dd.map((d) => (f.at(U.daysBetween(from, d)) ?? null)), color: 'var(--ink-2)', width: 1.4, dash: '4 4', name: 'Trend', noTip: true }] })),
+          h('p', { class: 'small ink2', style: { marginTop: '8px' } }, diff == null ? 'Add your age and sex in Settings to compare with what’s typical.' : `${Math.abs(diff) < 1 ? 'About typical' : diff > 0 ? `${diff.toFixed(1)} above typical` : `${(-diff).toFixed(1)} below typical`} for your age and sex (${v.norm.toFixed(1)}).`),
+          h('p', { class: 'note', style: { marginTop: '6px' } }, 'Your watch estimates VO₂ max from outdoor walks, runs and hikes. It moves slowly, so a trend over months says more than any one reading.')));
+      }
+      // weekly minutes by zone
+      const cm = weeks.slice(0, -1).filter((w) => w.cardioMin > 0).slice(-4), avg = cm.length ? U.mean(cm.map((w) => w.cardioMin)) : null;
+      const zoneColor = (k) => `var(--z${k + 1})`;
+      out.push(cardT('Cardio per week', avg != null ? `4-week avg ${fmtDur(avg)}` : null,
+        Charts.stackBars({ items: weeks.map((w, i) => ({ label: U.fmtShort(w.mon), full: `Week of ${U.fmtShort(w.mon)}${i === weeks.length - 1 ? ' (so far)' : ''}`,
+          parts: [...w.zones.map((v, k) => ({ v, color: zoneColor(k), name: ZONES[k][0] })), { v: w.noHr, color: 'var(--raise)', name: 'No heart rate' }] })),
+          height: 140, xEvery: 4, fmt: fmtH, caption: 'Cardio minutes per week by heart-rate zone' }),
+        h('div', { style: { marginTop: '10px' } }, legend(...ZONES.map(([z], k) => [z, zoneColor(k)]), weeks.some((w) => w.noHr) ? ['No heart rate', 'var(--raise)'] : null)),
+        h('p', { class: 'note', style: { marginTop: '8px' } }, `Zones are shares of your max heart rate, ${Math.round(mx)} bpm: ${ZONES.map(([z, a, b]) => `${z} ${Math.round((mx * a) / 100)}${b < 100 ? '–' + Math.round((mx * b) / 100) : '+'}`).join(', ')}. Lifting isn’t counted here.`)));
+      // intensity mix
+      if (cf.mix.total > 0) out.push(cardT('Intensity', 'last 4 weeks', Tabs.mixBlock(cf.mix), h('p', { class: 'small ink2', style: { marginTop: '12px' } }, Tabs.mixText(cf.mix))));
+      // running
+      const km = weeks.map((w) => (imp ? w.runKm / 1.609344 : w.runKm));
+      if (km.some((x) => x > 0) || rp) {
+        const kids = [];
+        if (km.some((x) => x > 0)) kids.push(h('div', { class: 'chart-label' }, h('span', null, `Distance per week (${imp ? 'mi' : 'km'})`), h('span', null, `this week ${fmt1(km[km.length - 1])}`)),
+          Charts.bars({ items: weeks.map((w, i) => ({ label: U.fmtShort(w.mon), full: `Week of ${U.fmtShort(w.mon)}`, v: km[i], color: 'var(--strain)', faint: i === weeks.length - 1 })), height: 120, xEvery: 4, fmt: (x) => (x >= 10 || x === 0 ? String(Math.round(x)) : x.toFixed(1)), unit: imp ? ' mi' : ' km', caption: 'Running distance per week' }));
+        if (rp) {
+          const from = addDays(date, -90), dd = U.range(from, date), byDay = new Map();
+          for (const r of rp.runs) byDay.set(r.date, r.paceAtRef);
+          const ch = Tabs.paceChange(rp);
+          kids.push(h('div', { class: 'prog-head', style: { marginTop: kids.length ? '18px' : 0 } },
+            h('div', null, h('div', { class: 'chart-label', style: { marginBottom: 0 } }, h('span', null, `Pace at ${rp.ref} bpm`)), h('div', { class: 's' }, ch ? h('span', { style: { color: Tabs.changeInk(rp.fit) } }, `${ch} over 13 weeks`) : null, Tabs.confPill(rp.fit))),
+            h('div', { class: 'mid-num' }, Tabs.fmtPace(rp.cur), h('small', null, rp.unit))),
+            h('div', { style: { marginTop: '8px' } }, Charts.trend({ labels: dd.map((d) => ({ label: U.fmtShort(d), full: U.fmtDay(d) })), height: 140, gap: 400, xEvery: 30, invert: true, fmt: Tabs.fmtPace, caption: `Running pace at ${rp.ref} bpm`,
+              series: [{ values: dd.map((d) => byDay.get(d) ?? null), color: 'var(--strain)', dots: 'all', line: false, name: 'Pace' },
+                { values: dd.map((d) => rp.at(U.daysBetween(from, d))), color: 'var(--ink-2)', width: 1.4, dash: '4 4', name: 'Trend', noTip: true }] })),
+            h('p', { class: 'note', style: { marginTop: '6px' } }, `Your speed divided by your heart rate, read back as the pace you’d hold at ${rp.ref} bpm. It lets easy and hard runs be compared. Heat, hills and wind move single runs, so watch the trend.`));
+        }
+        const lastRuns = cf.runs.slice(-4).reverse();
+        if (lastRuns.length) kids.push(h('div', { class: 'list', style: { marginTop: '8px' } }, lastRuns.map((r) => prow({ ic: 'run', tone: 'strain', t: r.s.name || r.s.type,
+          s: `${U.fmtDay(r.date)} · ${fmt1(imp ? r.km / 1.609344 : r.km)} ${imp ? 'mi' : 'km'} · ${r.avgHr} bpm`, right: h('span', { class: 'val' }, Tabs.fmtPace(imp ? r.pace * 1.609344 : r.pace), h('small', null, imp ? '/mi' : '/km')),
+          onclick: () => App.open('session', { s: r.s, date: r.date }), chevron: false }))));
+        out.push(cardT('Running', null, kids));
+      }
+      return view(out);
     },
   };
 
@@ -7761,7 +8337,7 @@ const Sheet = (() => {
       if (p.kind === 'nap') S.nap(date, { min: p.min });
       else if (p.kind === 'weight') S.bodyLog(date, { weight: p.unit === 'lb' ? p.v * U.KG_PER_LB : p.v });
       else if (p.kind === 'cardio') S.cardio(date, p);
-      else if (p.kind === 'strength') App.go('train');
+      else if (p.kind === 'strength') (App.draft ? App.open('workout') : S.chooseWorkout(date));
       else App.open('foodlog', { date, meal, mode: App.sample ? 'describe' : 'search', text: t });
     };
     const tile = (ic, tone, label, fn) => h('button', { class: 'add-tile tap', onclick: () => { sh.close(); fn(); } }, h('span', { class: 'ic ' + tone }, icon(ic)), label);
@@ -7774,7 +8350,7 @@ const Sheet = (() => {
           tile('search', 'food', 'Food', () => App.open('foodlog', { date, meal, mode: 'search' })),
           tile('barcode', 'food', 'Scan barcode', () => App.open('foodlog', { date, meal, mode: 'scan' })),
           App.sample ? tile('camera', 'food', 'Describe a meal', () => App.open('foodlog', { date, meal, mode: 'describe' })) : tile('bolt', 'food', 'Quick add', () => App.open('foodlog', { date, meal, mode: 'quick' })),
-          tile('train', 'strain', App.draft ? 'Resume workout' : 'Strength', () => (App.draft ? App.open('workout') : App.go('train'))),
+          tile('train', 'strain', App.draft ? 'Resume workout' : 'Workout', () => (App.draft ? App.open('workout') : S.chooseWorkout(date))),
           tile('pulse', 'strain', 'Cardio', () => S.cardio(date)),
           tile('moon', 'sleep', 'Nap', () => S.nap(date)),
           tile('scale', '', 'Weigh-in', () => S.bodyLog(date)),
@@ -8008,6 +8584,34 @@ const Sheet = (() => {
       foot: [h('button', { class: 'btn', onclick: () => { sh.close(); App.open('routine', { id: r.id }); } }, icon('edit'), 'Edit'),
         h('button', { class: 'btn', onclick: () => { sh.close(); S.planWorkout({ routineId: r.id }); } }, icon('calendar'), 'Plan'),
         h('button', { class: 'btn primary', onclick: () => { sh.close(); Tabs.startRoutine(c, r); } }, icon('play'), App.draft ? 'Resume' : 'Start')],
+    });
+  };
+
+
+  /** Every way to train today: routines ranked by how ready their muscles are, an empty workout, cardio, or a plan. */
+  S.chooseWorkout = (date) => {
+    const c = C(), d = date && date <= c.todayStr ? date : c.todayStr;
+    const ranked = c.routines.map((r) => ({ r, inf: c.routineInfo(r, d) })).sort((a, b) => b.inf.freshAvg - a.inf.freshAvg);
+    const go = (fn) => () => { sh.close(); fn(); };
+    const sh = Sheets.open({
+      title: App.draft ? 'Workout in progress' : 'Choose a workout', full: true,
+      body: [
+        App.draft ? h('div', { class: 'banner' }, h('p', null, h('b', null, App.draft.name), ' is still open.'), h('button', { class: 'btn sm primary', onclick: go(() => App.open('workout')) }, 'Resume')) : null,
+        h('div', { class: 'eyebrow', style: { margin: '2px 0 -6px' } }, 'Routines, most ready first'),
+        h('div', { class: 'list' }, ranked.map(({ r, inf }) => {
+          const st = Tabs.STATUS_TXT(inf);
+          return prow({ ic: 'train', tone: 'good', t: r.name,
+            s: h('span', null, h('i', { class: 'status-dot', style: { background: st[1], marginRight: '6px', verticalAlign: '1px' } }), `${st[0]} · ${inf.min} min`),
+            right: h('button', { class: 'btn sm primary', 'aria-label': `Start ${r.name}`, onclick: (e) => { e.stopPropagation(); sh.close(); Tabs.startRoutine(c, r); } }, App.draft ? 'Resume' : 'Start'),
+            onclick: go(() => S.routine(r)), chevron: false });
+        })),
+        h('div', { class: 'eyebrow', style: { margin: '8px 0 -6px' } }, 'Something else'),
+        h('div', { class: 'list' },
+          prow({ ic: 'plus', t: 'Empty workout', s: 'Add exercises as you go', onclick: go(() => Tabs.startEmpty(c)) }),
+          prow({ ic: 'pulse', tone: 'strain', t: 'Log cardio', s: 'A run, ride, swim or anything your watch missed', onclick: go(() => S.cardio(d)) }),
+          prow({ ic: 'calendar', t: 'Plan a workout', s: 'For later today or another day', onclick: go(() => S.planWorkout({ date: d })) }),
+          prow({ ic: 'edit', t: 'New routine', s: 'Save a set of exercises to repeat', onclick: go(() => App.open('routine', {})) })),
+      ],
     });
   };
 
@@ -8312,6 +8916,24 @@ const Sheet = (() => {
         ei > 0 ? opt('chevU', 'Move up', () => { [d.exercises[ei - 1], d.exercises[ei]] = [d.exercises[ei], d.exercises[ei - 1]]; done(); }) : null,
         next ? opt('chevD', 'Move down', () => { [d.exercises[ei + 1], d.exercises[ei]] = [d.exercises[ei], d.exercises[ei + 1]]; done(); }) : null,
         opt('trash', 'Remove exercise', () => { d.exercises.splice(ei, 1); done('Exercise removed'); }, 'stress'))],
+    });
+  };
+  /** Rest after each set: pick a length, and keep it as this exercise's default if you like. */
+  S.restPicker = (name, cur, onPick) => {
+    const c = C(), cfg = c.exSettings(name);
+    let sec = cur ?? cfg.rest;
+    const opts = [...new Set([0, 45, 60, 90, 120, 150, 180, 240, 300, sec])].sort((a, b) => a - b);
+    const keep = h('input', { type: 'checkbox', id: 'rest-keep', checked: true });
+    const chips = h('div', { class: 'chips wrap' }, opts.map((v) => h('button', { class: 'chip', 'aria-pressed': String(v === sec),
+      onclick: (e) => { sec = v; for (const b of chips.children) b.setAttribute('aria-pressed', String(b === e.currentTarget)); } }, v ? fmtMMSS(v) : 'Off')));
+    const sh = Sheets.open({
+      title: 'Rest timer',
+      body: [h('p', { class: 'small muted', style: { marginTop: '-6px' } }, `After each set of ${name}`), chips,
+        h('label', { class: 'switch', for: 'rest-keep' }, h('span', null, h('b', { style: { display: 'block' } }, `Use for ${name} from now on`), h('span', { class: 'xs muted' }, `Your usual is ${cfg.rest ? fmtMMSS(cfg.rest) : 'off'}`)), keep)],
+      foot: [h('button', { class: 'btn primary', onclick: () => {
+        if (keep.checked && sec !== cfg.rest) { const ex = { ...(c.training.exercises || {}) }; ex[name] = { ...(ex[name] || {}), rest: sec }; Store.setTraining({ exercises: ex }); }
+        sh.close(); onPick(sec);
+      } }, 'Done')],
     });
   };
   S.notes = (text, onSave) => {
