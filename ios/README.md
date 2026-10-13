@@ -55,6 +55,13 @@ With a personal (free) Apple ID, the watch app can't be installed from the Watch
 4. In Xcode, every target (*Baseline*, *BaselineWatch*, and in the full project *BaselineWidgets* and *BaselineWatchWidgets*) → *Signing & Capabilities* → *Team* → your Apple ID.
 5. At the top of the Xcode window pick the scheme *BaselineWatch* and your Apple Watch as the destination, then press ▶. The first install over Wi-Fi can take several minutes.
 
+**If Developer Mode doesn't appear on the watch:** the watch only shows it after Xcode has connected to it. Check, in order:
+- the iPhone is in Developer Mode (*Settings → Privacy & Security → Developer Mode* on the iPhone, then restart it);
+- the Mac has Wi-Fi and Bluetooth on, on the same Wi-Fi as the iPhone, and the watch is unlocked, on your wrist or the charger, with Wi-Fi on;
+- Xcode is up to date (App Store → Updates): an older Xcode doesn't recognise a newer watchOS;
+- in *Window → Devices and Simulators*, select the watch under the iPhone and wait; Xcode may say it's preparing the watch (several minutes). Then look again on the watch at *Settings → Privacy & Security*, at the bottom;
+- still nothing: restart the watch, the iPhone and Xcode, and plug the iPhone in again.
+
 The watch needs watchOS 10 or later. A free Apple ID can have at most 3 of your own apps on a device at once; delete old test apps if Xcode says the limit is reached. If it still fails, Xcode shows the reason in a red banner or the Issue navigator.
 
 ## Run it on your iPhone (no Terminal)
