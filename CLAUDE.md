@@ -101,6 +101,13 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Keyboard: `visualViewport` sets `--kb` (keyboard height) and `body.kb-open`; sheets sit on top of the keyboard and the tab bar and floating bars step aside while typing.
 - Settings has an About section (`APP_VERSION`, data sources with their licences, privacy). Bump `APP_VERSION` with a release.
 
+## Workout page
+- `Pages.session` is the workout view: route map (coloured by pace, start and finish), stat tiles, heart rate over time on the zones plus time in each zone, pace (speed for cycling), splits per km / mile (pace, heart rate, elevation) and elevation. Each part shows only when its data exists.
+- Detail comes from `WD.get(s0)`: in the iPhone app the bridge request `{ type: 'workout', start, end, width, dark }` (`HealthSync.workout`, `HealthReader.workoutDetail` + `RouteMap.snapshot`), cached per workout and theme; the sample person gets `DEMO.workoutDetail`; otherwise only the day doc. Shape: `hr [[sec, bpm]]` (10 s), `dist [[sec, m]]` (cumulative), `route [[sec, lat, lon, alt, m]]` (≤ 500 points, alt -9999 when unknown), `climb`, `tempC`, `humidity`, `indoor`, `steps`, `map { img, w, h, xy }` (Apple Maps picture and each route point's place on it; the page draws the route).
+- Workout docs from the sync carry `hrs` (heart rate per minute, null for gaps) so the chart works offline and for imported exports.
+- Route and distance access (`detailTypes` in HealthReader) is asked with everything else on a new install, and the first time a workout opens on earlier ones.
+- `Charts.timeLine({ pts, dur, bands, invert, ticks })` draws a measure over elapsed time.
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.

@@ -578,6 +578,39 @@ a.btn { text-decoration: none; }
 .comp-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px 34px; gap: 12px; align-items: center; padding-block: 9px; font-size: calc(14.5 * var(--fs)); font-weight: 600; }
 .comp-row .val { font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
 .zone-row { display: grid; grid-template-columns: 70px minmax(0, 1fr) 54px; gap: 12px; align-items: center; padding-block: 6px; font-size: calc(13.5 * var(--fs)); }
+.zone-list { margin-top: 10px; }
+.zone-list .zone-row { grid-template-columns: 64px minmax(0, 1fr) auto; }
+.zone-list .zone-row + .zone-row { border-top: 1px solid var(--line); }
+.zone-row .z small, .zone-row .m small { display: block; color: var(--muted); font-weight: 400; font-size: calc(11.5 * var(--fs)); }
+.zone-row .zbar { display: grid; gap: 4px; min-width: 0; }
+.zone-row .zn { color: var(--ink-2); font-size: calc(12 * var(--fs)); }
+/* one workout: the route, splits */
+.wk-map-card { padding: 0; overflow: hidden; }
+.wk-map { position: relative; width: 100%; }
+.wk-map img, .wk-map svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wk-map.plain { background: var(--card-2, var(--track)); background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 28px 28px; }
+.wk-route-under { stroke: rgba(0, 0, 0, 0.35); }
+:root[data-theme="light"] .wk-route-under { stroke: rgba(255, 255, 255, 0.85); }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .wk-route-under { stroke: rgba(255, 255, 255, 0.85); } }
+.wk-start { fill: #2fbf71; stroke: #fff; stroke-width: 2.5; }
+.wk-end { fill: #111; stroke: #fff; stroke-width: 2.5; }
+.wk-legend { display: flex; align-items: center; gap: 8px; padding: 10px 16px 12px; color: var(--muted); font-size: calc(12 * var(--fs)); flex-wrap: wrap; }
+.wk-legend > i { width: 64px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgb(219, 106, 36), rgb(231, 180, 60), rgb(26, 163, 148)); }
+.wk-key { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.wk-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; display: inline-block; box-shadow: 0 0 0 1px var(--line); }
+.wk-dot.start { background: #2fbf71; }
+.wk-dot.end { background: #111; margin-left: 6px; }
+.wk-loading { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: calc(13.5 * var(--fs)); }
+.wk-spin { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink-2); animation: spin 0.7s linear infinite; }
+.splits { display: grid; }
+.split { display: grid; grid-template-columns: 34px 52px minmax(0, 1fr) 40px 44px; gap: 10px; align-items: center; padding-block: 7px; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(14 * var(--fs)); }
+.split + .split { border-top: 1px solid var(--line); }
+.split.head { color: var(--muted); font-family: inherit; font-size: calc(11.5 * var(--fs)); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding-block: 0 6px; }
+.split .n { color: var(--muted); }
+.split .p { font-weight: 600; }
+.split .bar i { display: block; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--strain) 55%, transparent); }
+.split.best .bar i { background: var(--strain); }
+.split .hr, .split .up { text-align: right; color: var(--ink-2); }
 .zone-row .z { font-weight: 600; }
 .zone-row .m { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 600; }
 .diverge { position: relative; height: 10px; border-radius: 999px; background: var(--surface-3); }
@@ -3423,6 +3456,8 @@ const HI = (() => {
       const date = lmDate(w.lm0);
       if (!inRange(date)) continue;
       const hist = {};
+      // heart rate minute by minute for the workout's chart (up to 10 hours)
+      const len = Math.min(600, Math.max(1, Math.ceil(w.lm1 - w.lm0))), mSum = new Float64Array(len), mCnt = new Uint16Array(len);
       let mx = 0, any = false;
       for (let i = lowerBound(w.lm0); i < n && ts[i] <= w.lm1; i++) {
         const bin = Math.max(0, Math.min(39, Math.floor((vs[i] - 30) / 5)));
@@ -3430,6 +3465,8 @@ const HI = (() => {
         hist[bin] = (hist[bin] || 0) + d0;
         if (vs[i] > mx) mx = vs[i];
         any = true;
+        const k = Math.min(len - 1, Math.floor(ts[i] - w.lm0));
+        mSum[k] += vs[i]; mCnt[k]++;
       }
       for (const k in hist) hist[k] = r1(hist[k]);
       const doc = {
@@ -3440,7 +3477,7 @@ const HI = (() => {
       if (w.km) doc.km = Math.round(w.km * 100) / 100;
       if (w.avgHr) doc.avgHr = Math.round(w.avgHr);
       if (w.maxHr || mx) doc.maxHr = Math.round(w.maxHr || mx);
-      if (any) doc.hist = hist;
+      if (any) { doc.hist = hist; doc.hrs = Array.from(mSum, (v, k) => (mCnt[k] ? Math.round(v / mCnt[k]) : null)); }
       (D(date).workouts ||= []).push(doc);
     }
 
@@ -3943,7 +3980,8 @@ const DEMO = (() => {
         const wh = {}; let sum = 0, wmx = 0;
         for (let k = wk.at; k < wk.at + wk.min; k++) { const bin = Math.max(0, Math.min(39, Math.floor((hr[k] - 30) / 5))); wh[bin] = (wh[bin] || 0) + 1; sum += hr[k]; wmx = Math.max(wmx, hr[k]); }
         const doc = { id: 'h' + date.replace(/-/g, '') + wk.at, type: wk.type, name: wk.type, start: iso(date, wk.at), end: iso(date, wk.at + wk.min), min: wk.min,
-          kcal: Math.round({ run: 11, soccer: 9.5, strength: 5, walk: 4.5 }[wk.kind] * wk.min), avgHr: Math.round(sum / wk.min), maxHr: wmx, hist: wh, src: 'Apple Watch' };
+          kcal: Math.round({ run: 11, soccer: 9.5, strength: 5, walk: 4.5 }[wk.kind] * wk.min), avgHr: Math.round(sum / wk.min), maxHr: wmx, hist: wh, src: 'Apple Watch',
+          hrs: Array.from({ length: wk.min }, (_, k) => Math.round(hr[wk.at + k])) };
         if (wk.pace) doc.km = Math.round((wk.min / wk.pace) * 100) / 100;
         if (wk.kind === 'walk') doc.km = Math.round(wk.min * 0.085 * 100) / 100;
         day.workouts = [doc];
@@ -4088,7 +4126,34 @@ const DEMO = (() => {
     return items;
   }
 
-  return { generate };
+  /** The sample person's runs and walks in detail, shaped like the iPhone app's workout answer: a loop through a park
+   *  ([[sec, lat, lon, alt, m]]), its pace changing with the hills, plus the weather. Same workout, same route. */
+  function workoutDetail(doc) {
+    if (!doc?.km || !/run|walk|hik/i.test(doc.type || '')) return null;
+    let seed = 0; for (const ch of doc.id || doc.start || '') seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+    const r = makeRng(seed || 1), ph = r() * 6.28, n = Math.max(60, Math.min(400, Math.round(doc.min * 4)));
+    // the loop's shape in metres, then scaled to the distance run
+    const raw = Array.from({ length: n }, (_, i) => { const t = (i / (n - 1)) * 2 * Math.PI; return [Math.cos(t) + 0.32 * Math.cos(2 * t + ph) + 0.06 * Math.sin(7 * t), 0.62 * Math.sin(t) + 0.18 * Math.sin(3 * t + ph)]; });
+    let len = 0; for (let i = 1; i < n; i++) len += Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]);
+    const k = (doc.km * 1000) / len, lat0 = 52.5145, lon0 = 13.3501, mLat = 111320, mLon = 111320 * Math.cos((lat0 * Math.PI) / 180);
+    const alt = (i) => 36 + 7 * Math.sin((i / (n - 1)) * 4 * Math.PI + ph) + 2.5 * Math.sin((i / (n - 1)) * 10 * Math.PI);
+    let m = 0, tRaw = 0, climb = 0;
+    const pts = raw.map(([x, y], i) => {
+      if (i) {
+        const ds = Math.hypot(x - raw[i - 1][0], y - raw[i - 1][1]) * k, up = alt(i) - alt(i - 1);
+        m += ds; if (up > 0) climb += up;
+        // slower uphill and in the first minutes, a little faster at the end
+        const f = i / (n - 1), v = 1 - Math.max(-0.06, Math.min(0.1, up / ds * 4)) - (f < 0.08 ? 0.08 : 0) + (f > 0.9 ? 0.05 : 0) + gauss(r) * 0.03;
+        tRaw += ds / Math.max(0.6, v);
+      }
+      return [tRaw, lat0 + (y * k) / mLat, lon0 + (x * k) / mLon, alt(i), m];
+    });
+    const dur = doc.min * 60;
+    const route = pts.map(([t, la, lo, a, mm]) => [Math.round((t / tRaw) * dur), Math.round(la * 1e6) / 1e6, Math.round(lo * 1e6) / 1e6, Math.round(a * 10) / 10, Math.round(mm)]);
+    return { route, climb: Math.round(climb), tempC: Math.round((9 + r() * 9) * 10) / 10, humidity: Math.round(55 + r() * 30), indoor: false };
+  }
+
+  return { generate, workoutDetail };
 })();
 
 /* ===== store.js — where data lives =====
@@ -5189,7 +5254,75 @@ const Charts = (() => {
     return d;
   }
 
-  return { scoreRing, segGauge, bars, line, trend, niceTicks, dayLine, hypnogram, windows, nightVitals, bodyMap, meter, stack, sparkline, miniDay, diverge, rangeBar, emptyChart, hideTip, STAGES, firstTime };
+  /** A workout's measure over time: pts [[sec, v]] across `dur` seconds, averaged into at most 120 slots, elapsed time
+   *  along the bottom. `bands` shade ranges behind the line ([{ lo, hi, fill, label }], heart-rate zones); `invert` puts low
+   *  values on top (pace, where faster is better). */
+  const lerpN = (a, b, f) => a + (b - a) * f;
+  function timeLine({ pts, dur, color = 'var(--ink)', height = 150, bands = [], lo = null, hi = null, fmt = (v) => String(Math.round(v)), tipFmt = null,
+    caption = '', invert = false, area = true, unit = '', ticks = null }) {
+    const W = 340, padL = 4, padR = 32, padT = 8, padB = 20, H = height, plotW = W - padL - padR, plotH = H - padT - padB;
+    const N = Math.max(2, Math.min(120, pts.length));
+    const sum = new Float64Array(N), cnt = new Uint16Array(N);
+    for (const [t, v] of pts) { if (v == null || !isFinite(v)) continue; const i = Math.max(0, Math.min(N - 1, Math.floor((t / dur) * N))); sum[i] += v; cnt[i]++; }
+    const vals = Array.from(sum, (v, i) => (cnt[i] ? v / cnt[i] : null));
+    // a slot or two without a reading between two with one is sparse data, not a gap
+    for (let i = 1; i < N - 1; i++) {
+      if (vals[i] != null) continue;
+      let j = i; while (j < N && vals[j] == null && j - i < 3) j++;
+      if (j < N && vals[j] != null && j - i <= 2 && vals[i - 1] != null) for (let k = i; k < j; k++) vals[k] = lerpN(vals[i - 1], vals[j], (k - i + 1) / (j - i + 1));
+    }
+    const got = vals.filter((v) => v != null);
+    if (got.length < 2) return emptyChart(height, 'No data');
+    let a = lo ?? Math.min(...got), b = hi ?? Math.max(...got);
+    const pad0 = Math.max((b - a) * 0.12, 1);
+    if (lo == null) a -= pad0;
+    if (hi == null) b += pad0;
+    const slot = plotW / N, x = (i) => padL + slot * (i + 0.5);
+    const y = (v) => { const f = (Math.max(a, Math.min(b, v)) - a) / (b - a); return padT + (invert ? f : 1 - f) * plotH; };
+    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart-svg', role: 'img', 'aria-label': caption });
+    for (const bd of bands) {
+      const b0 = Math.max(a, bd.lo), b1 = Math.min(b, bd.hi);
+      if (b1 <= b0) continue;
+      const y0 = Math.min(y(b0), y(b1)), y1 = Math.max(y(b0), y(b1));
+      svg.append(s('rect', { x: padL, y: y0.toFixed(1), width: plotW, height: (y1 - y0).toFixed(1), fill: bd.fill, opacity: 0.16 }));
+      if (bd.label && y1 - y0 >= 9) svg.append(s('text', { x: padL + plotW + 5, y: ((y0 + y1) / 2 + 3.5).toFixed(1), class: 'tick', 'text-anchor': 'start' }, bd.label));
+    }
+    if (!bands.length) for (const v of ticks ? ticks(a, b) : niceTicks(a, b, 3)) {
+      if (v < a || v > b) continue;
+      svg.append(s('line', { x1: padL, x2: padL + plotW, y1: y(v), y2: y(v), class: 'grid dash' }));
+      svg.append(s('text', { x: padL + plotW + 5, y: y(v) + 3.5, class: 'tick', 'text-anchor': 'start' }, fmt(v)));
+    }
+    svg.append(s('line', { x1: padL, x2: padL + plotW, y1: padT + plotH, y2: padT + plotH, class: 'axis' }));
+    const base = invert ? padT : padT + plotH, fill = area ? gradDef(svg, color, 0.28) : null;
+    const runs = []; let cur = [];
+    vals.forEach((v, i) => { if (v == null) { if (cur.length) runs.push(cur); cur = []; } else cur.push(i); });
+    if (cur.length) runs.push(cur);
+    for (const r of runs) {
+      const pp = r.map((i) => `${x(i).toFixed(1)},${y(vals[i]).toFixed(1)}`);
+      if (r.length === 1) { svg.append(s('circle', { cx: x(r[0]), cy: y(vals[r[0]]), r: 2.2, fill: color })); continue; }
+      if (fill && !invert) svg.append(s('path', { d: `M${x(r[0]).toFixed(1)},${base}L${pp.join('L')}L${x(r.at(-1)).toFixed(1)},${base}Z`, fill }));
+      svg.append(s('path', { d: 'M' + pp.join('L'), stroke: color, 'stroke-width': 2, fill: 'none', 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    }
+    // elapsed time: a round step that gives at most four marks after the start
+    const el = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)}:${U.pad(Math.floor(sec / 60) % 60)}` : `${Math.round(sec / 60)} min`);
+    const step = [5, 10, 15, 20, 30, 60, 120, 240].find((m) => dur / (m * 60) <= 4.2) || 480;
+    svg.append(s('text', { x: padL, y: H - 5, class: 'tick', 'text-anchor': 'start' }, '0'));
+    for (let t = step * 60; t < dur - step * 15; t += step * 60) svg.append(s('text', { x: padL + (t / dur) * plotW, y: H - 5, class: 'tick', 'text-anchor': 'middle' }, el(t)));
+    const cross = s('line', { x1: -10, x2: -10, y1: padT, y2: padT + plotH, class: 'cross', opacity: 0 });
+    const hl = s('circle', { cx: -10, cy: -10, r: 4.2, fill: color, class: 'dot', opacity: 0 });
+    svg.append(cross, hl);
+    const at = (i) => el(((i + 0.5) / N) * dur);
+    const wrap = wrapChart(svg, [srTable(caption, vals.map((v, i) => [at(i), v == null ? '–' : fmt(v) + unit]).filter((r) => r[1] !== '–'))]);
+    interact(wrap, svg, N, padL, slot, W, (i) => (vals[i] == null ? null : `<b>${at(i)}</b><br>${(tipFmt || fmt)(vals[i])}${unit}`), (i) => {
+      if (i < 0) { cross.setAttribute('opacity', 0); hl.setAttribute('opacity', 0); return; }
+      cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('opacity', 1);
+      if (vals[i] == null) { hl.setAttribute('opacity', 0); return; }
+      hl.setAttribute('cx', x(i)); hl.setAttribute('cy', y(vals[i])); hl.setAttribute('opacity', 1);
+    });
+    return wrap;
+  }
+
+  return { scoreRing, segGauge, bars, line, timeLine, trend, niceTicks, dayLine, hypnogram, windows, nightVitals, bodyMap, meter, stack, sparkline, miniDay, diverge, rangeBar, emptyChart, hideTip, STAGES, firstTime };
 })();
 
 /* ===== live.js — heart rate, HRV and stress right now =====
@@ -9194,6 +9327,9 @@ const HealthSync = (() => {
   S.food = (path) => ask({ type: 'food', path }, 30000);
   /** The last few hours of heart rate and HRV, straight from Health: { at, hr: [[time, bpm]], hrv: [[time, ms]] }. */
   S.latest = () => ask({ type: 'latest' }, 30000);
+  /** One workout in detail from Health, by its start and end: { hr, dist, route, climb, tempC, humidity, indoor, steps, map }
+   *  (see the comment above userContentController in WebView.swift). `width` is the map's width in points. */
+  S.workout = ({ start, end, width, dark }) => ask({ type: 'workout', start, end, width, dark }, 45000);
   /** A local reminder at `at` (ms), shown only while the app isn't open; the same key replaces it. */
   S.notify = (key, at, title, body) => { if (S.native()) ask({ type: 'notify', key, at, title, body }, 10000).catch(() => {}); };
   S.unnotify = (key) => { if (S.native()) ask({ type: 'unnotify', key }, 10000).catch(() => {}); };
@@ -9897,24 +10033,183 @@ const Train = (() => {
   };
 
   // =============== SESSION DETAIL ===============
+  // =============== ONE WORKOUT ===============
+  // The detail comes from the iPhone app (route with a map, heart rate every 10 s, distance, weather; HealthSync.workout),
+  // from DEMO.workoutDetail for the sample person, and otherwise from the day doc alone (heart rate per minute).
+  const WD = (() => {
+    const got = new Map();
+    const dark = () => { const t = document.documentElement.getAttribute('data-theme'); return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+    function get(s0) {
+      if (Store.demo) return DEMO.workoutDetail(s0) || {};
+      if (!HealthSync.native() || !(s0.source === 'health' || s0.merged) || !s0.start || !s0.end) return {};
+      const k = `${s0.start}|${s0.end}|${dark()}`;
+      if (!got.has(k)) {
+        got.set(k, { loading: true });
+        HealthSync.workout({ start: s0.start, end: s0.end, width: Math.round(Math.min(innerWidth, 560) - 32), dark: dark() })
+          .then((d) => got.set(k, d || {}), () => got.set(k, {}))
+          .finally(() => App.render());
+      }
+      return got.get(k);
+    }
+    return { get };
+  })();
+
+  const ZONE_NAMES = ['Warm-up', 'Easy', 'Aerobic', 'Threshold', 'Maximum'];
+  const lerp = (a, b, f) => a + (b - a) * f;
+  /** Slower to faster: orange, yellow, green. */
+  const paceColor = (f) => {
+    const st = [[219, 106, 36], [231, 180, 60], [26, 163, 148]];
+    const k = Math.max(0, Math.min(1, f)) * 2, i = Math.min(1, Math.floor(k)), g = k - i;
+    return `rgb(${st[i].map((c, j) => Math.round(lerp(c, st[i + 1][j], g))).join(',')})`;
+  };
+  const quant = (arr, q) => { const v = arr.filter((x) => x != null && isFinite(x)).sort((x, y) => x - y); return v.length ? v[Math.min(v.length - 1, Math.max(0, Math.round(q * (v.length - 1))))] : null; };
+  const paceStr = (secPer) => { const r = Math.round(secPer); return `${Math.floor(r / 60)}:${U.pad(r % 60)}`; };
+
+  /** The route over Apple Maps (in the iPhone app) or on its own, coloured by pace, with the start and the finish marked. */
+  function routeMap(det) {
+    const R = det.route, n = R.length;
+    let W = 340, H = 210, xy, img = null;
+    if (det.map?.img && det.map.xy?.length === n) { W = det.map.w; H = det.map.h; xy = det.map.xy; img = det.map.img; }
+    else {
+      const k = Math.cos((R[0][1] * Math.PI) / 180), la = R.map((p) => p[1]), lo = R.map((p) => p[2] * k);
+      const la0 = Math.min(...la), la1 = Math.max(...la), lo0 = Math.min(...lo), lo1 = Math.max(...lo);
+      const sc = Math.min((W - 40) / Math.max(1e-9, lo1 - lo0), (H - 40) / Math.max(1e-9, la1 - la0));
+      const ox = (W - (lo1 - lo0) * sc) / 2, oy = (H - (la1 - la0) * sc) / 2;
+      xy = R.map((p) => [ox + (p[2] * k - lo0) * sc, H - oy - (p[1] - la0) * sc]);
+    }
+    // pace at each point over about 20 seconds either side, scaled between this workout's slow and fast stretches
+    const sp = R.map((p, i) => { const a0 = R[Math.max(0, i - 3)], b0 = R[Math.min(n - 1, i + 3)]; return b0[0] > a0[0] ? (b0[4] - a0[4]) / (b0[0] - a0[0]) : null; });
+    const s10 = quant(sp, 0.1), s90 = quant(sp, 0.9);
+    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'wk-route', 'aria-hidden': 'true' });
+    const pts = xy.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+    svg.append(s('polyline', { points: pts, fill: 'none', class: 'wk-route-under', 'stroke-width': 7, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    for (let i = 1; i < n; i++) {
+      const v = sp[i] ?? sp[i - 1], f = s90 > s10 && v != null ? (v - s10) / (s90 - s10) : 0.5;
+      svg.append(s('line', { x1: xy[i - 1][0].toFixed(1), y1: xy[i - 1][1].toFixed(1), x2: xy[i][0].toFixed(1), y2: xy[i][1].toFixed(1), stroke: paceColor(f), 'stroke-width': 4, 'stroke-linecap': 'round' }));
+    }
+    const end = xy[n - 1], st = xy[0];
+    svg.append(s('circle', { cx: end[0], cy: end[1], r: 6, class: 'wk-end' }), s('circle', { cx: st[0], cy: st[1], r: 6, class: 'wk-start' }));
+    const box = h('div', { class: 'wk-map' + (img ? '' : ' plain'), style: { aspectRatio: `${W} / ${H}` } }, img ? h('img', { src: img, alt: '' }) : null, svg);
+    return h('section', { class: 'card wk-map-card', 'aria-label': 'Route' }, box,
+      h('div', { class: 'wk-legend' }, h('span', null, 'Slower'), h('i', { 'aria-hidden': 'true' }), h('span', null, 'Faster'),
+        h('span', { class: 'wk-key' }, h('b', { class: 'wk-dot start' }), 'Start', h('b', { class: 'wk-dot end' }), 'Finish')));
+  }
+
   Pages.session = {
     render(C, args) {
       setTint('#3b8deb', '#1aa394');
       const date = args.date || App.date;
       const s0 = (args.id && C.sessions(date).find((x) => x.id === args.id)) || (args.s && C.sessions(date).find((x) => x.id === args.s.id)) || args.s;
       if (!s0) return view(pageHead('Workout'), card(emptyState('train', 'Workout not found', 'It may have been deleted.')));
-      const p = C.hrParams(date), imp = units() === 'imperial';
+      const p = C.hrParams(date), imp = units() === 'imperial', unitM = imp ? 1609.344 : 1000, uName = imp ? 'mi' : 'km';
+      const det = WD.get(s0) || {};
       const zones = s0.hist ? E.zonesFromHist(s0.hist, p.max) : null, zt = zones ? zones.reduce((a, b) => a + b, 0) : 0;
       const prs = s0.source === 'app' && s0.exercises ? C.prsOf(s0.id) : [];
-      const pace = s0.km && s0.min && /run|walk|hik/i.test(s0.type) ? (() => { const pc = s0.min / (imp ? s0.km / 1.609344 : s0.km); return `${Math.floor(pc)}:${U.pad(Math.round((pc % 1) * 60) % 60)}`; })() : null;
+      const dur = Math.max(60, s0.start && s0.end ? (U.isoToDate(s0.end) - U.isoToDate(s0.start)) / 1000 : (s0.min || 1) * 60);
+
+      // heart rate: every 10 s from Health, else minute by minute from the sync
+      const hr = det.hr?.length > 4 ? det.hr : (s0.hrs || []).map((v, k) => [k * 60 + 30, v]).filter((x) => x[1] != null);
+      // distance covered over time, from the route or Health's distance samples
+      const along = det.route?.length > 1 ? det.route.map((x) => [x[0], x[4]]) : det.dist?.length > 1 ? [[0, 0], ...det.dist] : null;
+      const interp = (arr, v, from, to) => {
+        if (v <= arr[0][from]) return arr[0][to];
+        for (let i = 1; i < arr.length; i++) if (arr[i][from] >= v) { const a = arr[i - 1], b = arr[i], f = b[from] > a[from] ? (v - a[from]) / (b[from] - a[from]) : 0; return lerp(a[to], b[to], f); }
+        return arr.at(-1)[to];
+      };
+      const totalM = along ? along.at(-1)[1] : (s0.km || 0) * 1000;
+      const km = totalM > 50 ? totalM / 1000 : s0.km;
+      const moving = /run|walk|hik|cycl|swim|row/i.test(s0.type || '') && km > 0.2;
+      const alt = det.route?.length > 1 && det.route.every((x) => x[3] > -9000) ? det.route.map((x) => [x[0], x[3]]) : null;
+      let climb = det.climb ?? null;
+      if (climb == null && alt) { climb = 0; let last = alt[0][1]; for (const [, v] of alt) { if (v - last > 1) { climb += v - last; last = v; } else if (v < last) last = v; } climb = Math.round(climb); }
+
+      const pace = moving && s0.min && !/cycl/i.test(s0.type) ? (s0.min * 60) / ((km * 1000) / unitM) : null;
+      const speed = moving && s0.min && /cycl/i.test(s0.type) ? (km / (imp ? 1.609344 : 1)) / (s0.min / 60) : null;
+      const cadence = det.steps && /run|walk|hik/i.test(s0.type || '') && s0.min ? Math.round(det.steps / s0.min) : null;
+      const temp = det.tempC != null ? (imp ? Math.round(det.tempC * 1.8 + 32) + '°F' : Math.round(det.tempC) + '°') : null;
       const tiles = [tile2('Strain', s0.strain?.toFixed(1) ?? '–', null, s0.basis === 'hr' ? 'from heart rate' : 'from effort'), tile2('Duration', fmtDur(s0.min), null),
-        s0.avgHr ? tile2('Avg heart rate', s0.avgHr, 'bpm') : null, s0.maxHr ? tile2('Max heart rate', s0.maxHr, 'bpm') : null, s0.kcal ? tile2('Energy', fmtInt(s0.kcal), 'kcal') : null,
-        s0.km ? tile2('Distance', fmt1(imp ? s0.km / 1.609344 : s0.km), imp ? 'mi' : 'km') : null, pace ? tile2('Pace', pace, imp ? '/mi' : '/km') : null,
+        km ? tile2('Distance', fmt1(imp ? km / 1.609344 : km), uName) : null, pace ? tile2('Pace', paceStr(pace), '/' + uName) : null, speed ? tile2('Speed', fmt1(speed), imp ? 'mph' : 'km/h') : null,
+        s0.avgHr ? tile2('Avg HR', s0.avgHr, 'bpm') : null, s0.maxHr ? tile2('Max HR', s0.maxHr, 'bpm') : null, s0.kcal ? tile2('Energy', fmtInt(s0.kcal), 'kcal') : null,
+        climb > 0 ? tile2('Climbed', fmtInt(imp ? climb * 3.28084 : climb), imp ? 'ft' : 'm') : null, cadence ? tile2('Cadence', cadence, 'spm') : null,
+        temp ? tile2('Weather', temp, null, det.humidity != null ? `${det.humidity}% humidity` : null) : null,
         s0.volume ? tile2('Volume', fmtInt(U.kgTo(s0.volume, units())), wU()) : null, s0.rpe ? tile2('Effort', s0.rpe, '/ 10') : null].filter(Boolean);
-      const out = [pageHead(s0.name || s0.type, { sub: `${U.fmtDayLong(date)} · ${U.fmtClock(s0.start)}–${U.fmtClock(s0.end)}${s0.source === 'health' ? ' · ' + (s0.src || 'Apple Watch') : s0.merged ? ' · logged + watch' : ''}` }),
-        h('div', { class: 'grid3' }, tiles)];
+      const where = det.indoor === true ? ' · indoor' : '';
+      const out = [pageHead(s0.name || s0.type, { sub: `${U.fmtDayLong(date)} · ${U.fmtClock(s0.start)}–${U.fmtClock(s0.end)}${s0.source === 'health' ? ' · ' + (s0.src || 'Apple Watch') : s0.merged ? ' · logged + watch' : ''}${where}` })];
+      if (det.route?.length > 1) out.push(routeMap(det));
+      else if (det.loading) out.push(h('section', { class: 'card wk-loading', 'aria-live': 'polite' }, h('span', { class: 'wk-spin', 'aria-hidden': 'true' }), 'Reading this workout from Apple Health…'));
+      out.push(card(h('div', { class: 'grid3' }, tiles)));
       if (prs.length) out.push(h('div', { class: 'banner', style: { background: 'var(--warn-bg)' } }, h('span', { style: { color: 'var(--warn-ink)', display: 'grid' } }, icon('trophy')), h('p', null, h('b', null, plural(prs.length, 'personal record')), ' · ' + prs.map((x) => x.name).join(', '))));
-      if (zt > 0) { const mx = Math.max(...zones); out.push(cardT('Heart rate zones', `% of max ${Math.round(p.max)}`, [4, 3, 2, 1, 0].map((i) => h('div', { class: 'zone-row' }, h('span', { class: 'z' }, `Z${i + 1}`), Charts.meter(zones[i], mx, `var(--z${i + 1})`, { h: 8 }), h('span', { class: 'm' }, fmtDur(zones[i])))))); }
+
+      // heart rate over time on the zones, then the time spent in each
+      if (hr.length > 4 || zt > 0) {
+        const mx = p.max, kids = [];
+        if (hr.length > 4) {
+          const vs = hr.map((x) => x[1]);
+          kids.push(Charts.timeLine({ pts: hr, dur, color: 'var(--hr)', height: 160, lo: Math.min(Math.min(...vs) - 4, mx * 0.5), hi: Math.max(Math.max(...vs) + 4, mx * 0.62),
+            bands: [0, 1, 2, 3, 4].map((i) => ({ lo: mx * (0.5 + i * 0.1), hi: i === 4 ? 260 : mx * (0.6 + i * 0.1), fill: `var(--z${i + 1})`, label: `Z${i + 1}` })),
+            unit: ' bpm', caption: 'Heart rate during the workout' }));
+        }
+        if (zt > 0) {
+          const zm = Math.max(...zones);
+          kids.push(h('div', { class: 'zone-list' }, [4, 3, 2, 1, 0].map((i) => h('div', { class: 'zone-row' },
+            h('span', { class: 'z' }, `Z${i + 1}`, h('small', null, i === 4 ? `${Math.round(mx * 0.9)}+` : `${Math.round(mx * (0.5 + i * 0.1))}–${Math.round(mx * (0.6 + i * 0.1)) - 1}`)),
+            h('span', { class: 'zbar' }, h('span', { class: 'zn' }, ZONE_NAMES[i]), Charts.meter(zones[i], zm, `var(--z${i + 1})`, { h: 8 })),
+            h('span', { class: 'm' }, fmtDur(zones[i]), h('small', null, `${Math.round((zones[i] / zt) * 100)}%`))))));
+        }
+        out.push(cardT('Heart rate', s0.avgHr ? `avg ${s0.avgHr} · max ${s0.maxHr ?? '–'}` : null, kids));
+      }
+
+      // pace over time, faster on top (a minute either side, gaps where you stopped)
+      if (along && moving && !/swim/i.test(s0.type)) {
+        const ps = [], cyc = /cycl/i.test(s0.type);
+        for (let t = 15; t < along.at(-1)[0]; t += 15) {
+          const a = Math.max(0, t - 45), b = Math.min(along.at(-1)[0], t + 45), m = interp(along, b, 0, 1) - interp(along, a, 0, 1), v = b > a ? m / (b - a) : 0;
+          ps.push([t, v > 0.6 ? (cyc ? v * 3.6 / (imp ? 1.609344 : 1) : unitM / v) : null]);
+        }
+        const pv = ps.map((x) => x[1]);
+        if (pv.filter((v) => v != null).length > 4) {
+          const q05 = quant(pv, 0.03), q95 = quant(pv, 0.97);
+          out.push(cardT(cyc ? 'Speed' : 'Pace', pace ? `avg ${paceStr(pace)} /${uName}` : speed ? `avg ${fmt1(speed)} ${imp ? 'mph' : 'km/h'}` : null,
+            Charts.timeLine({ pts: ps.map(([t, v]) => [t, v == null ? null : Math.max(q05, Math.min(q95, v))]), dur, color: 'var(--strain)', height: 130, invert: !cyc, area: cyc,
+              fmt: cyc ? (v) => fmt1(v) : paceStr, ticks: cyc ? null : (a, b) => { const st = b - a > 150 ? 60 : 30, out0 = []; for (let v = Math.ceil(a / st) * st; v <= b; v += st) out0.push(v); return out0; }, unit: cyc ? (imp ? ' mph' : ' km/h') : ' /' + uName, caption: cyc ? 'Speed during the workout' : 'Pace during the workout' })));
+        }
+      }
+
+      // splits: each whole km (mile), and the last part when it's at least a tenth
+      if (along && moving && totalM >= unitM * 0.9) {
+        const tEnd = along.at(-1)[0], sp = [];
+        let t0 = 0;
+        for (let k = 1; k * unitM <= totalM + 1; k++) { const t1 = interp(along, k * unitM, 1, 0); sp.push({ n: k, t0, t1, frac: 1 }); t0 = t1; }
+        const rest = totalM - sp.length * unitM;
+        if (rest >= unitM * 0.1) sp.push({ n: sp.length + 1, t0, t1: tEnd, frac: rest / unitM });
+        for (const x of sp) {
+          x.pace = (x.t1 - x.t0) / x.frac;
+          const hh = hr.filter((r0) => r0[0] >= x.t0 && r0[0] < x.t1).map((r0) => r0[1]);
+          x.hr = hh.length ? Math.round(hh.reduce((a, b) => a + b, 0) / hh.length) : null;
+          x.up = alt ? interp(alt, x.t1, 0, 1) - interp(alt, x.t0, 0, 1) : null;
+        }
+        const fast = Math.min(...sp.map((x) => x.pace)), slow = Math.max(...sp.map((x) => x.pace));
+        const cyc = /cycl/i.test(s0.type);
+        out.push(cardT('Splits', `per ${imp ? 'mile' : 'km'}`, h('div', { class: 'splits' },
+          h('div', { class: 'split head' }, h('span', null, imp ? 'Mi' : 'Km'), h('span', null, cyc ? 'Speed' : 'Pace'), h('span'), h('span', null, 'HR'), alt ? h('span', null, imp ? 'Ft' : 'M') : null),
+          sp.map((x) => h('div', { class: 'split' + (x.pace === fast && sp.length > 1 ? ' best' : '') },
+            h('span', { class: 'n' }, x.frac < 1 ? fmt1(x.frac) : x.n),
+            h('span', { class: 'p' }, cyc ? fmt1((unitM / x.pace) * 3.6 / (imp ? 1.609344 : 1)) : paceStr(x.pace)),
+            h('span', { class: 'bar' }, h('i', { style: { width: `${Math.round(35 + 65 * (slow > fast ? (slow - x.pace) / (slow - fast) : 1))}%` } })),
+            h('span', { class: 'hr' }, x.hr ?? '–'),
+            alt ? h('span', { class: 'up' }, ((u) => (u > 0 ? '+' + u : u < 0 ? '−' + -u : '0'))(Math.round(imp ? x.up * 3.28084 : x.up))) : null)))));
+      }
+
+      // the climb, when there was one worth showing
+      if (alt) {
+        const av = alt.map((x) => x[1]), lo = Math.min(...av), hi = Math.max(...av);
+        if (hi - lo >= 6) {
+          const f = imp ? 3.28084 : 1;
+          out.push(cardT('Elevation', climb ? `${fmtInt(climb * f)} ${imp ? 'ft' : 'm'} climbed` : null,
+            Charts.timeLine({ pts: alt.map(([t, v]) => [t, v * f]), dur, color: 'var(--ink-2)', height: 110, unit: imp ? ' ft' : ' m', caption: 'Elevation during the workout' })));
+        }
+      }
+
       if (s0.exercises?.length) out.push(cardT('Exercises', null, h('div', { class: 'list' }, s0.exercises.map((ex) => prow({ t: ex.name, s: (ex.sets || []).map((x) => (x.t === 'W' ? 'W ' : '') + setStr(x)).join('  ·  '), onclick: () => App.open('exercise', { name: ex.name }) })))));
       if (s0.notes) out.push(cardT('Notes', null, h('p', { class: 'ink2' }, s0.notes)));
       const acts = [];

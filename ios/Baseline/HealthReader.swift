@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import HealthKit
 import WidgetKit
@@ -80,11 +81,17 @@ final class HealthReader {
     /// Whether the person has answered the Health sheet already, so the page can skip its welcome.
     var hasAsked: Bool { UserDefaults.standard.bool(forKey: Self.askedKey) }
 
+    /// What a workout's own page reads on top of the sync: the route and the distance covered along the way. New installs are
+    /// asked for these with everything else; earlier ones the first time a workout opens.
+    private static let detailTypes: Set<HKObjectType> = [HKSeriesType.workoutRoute(), HKQuantityType(.distanceWalkingRunning),
+                                                         HKQuantityType(.distanceCycling), HKQuantityType(.distanceSwimming)]
+
     private func authorize() async throws {
         guard HKHealthStore.isHealthDataAvailable() else { throw Failure(code: "unavailable") }
         if authorized { return }
         // iOS never says which types were refused; refused ones simply come back empty. The only type written is water.
-        try await store.requestAuthorization(toShare: [HKQuantityType(.dietaryWater)], read: readTypes)
+        let read = hasAsked ? readTypes : readTypes.union(Self.detailTypes)
+        try await store.requestAuthorization(toShare: [HKQuantityType(.dietaryWater)], read: read)
         authorized = true
         UserDefaults.standard.set(true, forKey: Self.askedKey)
         observe()
@@ -343,14 +350,94 @@ final class HealthReader {
         return ["format": "baseline.health/1", "from": from, "to": to, "me": me, "samples": samples, "workouts": workouts]
     }
 
+    // MARK: one workout in detail
+
+    /// The workout that best overlaps `start`...`end` (local times, as the sync sends them), in detail, for its page:
+    /// heart rate every 10 seconds, the distance covered so far every 10 seconds, the route (at most 500 points), and what the
+    /// watch noted: elevation climbed, weather, indoors. Times are seconds from the start. The route's locations come back as
+    /// well, so the caller can draw the map.
+    func workoutDetail(start: String, end: String) async throws -> (payload: [String: Any], route: [CLLocation]) {
+        try await authorize()
+        // asks only for what hasn't been asked before; nothing shows when the answers are in
+        try? await store.requestAuthorization(toShare: [], read: Self.detailTypes)
+        guard let s = local.date(from: start), let e = local.date(from: end) else { throw Failure(code: "bad_request") }
+        let around = HKQuery.predicateForSamples(withStart: s.addingTimeInterval(-180), end: e.addingTimeInterval(180), options: [])
+        let found = try await read(HKObjectType.workoutType(), around).compactMap { $0 as? HKWorkout }
+        let overlap = { (w: HKWorkout) in min(w.endDate, e).timeIntervalSince(max(w.startDate, s)) }
+        guard let w = found.max(by: { overlap($0) < overlap($1) }), overlap(w) > 0 else { throw Failure(code: "not_found") }
+        let t0 = w.startDate, sec = { (d: Date) in (d.timeIntervalSince(t0)).rounded() }
+
+        var out: [String: Any] = ["start": local.string(from: w.startDate), "end": local.string(from: w.endDate), "min": w.duration / 60]
+        let bpm = HKUnit.count().unitDivided(by: .minute())
+        let hr = try await statistics(.heartRate, unit: bpm, start: w.startDate, end: w.endDate, every: DateComponents(second: 10), sum: false, anchor: t0)
+        out["hr"] = hr.map { [sec($0.0), $0.1.rounded()] }
+
+        let distanceType: HKQuantityTypeIdentifier = switch w.workoutActivityType {
+        case .cycling: .distanceCycling
+        case .swimming: .distanceSwimming
+        default: .distanceWalkingRunning
+        }
+        var covered = 0.0
+        let dist = try await statistics(distanceType, unit: .meter(), start: w.startDate, end: w.endDate, every: DateComponents(second: 10), sum: true, anchor: t0)
+        out["dist"] = dist.map { b -> [Double] in covered += b.1; return [sec(b.0) + 10, covered.rounded()] }
+        if let steps = try? await statistics(.stepCount, unit: .count(), start: w.startDate, end: w.endDate, every: DateComponents(day: 1), sum: true, anchor: t0),
+           !steps.isEmpty {
+            out["steps"] = steps.reduce(0) { $0 + $1.1 }.rounded()
+        }
+
+        let meta = w.metadata ?? [:]
+        if let q = meta[HKMetadataKeyElevationAscended] as? HKQuantity { out["climb"] = q.doubleValue(for: .meter()).rounded() }
+        if let q = meta[HKMetadataKeyWeatherTemperature] as? HKQuantity { out["tempC"] = (q.doubleValue(for: .degreeCelsius()) * 10).rounded() / 10 }
+        if let q = meta[HKMetadataKeyWeatherHumidity] as? HKQuantity { out["humidity"] = (q.doubleValue(for: .percent()) * 100).rounded() }
+        if let indoor = meta[HKMetadataKeyIndoorWorkout] as? Bool { out["indoor"] = indoor }
+
+        // the route: its points in order, without the inaccurate ones, thinned to 500
+        var all: [CLLocation] = []
+        for case let r as HKWorkoutRoute in try await read(HKSeriesType.workoutRoute(), HKQuery.predicateForObjects(from: w)) {
+            all += (try? await locations(of: r)) ?? []
+        }
+        all = all.filter { $0.horizontalAccuracy >= 0 && $0.horizontalAccuracy <= 50 }.sorted { $0.timestamp < $1.timestamp }
+        var along = [0.0]
+        for i in all.indices.dropFirst() { along.append(along[i - 1] + all[i].distance(from: all[i - 1])) }
+        let keep = all.count <= 500 ? Array(all.indices) : (0..<500).map { Int((Double($0) * Double(all.count - 1) / 499).rounded()) }
+        let route = keep.map { all[$0] }
+        if route.count > 1 {
+            out["route"] = keep.map { i -> [Double] in
+                let l = all[i]
+                return [sec(l.timestamp), (l.coordinate.latitude * 1e6).rounded() / 1e6, (l.coordinate.longitude * 1e6).rounded() / 1e6,
+                        l.verticalAccuracy >= 0 ? (l.altitude * 10).rounded() / 10 : -9999, along[i].rounded()]
+            }
+        }
+        return (out, route.count > 1 ? route : [])
+    }
+
+    /// Every location of a route, in the batches Health hands them over.
+    private func locations(of route: HKWorkoutRoute) async throws -> [CLLocation] {
+        try await withCheckedThrowingContinuation { cont in
+            var all: [CLLocation] = []
+            var finished = false
+            let q = HKWorkoutRouteQuery(route: route) { _, batch, done, error in
+                guard !finished else { return }
+                if let error { finished = true; cont.resume(throwing: error); return }
+                all += batch ?? []
+                if done { finished = true; cont.resume(returning: all) }
+            }
+            store.execute(q)
+        }
+    }
+
     /// Sums or averages in fixed buckets, from Health's statistics: (bucket start, value) for buckets that have data.
     private func statistics(_ id: HKQuantityTypeIdentifier, unit: HKUnit, start: Date, end: Date, minutes: Int, sum: Bool) async throws -> [(Date, Double)] {
+        try await statistics(id, unit: unit, start: start, end: end, every: DateComponents(minute: minutes), sum: sum, anchor: Calendar.current.startOfDay(for: start))
+    }
+
+    private func statistics(_ id: HKQuantityTypeIdentifier, unit: HKUnit, start: Date, end: Date, every: DateComponents, sum: Bool, anchor: Date) async throws -> [(Date, Double)] {
         try await withCheckedThrowingContinuation { cont in
             let q = HKStatisticsCollectionQuery(quantityType: HKQuantityType(id),
                                                 quantitySamplePredicate: HKQuery.predicateForSamples(withStart: start, end: end, options: []),
                                                 options: sum ? .cumulativeSum : .discreteAverage,
-                                                anchorDate: Calendar.current.startOfDay(for: start),
-                                                intervalComponents: DateComponents(minute: minutes))
+                                                anchorDate: anchor,
+                                                intervalComponents: every)
             q.initialResultsHandler = { _, results, error in
                 if let error = error as? HKError, error.code == .errorAuthorizationDenied || error.code == .errorAuthorizationNotDetermined || error.code == .errorNoData {
                     cont.resume(returning: []); return

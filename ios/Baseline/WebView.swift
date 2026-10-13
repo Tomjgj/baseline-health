@@ -78,6 +78,8 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "watch", id, json }                                 → the context for the watch app (WatchLink)
     ///   { type: "share", id, filename, text }                       → the share sheet with that file
     ///   { type: "healthStatus", id }                                → { asked }: whether the Health sheet was answered before
+    ///   { type: "workout", id, start, end, width, dark }             → one workout in detail (HealthReader.workoutDetail): hr, dist,
+    ///     route [[sec, lat, lon, alt, m]], climb, tempC, humidity, indoor, steps, and map { img, w, h, xy } when it has a route
     ///   { type: "latest", id }                                      → { at, hr: [[time, bpm]], hrv: [[time, ms]] }, the last few hours
     ///   { type: "water", id, ml, at: "YYYY-MM-DDTHH:MM" }           → saved to Health as dietary water, tagged with id; { saved }
     ///   { type: "unwater", id }                                     → deletes the sample saved with that id; { saved }
@@ -190,6 +192,23 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
         case "healthStatus":
             log.notice("health status request")
             reply(["id": id, "ok": true, "payload": ["asked": health.hasAsked]])
+            return
+        case "workout":
+            log.notice("workout request")
+            let start = body["start"] as? String ?? "", end = body["end"] as? String ?? ""
+            let width = body["width"] as? Double ?? 360, dark = body["dark"] as? Bool ?? true
+            Task {
+                do {
+                    let detail = try await health.workoutDetail(start: start, end: end)
+                    var payload = detail.payload
+                    if let map = await RouteMap.snapshot(of: detail.route, width: width, dark: dark) { payload["map"] = map }
+                    await MainActor.run { self.reply(["id": id, "ok": true, "payload": payload]) }
+                } catch let error as HealthReader.Failure {
+                    await MainActor.run { self.reply(["id": id, "ok": false, "error": error.code]) }
+                } catch {
+                    await MainActor.run { self.reply(["id": id, "ok": false, "error": "workout-failed"]) }
+                }
+            }
             return
         case "latest":
             Task {
