@@ -2022,6 +2022,23 @@ const E = (() => {
   }
   const EFFECT_LABELS = { clear: 'Clear', likely: 'Likely', unclear: 'Not clear yet', few: 'Not enough data' };
 
+  /**
+   * Your normal from recent days: mean and SD, but robust. Days more than 3 SDs from the median (a night of illness or drinks,
+   * a bad reading) are left out, measured with the median absolute deviation so the outliers can't hide themselves. The SD
+   * leans on a typical spread (`prior`) as if it were 5 more days, which only matters while there are few days.
+   */
+  function robustNormal(vals, prior) {
+    let v = vals;
+    if (v.length >= 8) {
+      const srt = [...v].sort((a, b) => a - b), med = quantile(srt, 0.5);
+      const mad = 1.4826 * quantile(srt.map((x) => Math.abs(x - med)).sort((a, b) => a - b), 0.5);
+      if (mad > 0) v = v.filter((x) => Math.abs(x - med) <= 2.5 * mad);
+    }
+    const n = v.length, s0 = sd(v);
+    const k = 5, spread = prior && n >= 2 ? Math.sqrt(((n - 1) * s0 * s0 + k * prior * prior) / (n - 1 + k)) : s0;
+    return { mean: mean(v), sd: spread, n, left: vals.length - n };
+  }
+
   function context(state, now = new Date()) {
     CUSTOM = state.training?.customEx || {};
     const days = state.days || {}, food = state.food || {}, body = state.body || {}, workouts = state.workouts || {};
@@ -2050,12 +2067,16 @@ const E = (() => {
     };
 
     // ---------- baselines ----------
+    // HRV measured only during the day (the watch was off at night) runs far lower than overnight HRV, so it's no measure of recovery
+    const nightHrv = (x) => x?.hrv > 0 && x.hrvSrc !== 'day';
     const pick = {
-      lnhrv: (x) => (x.hrv > 0 ? Math.log(x.hrv) : null),
+      lnhrv: (x) => (nightHrv(x) ? Math.log(x.hrv) : null),
       rhr: (x) => x.rhr ?? null,
       resp: (x) => x.resp ?? null,
       temp: (x) => x.temp ?? null,
     };
+    // a typical day-to-day spread for each, so a normal learned from a handful of days isn't absurdly narrow or wide
+    const SPREAD = { lnhrv: 0.15, rhr: 2.5, resp: 0.5, temp: 0.25 };
     const base = (key, win = 30) => m('base_' + key + win, (d) => {
       const vals = [];
       for (let i = 1; i <= win; i++) {
@@ -2064,7 +2085,7 @@ const E = (() => {
         const v = pick[key](x);
         if (v != null && isFinite(v)) vals.push(v);
       }
-      return { mean: mean(vals), sd: sd(vals), n: vals.length };
+      return robustNormal(vals, SPREAD[key]);
     });
     const hrvBase = base('lnhrv'), rhrBase = base('rhr'), respBase = base('resp'), tempBase = base('temp');
 
@@ -2199,7 +2220,8 @@ const E = (() => {
         wakeDev = U.noonRel(s.end) - mean(wakes);
         c.consistency = clamp01(1 - ((Math.abs(bedDev) + Math.abs(wakeDev)) / 2 - 15) / 75);
       }
-      c.interruptions = clamp01(1 - ((s.awake || 0) - 10) / 50);
+      // interruptions: time awake after first falling asleep (falling asleep slowly already shows in efficiency)
+      c.interruptions = clamp01(1 - (Math.max(0, (s.awake || 0) - (s.latency || 0)) - 10) / 50);
       const W = { duration: 0.45, efficiency: 0.15, restorative: 0.15, consistency: 0.15, interruptions: 0.1 };
       let num = 0, den = 0;
       for (const k in c) { num += W[k] * c[k]; den += W[k]; }
@@ -2211,10 +2233,12 @@ const E = (() => {
       const day = days[d];
       if (!day || (day.hrv == null && day.rhr == null)) return null;
       const hb = hrvBase(d), rb = rhrBase(d);
-      const hasH = day.hrv != null && hb.n >= 4, hasR = day.rhr != null && rb.n >= 4;
-      if (!hasH && !hasR) return { calibrating: true, n: Math.max(hb.n, rb.n), needed: 4 };
+      const hasH = nightHrv(day) && hb.n >= 4, hasR = day.rhr != null && rb.n >= 4;
+      if (!hasH && !hasR) return hb.n >= 4 || rb.n >= 4 ? null : { calibrating: true, n: Math.max(hb.n, rb.n), needed: 4 };
       const parts = [];
-      if (hasH) parts.push({ k: 'hrv', w: 0.45, z: clamp((Math.log(day.hrv) - hb.mean) / Math.max(hb.sd || 0, 0.08), -2.5, 2.5) });
+      // a night with only one or two HRV readings says less than one with several, so it moves recovery less
+      const nH = day.hrvSrc === 'sleep' ? day.night?.hrv?.length : null;
+      if (hasH) parts.push({ k: 'hrv', w: 0.45 * (nH ? Math.min(1, 0.55 + 0.15 * nH) : 1), z: clamp((Math.log(day.hrv) - hb.mean) / Math.max(hb.sd || 0, 0.08), -2.5, 2.5) });
       if (hasR) parts.push({ k: 'rhr', w: 0.25, z: clamp((rb.mean - day.rhr) / Math.max(rb.sd || 0, 1.5), -2.5, 2.5) });
       const ss = sleepScore(d);
       if (ss) parts.push({ k: 'sleep', w: 0.2, z: clamp((ss.score - 75) / 15, -2.5, 2) });
@@ -2234,9 +2258,24 @@ const E = (() => {
         sleep: ss,
       };
     });
+    /**
+     * Night-time signs well off your normal at once: wrist temperature, resting heart rate, breathing rate, HRV. Two or more
+     * together is the usual pattern before a cold, or after a heavy night; one alone often means little.
+     */
+    const bodySigns = m('signs', (d) => {
+      const r = recovery(d), day = days[d];
+      if (!r || r.calibrating) return [];
+      const rb = rhrBase(d), rsb = respBase(d), out = [];
+      if (r.tempDev != null && r.tempDev >= 0.4) out.push(`wrist temperature ${r.tempDev.toFixed(1)} °C up`);
+      if (r.rhrDiff != null && r.rhrDiff >= Math.max(3, 1.5 * (rb.sd || 0))) out.push(`resting heart rate ${Math.round(r.rhrDiff)} bpm up`);
+      if (day?.resp != null && rsb.n >= 4 && day.resp - rsb.mean >= Math.max(1, 1.5 * (rsb.sd || 0))) out.push(`breathing rate ${(day.resp - rsb.mean).toFixed(1)} up`);
+      if (r.hrvPct != null && r.hrvPct <= -20) out.push(`HRV ${Math.round(-r.hrvPct)}% down`);
+      return out;
+    });
     const strainTarget = (d) => {
       const r = recovery(d);
       if (!r || r.calibrating) return [8, 14];
+      if (bodySigns(d).length >= 2) return [5, 10];
       return r.band === 'high' ? [14, 18] : r.band === 'mid' ? [10, 14] : [5, 10];
     };
 
@@ -2288,18 +2327,34 @@ const E = (() => {
       return { mean: mu, sd: s0, lo: Math.exp(mu - s0), hi: Math.exp(mu + s0), mid: Math.exp(mu), n: vals.length };
     });
 
-    // ---------- stress: heart rate above resting plus HRV below your daytime normal, while awake and still ----------
+    // your calm daytime heart rate: the 10th percentile of the last 14 days' still, awake half hours. Sitting still runs 10–20 bpm
+    // above the resting heart rate Apple reports, by an amount that differs from person to person, so stress starts from this.
+    const hrCalm = m('hrCalm', (d) => {
+      const v = [];
+      for (let i = 1; i <= 14; i++) {
+        const x = addDays(d, -i), hb = days[x]?.hrB;
+        if (!hb) continue;
+        const sts = dayStates(x);
+        for (let b = 0; b < 48; b++) if (sts[b] === 'still' && hb[b] != null) v.push(hb[b]);
+      }
+      if (v.length < 24) return null;
+      return quantile(v.sort((a, b) => a - b), 0.1);
+    });
+
+    // ---------- stress: heart rate above your calm daytime normal plus HRV below your daytime normal, while awake and still ----------
     const stress = m('stress', (d) => {
       const day = days[d];
       if (!day?.hrB) return null;
       const p = hrParams(d);
       const sts = dayStates(d), hb = hrvDayBase(d);
+      // until there are two weeks to learn from, a typical gap above resting
+      const calm = clamp(hrCalm(d) ?? p.rest + 12, p.rest + 2, p.rest + 30), span = 0.18 * Math.max(40, p.max - p.rest);
       const buckets = [], vals = [], hrvAwake = [];
       let highMin = 0, calmMin = 0;
       for (let b = 0; b < 48; b++) {
         const state = sts[b], hr = day.hrB[b], st = day.stB?.[b] || 0, hv = day.hrvB?.[b] ?? null;
         if (state !== 'still') { buckets.push({ state, hr, st, hrv: hv }); continue; }
-        let v = clamp01((hr - (p.rest + 4)) / (0.28 * Math.max(40, p.max - p.rest))) * 100;
+        let v = clamp01((hr - calm) / span) * 100;
         if (st > 60) v *= 1 - Math.min(st, 500) / 700;
         if (hv && hb) { const z = (hb.mean - Math.log(hv)) / hb.sd; v = 0.55 * v + 0.45 * clamp01(0.35 + z * 0.22) * 100; }
         v = Math.round(v);
@@ -2320,7 +2375,7 @@ const E = (() => {
       }
       let top = -1;
       buckets.forEach((x, i) => { if (x.state === 'still' && (top < 0 || x.value > buckets[top].value)) top = i; });
-      return { avg, level: stressLevel(avg), buckets, highMin, calmMin, peak: best >= 50 ? peak : null, top: top >= 0 ? { i: top, v: buckets[top].value, hrv: buckets[top].hrv } : null,
+      return { avg, level: stressLevel(avg), buckets, highMin, calmMin, calmHr: Math.round(calm), peak: best >= 50 ? peak : null, top: top >= 0 ? { i: top, v: buckets[top].value, hrv: buckets[top].hrv } : null,
         hrvBase: hb, hrvAwake: hrvAwake.length ? Math.round(mean(hrvAwake)) : null };
     });
 
@@ -2637,7 +2692,7 @@ const E = (() => {
       if (ms === 'recovery') { const r = recovery(nx); return r && !r.calibrating ? r.score : null; }
       if (ms === 'sleep') return sleepScore(nx)?.score ?? null;
       const hv = days[nx]?.hrv, hb = hrvBase(nx);
-      return hv && hb.n >= 4 ? (hv / Math.exp(hb.mean) - 1) * 100 : null;
+      return nightHrv(days[nx]) && hb.n >= 4 ? (hv / Math.exp(hb.mean) - 1) * 100 : null;
     };
     /** Covariates for day x: weekend, the strain that bears on the outcome, an exam around it. */
     const COV_NAMES = ['weekends', 'training load', 'exam days'];
@@ -2772,7 +2827,9 @@ const E = (() => {
         if (r.band === 'high') out.push({ p: 3, kind: 'recovery', text: `Recovery is high${r.hrvPct != null ? ` and HRV is ${Math.round(Math.abs(r.hrvPct))}% ${r.hrvPct >= 0 ? 'above' : 'below'} your baseline` : ''}. Today suits a harder session, around ${tgt[0]}–${tgt[1]} strain.` });
         else if (r.band === 'mid') out.push({ p: 2, kind: 'recovery', text: `Recovery is moderate. A steady day fits best, around ${tgt[0]}–${tgt[1]} strain.` });
         else out.push({ p: 4, kind: 'recovery', text: `Recovery is low${r.hrvPct != null && r.hrvPct < 0 ? `: HRV is ${Math.round(-r.hrvPct)}% below baseline` : ''}${r.rhrDiff > 2 ? ` and resting heart rate is ${Math.round(r.rhrDiff)} bpm higher` : ''}. Keep training light today.` });
-        if (r.tempDev != null && r.tempDev >= 0.5) out.push({ p: 5, kind: 'temp', text: `Wrist temperature is ${r.tempDev.toFixed(1)} °C above your baseline. Illness, alcohol or a late meal can all cause this.` });
+        const signs = bodySigns(d);
+        if (signs.length >= 2) out.push({ p: 5, kind: 'body', text: `Several signs are off together: ${signs.join(', ')}. It often comes before a cold or after a heavy night. An easy day, fluids and an early night help.` });
+        else if (r.tempDev != null && r.tempDev >= 0.5) out.push({ p: 5, kind: 'temp', text: `Wrist temperature is ${r.tempDev.toFixed(1)} °C above your baseline. Illness, alcohol or a late meal can all cause this.` });
       } else if (r?.calibrating) {
         out.push({ p: 1, kind: 'recovery', text: `Recovery needs a few nights of data to learn your baseline (${r.n} of ${r.needed} so far).` });
       }
@@ -3005,7 +3062,7 @@ const E = (() => {
     };
 
     // ---------- baselines: the 30-day normals each score is measured against, and how they move ----------
-    const winStats = (n, d, f) => { const v = []; for (let i = 1; i <= n; i++) { const x = f(addDays(d, -i)); if (x != null && isFinite(x)) v.push(x); } return { mean: mean(v), sd: sd(v), n: v.length }; };
+    const winStats = (n, d, f) => { const v = []; for (let i = 1; i <= n; i++) { const x = f(addDays(d, -i)); if (x != null && isFinite(x)) v.push(x); } return robustNormal(v); };
     const dailyValue = (key, d) => {
       const x = days[d] || {};
       switch (key) {
@@ -3127,7 +3184,7 @@ const E = (() => {
       P, todayStr, days, food, body, workouts, allDates, bodyDates,
       muscleParts, ageOn, hrParams, sessions, strain, strainTarget, sleepOf, sleepNeed, sleepScore, recovery, stress,
       intake, water, waterGoal, waterSuggest, trendWeight, latestBody, energy, tdee, load, healthAge, insights,
-      hrvBase, rhrBase, respBase, tempBase, activeMean,
+      hrvBase, rhrBase, respBase, tempBase, activeMean, bodySigns,
       naps, journal, habits, loggedNaps, napsOn, muscleSets, habitEffect, autoAnswer, answerOf, habitEffectTrend: habitEffectTrendOf, experiment, experiments, activeExperiment, hrDay, muscleState,
       plan: PLAN, planOn, planNext, baseline, dailyValue,
       schedule: SCHED, activitiesOn, actStress, activitySummary, activityTrend, stressProfile, habitTrack, habitMeta,
@@ -6222,6 +6279,8 @@ const Tabs = (() => {
     const v = st?.value ?? 0;
     const plans = C.planOn(date);
     const open = plans.filter((p) => p.status === 'today');
+    const signs = C.bodySigns(date);
+    if (signs.length >= 2) rows.push([-1, prow({ ic: 'heart', tone: 'stress', t: 'Take it easy today', s: `Several signs are off your normal: ${signs.join(', ')}. That often comes before a cold or after a heavy night.`, onclick: () => App.open('recovery', { date }) })]);
     if (v >= tgt[0]) rows.push([8, prow({ ic: 'bolt', tone: 'strain', t: 'Strain target reached', s: `${v.toFixed(1)} against a ${tgt[0]}–${tgt[1]} target.${v > tgt[1] ? ' Rest for the rest of the day.' : ' Anything more is a bonus.'}`,
       right: h('span', { class: 'done-tag' }, icon('check'), 'Done'), onclick: () => App.open('strain', { date }), chevron: false })]);
     else if (date === C.todayStr && new Date().getHours() >= 20 && !open.length) { /* too late to chase the target */ }
@@ -6999,12 +7058,14 @@ const Tabs = (() => {
     const items = outsideNormal(C, date);
     const anyData = BASELINES.some((b) => C.baseline(b.key, date));
     if (!anyData) return null;
+    const signs = C.bodySigns(date);
+    const lead = signs.length >= 2 ? prow({ ic: 'heart', tone: 'stress', t: 'Several signs are off together', s: `${signs.join(', ').replace(/^./, (c) => c.toUpperCase())}. Often a cold coming, or a heavy night.`, onclick: () => App.open('recovery', { date }) }) : null;
     const rows = items.slice(0, 3).map(({ x, last, cur, pos, good }) => prow({ ic: 'dot', tone: good === false ? 'stress' : good ? 'good' : '',
       t: `${x.name} ${pos} your normal`, s: `${blFmt(x, last.v)}${x.unit && !x.dur ? ' ' + x.unit : ''} · normal ${blFmt(x, cur.lo)}–${blFmt(x, cur.hi)}`,
       onclick: () => App.open('metric', { key: x.key, date }) }));
     return h('section', { class: 'card', 'aria-label': 'Highlights' },
       h('div', { class: 'card-title' }, h('h2', null, 'Highlights')),
-      rows.length ? h('div', { class: 'list' }, rows, items.length > 3 ? h('p', { class: 'note', style: { paddingTop: '6px' } }, `${items.length - 3} more in the categories below.`) : null)
+      rows.length || lead ? h('div', { class: 'list' }, lead, rows, items.length > 3 ? h('p', { class: 'note', style: { paddingTop: '6px' } }, `${items.length - 3} more in the categories below.`) : null)
         : h('p', { class: 'small ink2' }, 'Everything is within your normal range.'));
   }
   function scoresStrip(C, date) {
@@ -7902,7 +7963,7 @@ const Pages = {};
         wkText ? h('p', { class: 'small ink2', style: { marginTop: '12px', lineHeight: 1.55 } }, wkText) : null));
       out.push(askRow('Ask Claude what’s driving my stress', 'What has been driving my stress and daytime HRV this week, and what can I change?'));
       out.push(expander('How stress is measured',
-        'Stress looks at every half hour you’re awake and sitting still. Two signals add up: how far your heart rate sits above resting, and how far HRV sits below your normal daytime HRV from the last two weeks.',
+        'Stress looks at every half hour you’re awake and sitting still. Two signals add up: how far your heart rate sits above your calm daytime heart rate, and how far HRV sits below your normal daytime HRV, both from the last two weeks.',
         'Where your watch took HRV readings during the day, the HRV line shows what your nervous system was doing, not just overnight. Workouts, walks and sleep are shaded and not scored.'));
       return view(out);
     },
@@ -8275,7 +8336,7 @@ const Pages = {};
   }
   Pages.coachContext = coachContext;
   const RULES = (ctx) => `You are the coach inside Baseline, the user's personal health app. Their recent data is below.
-How the app's scores work: recovery (0-100) compares this morning's HRV, resting heart rate and sleep with their own last 30 days (67+ high, 34-66 moderate, below 34 low). Strain (0-21) is heart-rate training load for the day. Sleep score (0-100) weighs time asleep against need, efficiency, deep+REM share, regular timing and interruptions. Stress (0-100) comes from daytime heart rate above resting plus HRV below the daytime normal, while awake and still. Calorie targets come from an adaptive expenditure estimate.
+How the app's scores work: recovery (0-100) compares this morning's HRV, resting heart rate and sleep with their own last 30 days (67+ high, 34-66 moderate, below 34 low). Strain (0-21) is heart-rate training load for the day. Sleep score (0-100) weighs time asleep against need, efficiency, deep+REM share, regular timing and interruptions. Stress (0-100) comes from daytime heart rate above the person's calm daytime heart rate plus HRV below the daytime normal, while awake and still. Calorie targets come from an adaptive expenditure estimate.
 Answer using this data. Be specific and brief because they read on a phone: lead with the answer, then a few short numbered or bulleted points. Quote real numbers from the data and do not invent any. If something isn't in the data, say so. You are not a doctor: for symptoms, injuries, medication or anything that sounds medical, suggest a professional. Use ${Store.state().profile.units === 'imperial' ? 'imperial' : 'metric'} units.
 
 DATA

@@ -109,6 +109,13 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Route and distance access (`detailTypes` in HealthReader) is asked with everything else on a new install, and the first time a workout opens on earlier ones.
 - `Charts.timeLine({ pts, dur, bands, invert, ticks })` draws a measure over elapsed time.
 
+## Models (Oct 2026 review)
+- Normals are robust: `robustNormal(vals, prior)` drops days more than 2.5 SDs (by median absolute deviation) from the median, so a sick week or a night of drinks doesn't stretch the normal, and leans the SD on a typical spread (`SPREAD`: lnHRV 0.15, RHR 2.5, breathing 0.5, temperature 0.25) as if it were 5 more days, which only matters early on. `winStats` (the other baselines) uses it too, without a prior.
+- HRV measured only in the daytime (`hrvSrc: 'day'`, watch off overnight) is never compared with the overnight normal: it's left out of the HRV baseline, recovery and the HRV effect outcome (`nightHrv`). Recovery then runs on resting heart rate and sleep. A night with one or two HRV readings weighs less in recovery (`night.hrv.length`).
+- Stress measures heart rate above your calm daytime heart rate (`hrCalm`: 10th percentile of the last 14 days' still half hours; resting + 12 until there are two weeks), over 18% of the heart-rate reserve, not above resting + 4: sitting still runs 10–20 bpm above Apple's resting heart rate, differently for everyone.
+- `C.bodySigns(d)`: wrist temperature, resting heart rate, breathing rate and HRV well off normal. Two or more together put "Take it easy today" at the top of Today and Highlights, and drop the strain target to 5–10.
+- Sleep score interruptions count time awake after first falling asleep (latency is already in efficiency).
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.
