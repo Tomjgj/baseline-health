@@ -484,7 +484,7 @@ a.btn { text-decoration: none; }
 .wk-food { margin: 4px -18px -6px; }
 .wk-food .sc-cell { padding: 8px 18px 4px; }
 .wk-food .sc-cell .v { font-size: calc(22 * var(--fs)); }
-.meal-empty { display: grid; gap: 8px; padding: 14px 18px; }
+.meal-empty { display: grid; gap: 8px; padding: 12px 0 14px; }
 .meal-empty .sm { color: var(--muted); font-size: calc(13.5 * var(--fs)); }
 .meal-empty .chips .chip svg { width: 14px; height: 14px; }
 .water-btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px; }
@@ -1778,7 +1778,7 @@ const E = (() => {
   const DEFAULT_PROFILE = {
     sex: null, birthYear: null, birthDate: null, heightCm: null, units: 'metric',
     goal: 'maintain', ratePct: 0.5, proteinPerKg: 2.0, fatPct: 0.28, adjustActivity: true,
-    sleepNeedH: 8, hrMaxOverride: null,
+    sleepNeedH: 8, hrMaxOverride: null, stepGoal: 10000, kcalTarget: null, goalWeight: null,
   };
 
   function srpeTrimp(min, rpe) { return 0.2 * (min || 0) * (rpe || 5); }
@@ -2201,8 +2201,10 @@ const E = (() => {
       const debtAdd = Math.round(Math.min(45, 0.25 * short));
       // naps taken during the day before this night reduce what the night needs to cover
       const napCredit = Math.round(napsOn(addDays(d, -1)));
-      const total = Math.max(baseMin - 45, baseMin + strainAdd + debtAdd - napCredit);
-      return { base: baseMin, strainAdd, debtAdd, napCredit: baseMin + strainAdd + debtAdd - total, total };
+      // at most an hour on top of your usual need: more only sets a bedtime nobody keeps (strain counts first)
+      const extra = Math.min(60, strainAdd + debtAdd), debtUsed = Math.max(0, extra - strainAdd), strainUsed = extra - debtUsed;
+      const total = Math.max(baseMin - 45, baseMin + extra - napCredit);
+      return { base: baseMin, strainAdd: strainUsed, debtAdd: debtUsed, napCredit: baseMin + extra - total, total };
     });
     const sleepScore = m('sleepScore', (d) => {
       const s = sleepOf(d);
@@ -2503,8 +2505,10 @@ const E = (() => {
         adj = clamp(adj, 0, 350);
       }
       const bmr = bmrOn(d);
-      const floor = Math.max(1200, bmr ? Math.round(bmr) : 0);
-      const target = Math.max(floor, Math.round((est + delta + adj) / 10) * 10);
+      // your own number replaces the adaptive one (training days still add on top when that's on)
+      const custom = P.kcalTarget > 0;
+      const floor = custom ? 1000 : Math.max(1200, bmr ? Math.round(bmr) : 0);
+      const target = Math.max(floor, Math.round(((custom ? P.kcalTarget : est + delta) + adj) / 10) * 10);
       let protein, fat, carbs;
       if (w) {
         protein = Math.round(P.proteinPerKg * w);
@@ -2519,7 +2523,10 @@ const E = (() => {
         tdee: Math.round(est), target, delta: Math.round(delta), adj: Math.round(adj), floor, bmr: bmr && Math.round(bmr),
         protein, fat, carbs, trendWeight: w, weekChange: w != null && wk != null ? w - wk : null,
         confidence: info.c, logged: info.logged, weighIns: info.weighIns, prior: Math.round(info.prior), intakeAvg: info.intakeAvg,
-        rate,
+        rate, custom,
+        // the goal weight, how far off it is, and when the trend gets there at the chosen rate
+        goalWeight: P.goalWeight > 0 ? P.goalWeight : null, toGoal: P.goalWeight > 0 && w ? P.goalWeight - w : null,
+        goalWeeks: P.goalWeight > 0 && w && rate && Math.sign(P.goalWeight - w) === Math.sign(rate) ? Math.abs(P.goalWeight - w) / ((Math.abs(rate) / 100) * w) : null,
       };
     });
 
@@ -6410,10 +6417,10 @@ const Tabs = (() => {
         dCls: hrvPct == null || Math.abs(hrvPct) < 8 ? '' : hrvPct < 0 ? 'down' : 'up', spark: Charts.sparkline(series(14, (d) => C.days[d]?.hrv ?? null), { color: 'var(--hrv)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'hrv', date }) }),
       mtile({ k: 'Resting heart rate', tone: 'hr', v: day.rhr ?? null, unit: 'bpm', d: rd == null ? 'Overnight' : Math.abs(rd) < 2.5 ? 'Normal range' : `${fmtSigned(rd, 0)} vs normal`, dCls: rd == null || Math.abs(rd) < 2.5 ? '' : rd > 0 ? 'down' : 'up',
         spark: Charts.sparkline(series(14, (d) => C.days[d]?.rhr ?? null), { color: 'var(--hr)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'rhr', date }) }),
-      mtile({ k: 'Steps', tone: 'strain', v: day.steps != null ? fmtInt(day.steps) : null, d: day.steps == null ? '' : day.steps >= 10000 ? 'Goal of 10,000 met' : `${fmtInt(10000 - day.steps)} to go`, dCls: day.steps >= 10000 ? 'up' : '',
+      mtile({ k: 'Steps', tone: 'strain', v: day.steps != null ? fmtInt(day.steps) : null, d: day.steps == null ? '' : day.steps >= C.P.stepGoal ? `Goal of ${fmtInt(C.P.stepGoal)} met` : `${fmtInt(C.P.stepGoal - day.steps)} to go`, dCls: day.steps >= C.P.stepGoal ? 'up' : '',
         spark: Charts.sparkline(series(14, (d) => C.days[d]?.steps ?? null), { color: 'var(--strain)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'steps', date }) }),
       mtile({ k: left >= 0 ? 'Calories left' : 'Calories over', tone: 'food', v: fmtInt(Math.abs(left)), unit: 'kcal', d: `${fmtInt(it.kcal)} of ${fmtInt(en.target)}`, spark: Charts.meter(it.kcal, en.target, 'var(--food)', { over: left < 0, h: 5 }), onclick: () => App.go('food') }),
-      mtile({ k: 'Weight trend', tone: 'ink-2', v: en.trendWeight != null ? fmtW(en.trendWeight) : null, unit: wU(), d: en.weekChange != null ? `${fmtSigned(U.kgTo(en.weekChange, units()), 1)} ${wU()} this week` : 'Weigh in to start',
+      mtile({ k: 'Weight trend', tone: 'ink-2', v: en.trendWeight != null ? fmtW(en.trendWeight) : null, unit: wU(), d: en.weekChange != null ? `${fmtSigned(U.kgTo(en.weekChange, units()), 1)} ${wU()} this week${en.toGoal != null && Math.abs(en.toGoal) >= 0.2 ? ` · ${fmtW(Math.abs(en.toGoal))} to goal` : ''}` : 'Weigh in to start',
         spark: Charts.sparkline(series(30, (d) => C.trendWeight(d)), { color: 'var(--ink-2)', w: 58, h: 24, area: false }), onclick: () => App.open('energy', { date }) }),
       (() => { const w = C.water(date), [n, u] = mlParts(w.ml); return mtile({ k: 'Water', tone: 'water', v: n, unit: u, d: w.ml >= w.goal ? `Goal of ${mlText(w.goal)} met` : `${mlText(w.left)} to go`, dCls: w.ml >= w.goal ? 'up' : '',
         spark: Charts.meter(w.ml, w.goal, 'var(--water)', { h: 5 }), onclick: () => App.open('water', { date }) }); })(),
@@ -6663,7 +6670,7 @@ const Tabs = (() => {
           mi.length >= 2 ? h('button', { class: 'add-line', style: { color: 'var(--muted)', paddingTop: 0 }, onclick: () => saveMeal(name, mi) }, icon('star'), 'Save as a meal') : null) : null);
     });
     if (emptyMeals.length) meals.push(h('div', { class: 'meal meal-empty' },
-      h('span', { class: 'sm' }, items.length ? 'Nothing yet:' : 'Nothing logged yet'),
+      h('span', { class: 'sm' }, items.length ? `Add to ${emptyMeals.length === 1 ? emptyMeals[0][1].toLowerCase() : 'another meal'}` : 'Nothing logged yet. Add to a meal:'),
       h('div', { class: 'chips wrap' }, emptyMeals.map(([m, name]) => h('button', { class: 'chip', 'aria-label': `Add food to ${name.toLowerCase()}`, onclick: () => App.open('foodlog', { date, meal: m }) }, icon('plus'), name)))));
     out.push(h('section', { class: 'card flush', 'aria-label': 'Meals' }, meals));
     const meal = isToday ? mealForNow() : 'snack';
@@ -7055,7 +7062,11 @@ const Tabs = (() => {
     for (const x of BASELINES) {
       if (!C.baseline(x.key, date)) continue;
       const l = latestOf(C, x, date);
-      if (l.pos && l.last && U.daysBetween(l.last.d, date) <= 2) out.push({ x, ...l });
+      if (!l.pos || !l.last || U.daysBetween(l.last.d, date) > 2) continue;
+      // a highlight is a clear step outside your normal: half again your usual spread past the middle, and more than
+      // the measure's smallest change that matters (just outside the band happens one day in three)
+      const spread = (l.cur.hi - l.cur.lo) / 2, dev = l.last.v - l.cur.v;
+      if (Math.abs(dev) >= Math.max(1.5 * spread, x.thr || 0)) out.push({ x, ...l, dev });
     }
     // what's worse first, then what's just different
     return out.sort((a, b) => (a.good === false ? 0 : a.good == null ? 1 : 2) - (b.good === false ? 0 : b.good == null ? 1 : 2));
@@ -7066,8 +7077,9 @@ const Tabs = (() => {
     if (!anyData) return null;
     const signs = C.bodySigns(date);
     const lead = signs.length >= 2 ? prow({ ic: 'heart', tone: 'stress', t: 'Several signs are off together', s: `${signs.join(', ').replace(/^./, (c) => c.toUpperCase())}. Often a cold coming, or a heavy night.`, onclick: () => App.open('recovery', { date }) }) : null;
-    const rows = items.slice(0, 3).map(({ x, last, cur, pos, good }) => prow({ ic: 'dot', tone: good === false ? 'stress' : good ? 'good' : '',
-      t: `${x.name} ${pos} your normal`, s: `${blFmt(x, last.v)}${x.unit && !x.dur ? ' ' + x.unit : ''} · normal ${blFmt(x, cur.lo)}–${blFmt(x, cur.hi)}`,
+    const unitOf = (x) => (x.unit && !x.dur ? (x.unit.startsWith('/') ? x.unit : ' ' + x.unit) : '');
+    const rows = items.slice(0, 3).map(({ x, last, cur, pos, good, dev }) => prow({ ic: CATS.find((c) => c.keys.includes(x.key))?.ic || 'dot', tone: good === false ? 'stress' : good ? 'good' : 'sleep',
+      t: `${x.name} ${pos} your normal`, s: `${blFmt(x, last.v)}${unitOf(x)} · ${x.dur ? fmtDur(Math.abs(dev)) : blFmt(x, Math.abs(dev))} ${pos === 'above' ? 'over' : 'under'} your usual ${blFmt(x, cur.v)}${unitOf(x)}`,
       onclick: () => App.open('metric', { key: x.key, date }) }));
     return h('section', { class: 'card', 'aria-label': 'Highlights' },
       h('div', { class: 'card-title' }, h('h2', null, 'Highlights')),
@@ -7404,8 +7416,8 @@ ${bp.length ? `<h2>Blood pressure</h2><table><tr><th>Day</th><th>Systolic</th><t
     const st = Store.state();
     out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
       prow({ ic: 'report', t: 'Summary for your doctor', s: 'The last 3 months on one page, to share or print', onclick: () => doctorSummary(C, date) }),
-      prow({ ic: 'watch', t: 'Data and sources', s: Store.demo ? 'Sample data · import your own from Apple Health' : `Apple Health${HealthSync.last() ? ` · synced ${U.fmtShort(HealthSync.last().at.slice(0, 10))}` : st.meta?.lastImport ? ` · imported ${U.fmtShort(st.meta.lastImport.at.slice(0, 10))}` : ''} · export or delete`, onclick: () => App.open('settings', { focus: 'data' }) }),
-      prow({ ic: 'gear', t: 'Profile, goals and units', s: 'Age, height, calorie goal, macros, theme', onclick: () => App.open('settings', { focus: 'profile' }) }))));
+      prow({ ic: 'heart', tone: 'hr', t: 'Apple Health', s: Store.demo ? 'Sample data · import your own from Apple Health' : `${HealthSync.last() ? `Synced ${U.fmtShort(HealthSync.last().at.slice(0, 10))}` : st.meta?.lastImport ? `Imported ${U.fmtShort(st.meta.lastImport.at.slice(0, 10))}` : 'Not connected yet'} · saving ${st.profile.healthWrite === true ? 'on' : 'off'}`, onclick: () => App.open('settings', { focus: 'health' }) }),
+      prow({ ic: 'gear', t: 'Settings', s: 'Profile, goals, units, notifications, appearance and your data', onclick: () => App.open('settings') }))));
     return h('div', { class: 'view health-view' }, out);
   };
 
@@ -8519,13 +8531,27 @@ ${ctx}`;
       const sec = (id, title, ...kids) => h('section', { id: 'set-' + id, class: 'card col', style: { gap: '14px' } }, h('h2', { style: { fontSize: 'calc(17 * var(--fs))', fontWeight: 600 } }, title), ...kids);
       const el = view(pageHead('Settings', { sub: Store.demo ? 'You’re editing the sample person' : 'Saved privately with this app' }),
         Store.demo ? h('div', { class: 'banner' }, h('p', null, 'You’re looking at sample data. Turn it off to set up your own profile.'), h('button', { class: 'btn sm primary', onclick: () => { Store.setDemo(false); App.render(); } }, 'Use my data')) : null,
-        sec('profile', 'Profile',
+        sec('profile', 'Profile and units',
           field('Sex', seg([['male', 'Male'], ['female', 'Female']], P.sex, (v) => set({ sex: v })), 'for calorie and fitness formulas'),
           h('div', { class: 'grid2' }, field('Birth year', yearIn), field(`Height (${imp ? 'in' : 'cm'})`, heightIn)),
+          (() => { const en = C.energy(C.todayStr), lb = C.latestBody(C.todayStr, 'weight');
+            return prow({ ic: 'scale', t: en.trendWeight != null ? `Weight: ${fmtW(en.trendWeight)} ${wU()}` : 'Weight', s: lb ? `Trend from your weigh-ins · last ${U.fmtShort(lb.date)}` : 'Weigh in so calories and protein fit you',
+              right: h('button', { class: 'btn sm', onclick: (e) => { e.stopPropagation(); Sheet.bodyLog(C.todayStr); } }, 'Weigh in'), onclick: () => App.open('metric', { key: 'weight', date: C.todayStr }) }); })(),
           field('Units', seg([['metric', 'kg · cm'], ['imperial', 'lb · in']], P.units, (v) => { set({ units: v }); App.render(); }))),
-        sec('goal', 'Goal and macros',
-          field('Goal', seg([['lose', 'Lose'], ['maintain', 'Maintain'], ['gain', 'Gain']], P.goal, (v) => { set({ goal: v }); drawRate(); })),
+        sec('goal', 'Goals and macros',
+          (() => { const en = C.energy(C.todayStr);
+            return prow({ ic: 'food', tone: 'food', t: `${fmtInt(en.target)} kcal a day`, s: `Protein ${en.protein} g · carbs ${en.carbs} g · fat ${en.fat} g${en.custom ? ' · your own target' : ' · adapts to what you burn'}`, onclick: () => App.open('energy', { date: C.todayStr }) }); })(),
+          field('Goal', seg([['lose', 'Lose'], ['maintain', 'Maintain'], ['gain', 'Gain']], P.goal, (v) => { set({ goal: v }); drawRate(); App.render(); })),
           rateWrap,
+          field('Calorie target', seg([['auto', 'Adaptive'], ['custom', 'My own']], P.kcalTarget > 0 ? 'custom' : 'auto', (v) => {
+            set({ kcalTarget: v === 'custom' ? Math.round(C.energy(C.todayStr).target / 10) * 10 : null }); App.render(); }),
+            P.kcalTarget > 0 ? 'your number, before training days' : 'learns from your weigh-ins and food log'),
+          P.kcalTarget > 0 ? h('div', { class: 'input-unit' }, h('input', { class: 'input', id: 'set-kcal', inputmode: 'numeric', value: String(P.kcalTarget), 'aria-label': 'Daily calories',
+            onchange: (e) => { const v = Math.round(U.num(e.target.value, NaN)); if (v >= 1000 && v <= 6000) set({ kcalTarget: v }); else { e.target.value = String(P.kcalTarget); toast('Enter between 1,000 and 6,000 kcal'); } } }), h('em', null, 'kcal')) : null,
+          field(`Goal weight (${wU()})`, h('div', { class: 'input-unit' }, h('input', { class: 'input', id: 'set-goalw', inputmode: 'decimal', placeholder: 'optional',
+            value: P.goalWeight > 0 ? fmtW(P.goalWeight) : '', onchange: (e) => { const v = U.num(e.target.value, NaN); set({ goalWeight: v > 0 ? U.round(U.toKg(v, P.units), 2) : null }); } }), h('em', null, wU())),
+            (() => { const en = C.energy(C.todayStr); return en.goalWeeks ? `about ${Math.max(1, Math.round(en.goalWeeks))} weeks at this rate` : en.toGoal != null && Math.abs(en.toGoal) >= 0.2 && P.goal === 'maintain' ? 'pick Lose or Gain to head there' : 'shown on your weight trend'; })()),
+          field('Daily steps', seg([[6000, '6k'], [8000, '8k'], [10000, '10k'], [12000, '12k'], [15000, '15k']], P.stepGoal || 10000, (v) => set({ stepGoal: v })), 'your step goal on Today'),
           field('Protein', seg([[1.6, '1.6'], [1.8, '1.8'], [2.0, '2.0'], [2.2, '2.2'], [2.4, '2.4']], P.proteinPerKg, (v) => set({ proteinPerKg: v })), 'g per kg of body weight'),
           field('Fat', seg([[0.25, '25%'], [0.28, '28%'], [0.32, '32%'], [0.35, '35%']], P.fatPct, (v) => set({ fatPct: v })), 'share of calories'),
           h('label', { class: 'switch', for: 'set-act' }, h('span', null, 'Eat more on hard training days'), h('input', { type: 'checkbox', id: 'set-act', checked: P.adjustActivity, onchange: (e) => set({ adjustActivity: e.target.checked }) })),
@@ -8585,7 +8611,7 @@ ${ctx}`;
       const l = HealthSync.last();
       const SUB = {
         profile: [P.sex === 'male' ? 'Male' : P.sex === 'female' ? 'Female' : null, age ? `${age}` : null, P.heightCm ? (imp ? `${Math.round(P.heightCm / 2.54)} in` : `${Math.round(P.heightCm)} cm`) : null].filter(Boolean).join(' · ') || 'Add your details',
-        goal: `${{ lose: 'Lose', maintain: 'Maintain', gain: 'Gain' }[P.goal] || 'Maintain'}${P.goal !== 'maintain' ? ` ${P.ratePct}% a week` : ''} · protein ${P.proteinPerKg} g/kg`,
+        goal: `${fmtInt(C.energy(C.todayStr).target)} kcal · ${{ lose: 'Lose', maintain: 'Maintain', gain: 'Gain' }[P.goal] || 'Maintain'}${P.goal !== 'maintain' ? ` ${P.ratePct}% a week` : ''}${P.goalWeight > 0 ? ` to ${fmtW(P.goalWeight)} ${wU()}` : ''} · ${fmtInt(P.stepGoal || 10000)} steps`,
         sleep: `Sleep need ${fmtDur(P.sleepNeedH * 60)} · max heart rate ${P.hrMaxOverride || 'estimated'}`,
         notify: on.length ? on.join(', ').replace(/^./, (c) => c.toUpperCase()) : 'Off',
         health: HealthSync.native() ? `${l ? `Synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)}` : 'Not synced yet'} · saving ${st.profile.healthWrite === true ? 'on' : 'off'}` : 'Import your export',
@@ -8879,7 +8905,7 @@ ${ctx}`;
         Sheet.habitEdit({ id: hb.id, fresh: true });
       };
       return view(pageHead('Edit habits', { sub: 'What you log and your weekly goals' }),
-        cur.length ? h('div', null, groupsOf(cur).map(([g, list]) => cardT(g.name, null, rows(list)))) : card(emptyState('check', 'No habits yet', 'Add a few from the suggestions below, or make your own.')),
+        cur.length ? h('div', { class: 'col' }, groupsOf(cur).map(([g, list]) => cardT(g.name, null, rows(list)))) : card(emptyState('check', 'No habits yet', 'Add a few from the suggestions below, or make your own.')),
         sugg.length ? cardT('Suggestions', null, h('div', { class: 'list' }, sugg.map((cIt) => prow({ t: cIt.name, s: goalText(E.habitMeta(cIt)),
           right: h('button', { class: 'btn sm', 'aria-label': `Add ${cIt.name}`, onclick: () => { const all = items(), ex = all.find((x) => x.id === cIt.id); Store.setHabits(ex ? all.map((x) => (x === ex ? { ...x, on: true } : x)) : [...all, { ...cIt, on: true }]); toast(`Added ${cIt.name}`); } }, icon('plus'), 'Add') })))) : null,
         cardT('Add your own', null, h('div', { class: 'row' }, h('div', { class: 'grow' }, nameIn), h('button', { class: 'btn', onclick: addOwn }, icon('plus'), 'Add')),
@@ -9493,7 +9519,8 @@ const HealthSync = (() => {
   let liveId = null, liveLast = '';
   S.workoutActivity = () => {
     if (!S.native() || Store.demo) return;
-    const d = App.draft;
+    // editing an old workout isn't one in progress: no Live Activity for it
+    const d = App.draft && !App.draft.editing ? App.draft : null;
     if (!d) { if (liveId) { liveId = null; liveLast = ''; ask({ type: 'live', action: 'end', json: '{}' }, 10000).catch(() => {}); } return; }
     let cur = null, si = 0, done = 0, total = 0;
     d.exercises.forEach((ex) => ex.sets.forEach((x, j) => { if (x.t === 'W') return; total++; if (x.done) done++; else if (!cur) { cur = ex; si = j; } }));
@@ -9752,7 +9779,7 @@ const Watch = (() => {
     const sug = planned ? null : C.suggestRoutine(d);
     const next = planned ? planOf(C, planned.routine, `Planned${planned.time ? ' · ' + planned.time : ''}`) : sug ? planOf(C, sug.r, 'Suggested') : null;
     const mp = C.muscleParts(d);
-    const draft = App.draft ? { id: App.draft.id, name: App.draft.name, why: 'In progress on iPhone', routineId: App.draft.routineId || null,
+    const draft = App.draft && !App.draft.editing ? { id: App.draft.id, name: App.draft.name, why: 'In progress on iPhone', routineId: App.draft.routineId || null,
       startedAt: Date.parse(App.draft.startedAt), exercises: App.draft.exercises.map((ex) => exOut(C, ex)) } : null;
     return {
       v: 1, at: U.isoLocal(new Date()), units: units() === 'imperial' ? 'lb' : 'kg',
@@ -10046,7 +10073,8 @@ const Train = (() => {
           if (x.done) vol += (+x.w || 0) * (+x.r || 0);
         }
         statsEl.innerHTML = '';
-        statsEl.append(h('span', { 'data-tick': 'elapsed' }, fmtMMSS(App.elapsed())), ` · ${done} of ${total} sets · ${fmtInt(U.kgTo(vol, units()))} ${wU()}`);
+        if (d.editing) statsEl.append(`Editing · ${U.fmtShort(d.date)} · ${done} sets`);
+        else statsEl.append(h('span', { 'data-tick': 'elapsed' }, fmtMMSS(App.elapsed())), ` · ${done} of ${total} sets · ${fmtInt(U.kgTo(vol, units()))} ${wU()}`);
         bar.style.width = (total ? (done / total) * 100 : 0) + '%';
       }
       function nextUp(ei, si) {
@@ -10158,14 +10186,16 @@ const Train = (() => {
               if (App.draft?.exercises?.some((ex) => ex.sets.some((x) => x.done && +x.r > 0))) return App.open('summary');
               confirmSheet({ title: 'No sets ticked yet', text: 'Tick the sets you finished, then tap Finish. Or discard this workout.', confirm: 'Discard workout', cancel: 'Keep going', danger: true,
                 onConfirm: () => { App.draft = null; App.saveDraft(); App.stopRest(); App.go('train'); toast('Workout discarded'); } });
-            } }, 'Finish')),
+            } }, d.editing ? 'Save' : 'Finish')),
           h('div', { class: 'wk-progress' }, bar)),
         list,
         h('p', { class: 'note', style: { marginInline: '4px' } }, 'Tap a set number to switch it between normal, warm-up (W), drop set (D) and failure (F). Tap a previous value to copy it. RPE is how hard the set felt, 10 being all-out.'),
         h('div', { class: 'grid2' },
           h('button', { class: 'btn', onclick: () => Sheet.exercisePicker((name) => { d.exercises.push(T.draftExercise(App.ctx(), name)); save(); drawList(); setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }), 60); }) }, icon('plus'), 'Add exercise'),
           h('button', { class: 'btn', onclick: () => Sheet.notes(d.notes || '', (t) => { d.notes = t; save(); }) }, icon('notes'), 'Notes')),
-        h('button', { class: 'btn quiet', style: { color: 'var(--crit-ink)', justifySelf: 'center' }, onclick: () => confirmSheet({ title: 'Discard this workout?', text: 'The sets you entered will be lost.', confirm: 'Discard', danger: true,
+        d.editing ? h('button', { class: 'btn quiet', style: { justifySelf: 'center' }, onclick: () => confirmSheet({ title: 'Discard your changes?', text: 'The workout stays as it was saved.', confirm: 'Discard changes', danger: true,
+          onConfirm: () => { App.draft = null; App.saveDraft(); App.stopRest(); App.back(); toast('Changes discarded'); } }) }, 'Discard changes')
+        : h('button', { class: 'btn quiet', style: { color: 'var(--crit-ink)', justifySelf: 'center' }, onclick: () => confirmSheet({ title: 'Discard this workout?', text: 'The sets you entered will be lost.', confirm: 'Discard', danger: true,
           onConfirm: () => { App.draft = null; App.saveDraft(); App.stopRest(); App.go('train'); toast('Workout discarded'); } }) }, 'Discard workout'));
       return el;
     },
@@ -10207,12 +10237,12 @@ const Train = (() => {
       const doneNames = done.map((ex) => ex.name).join('|');
       const changed = routine && doneNames !== (routine.exercises || []).map((ex) => ex.name).join('|');
       const upd = h('input', { type: 'checkbox', id: 'sum-upd', checked: false });
-      const startT = U.isoLocal(new Date(d.startedAt));
+      const startT = U.isoLocal(new Date(d.startedAt)), endT = d.editing ? d.editing.end || U.isoLocal(new Date(new Date(d.startedAt).getTime() + min * 60000)) : U.isoLocal(new Date());
       const tileK = (k, v, sub, cls = '') => h('div', { class: 'mtile' }, h('span', { class: 'k' }, k), h('span', { class: 'v ' + cls }, v), sub ? h('span', { class: 'd', style: { paddingRight: 0 } }, sub) : null);
       drawRpe();
       return view(
-        pageHead(null, { center: h('div', { class: 'pt' }), right: h('span', { class: 'xs muted', style: { fontWeight: 600 } }, `${U.fmtDay(d.date)} · ${startT.slice(11)} – ${U.isoLocal(new Date()).slice(11)}`) }),
-        h('div', null, h('div', { class: 'eyebrow', style: { color: 'var(--good-ink)' } }, 'Workout complete'), h('h1', { style: { fontSize: 'calc(32 * var(--fs))', fontWeight: 600, letterSpacing: '-0.02em', marginTop: '4px' } }, d.name)),
+        pageHead(null, { center: h('div', { class: 'pt' }), right: h('span', { class: 'xs muted', style: { fontWeight: 600 } }, `${U.fmtDay(d.date)} · ${startT.slice(11)} – ${endT.slice(11)}`) }),
+        h('div', null, h('div', { class: 'eyebrow', style: { color: 'var(--good-ink)' } }, d.editing ? 'Editing a saved workout' : 'Workout complete'), h('h1', { style: { fontSize: 'calc(32 * var(--fs))', fontWeight: 600, letterSpacing: '-0.02em', marginTop: '4px' } }, d.name)),
         h('div', { class: 'tiles' },
           tileK('Duration', fmtMMSS(sec), null),
           tileK('Volume', h('span', null, fmtInt(U.kgTo(vol, units())), h('small', null, wU())), prevVol && vol > 0 ? h('span', { class: vol >= prevVol ? 'up' : '' }, `${vol >= prevVol ? '+' : '−'}${fmtInt(Math.abs(U.kgTo(vol - prevVol, units())))} ${wU()} vs last time`) : null),
@@ -10236,16 +10266,19 @@ const Train = (() => {
         !done.length ? h('p', { class: 'error-text' }, 'No completed sets yet. Go back and tick at least one set.') : null,
         h('div', { class: 'stickyfoot' }, h('button', { class: 'btn primary block lg', disabled: !done.length, onclick: () => {
           const start = startT, end = U.isoLocal(new Date(new Date(d.startedAt).getTime() + min * 60000));
-          Store.saveWorkout({ id: d.id, date: d.date, start, end, min, type: 'Strength', name: d.name || 'Strength', kind: 'strength', routineId: d.routineId || null, exercises: done, rpe, notes: notes.value.trim() || null, src: 'app' });
+          Store.saveWorkout({ id: d.id, date: d.date, start, end: d.editing?.end || end, min, type: 'Strength', name: d.name || 'Strength', kind: 'strength', routineId: d.routineId || null, exercises: done, rpe, notes: notes.value.trim() || null, src: d.editing?.src || 'app',
+            ...(d.editing?.keep || {}) });
           if (changed && upd.checked) {
             const next = { ...routine, exercises: d.exercises.filter((ex) => ex.sets.some((x) => x.done)).map((ex) => ({ name: ex.name, sets: ex.sets.filter((x) => x.t !== 'W').length, reps: Math.max(...ex.sets.filter((x) => x.t !== 'W').map((x) => +x.r || +x.ph || 0)) || 8, rest: ex.rest, group: ex.group || null })) };
             const all = (C.training.routines && C.training.routines.length ? C.training.routines : C.routines).map((r) => (r.id === routine.id ? next : r));
             if (!all.some((r) => r.id === next.id)) all.push(next);
             Store.setTraining({ routines: all });
           }
+          const edited = !!d.editing;
           App.draft = null; App.saveDraft(); App.stopRest();
           App.go('train');
-          toast(prs.length ? `Workout saved · ${plural(prs.length, 'PR')}` : 'Workout saved');
+          if (edited) { App.open('session', { id: d.id, date: d.date }); toast('Workout updated'); }
+          else toast(prs.length ? `Workout saved · ${plural(prs.length, 'PR')}` : 'Workout saved');
         } }, 'Save workout')));
     },
   };
@@ -10431,6 +10464,20 @@ const Train = (() => {
       if (s0.exercises?.length) out.push(cardT('Exercises', null, h('div', { class: 'list' }, s0.exercises.map((ex) => prow({ t: ex.name, s: (ex.sets || []).map((x) => (x.t === 'W' ? 'W ' : '') + setStr(x)).join('  ·  '), onclick: () => App.open('exercise', { name: ex.name }) })))));
       if (s0.notes) out.push(cardT('Notes', null, h('p', { class: 'ink2' }, s0.notes)));
       const acts = [];
+      // what you logged here can be put right: sets in the logger, cardio in its sheet
+      const editLift = () => {
+        if (App.draft) { toast('Finish or discard the workout in progress first'); App.open('workout'); return; }
+        const w = Store.state().workouts[s0.id];
+        if (!w) return;
+        App.draft = { id: w.id, date: w.date, startedAt: U.isoToDate(w.start || w.date + 'T12:00').toISOString(), name: w.name, routineId: w.routineId || null, notes: w.notes || '', rpe: w.rpe || null,
+          editing: { min: w.min || 1, end: w.end || null, src: w.src || 'app', keep: Object.fromEntries(['avgHr', 'maxHr', 'kcal'].filter((k) => w[k] != null).map((k) => [k, w[k]])) },
+          exercises: (w.exercises || []).map((ex) => ({ id: U.uid(), name: ex.name, rest: C.exSettings(ex.name).rest, group: null,
+            sets: (ex.sets || []).map((x) => ({ t: x.t || 'N', w: x.w ?? '', r: x.r ?? '', ph: '', rpe: x.rpe ?? '', done: true })) })) };
+        App.saveDraft();
+        App.open('workout');
+      };
+      if (s0.source === 'app' && s0.exercises?.length) acts.push(h('button', { class: 'btn', onclick: editLift }, icon('edit'), 'Edit'));
+      else if (s0.source === 'app' && s0.kind === 'cardio') acts.push(h('button', { class: 'btn', onclick: () => { const w = Store.state().workouts[s0.id]; if (w) Sheet.cardio(w.date, { ...w, time: (w.start || '').slice(11, 16) }); } }, icon('edit'), 'Edit'));
       if (s0.exercises?.length && !App.draft) acts.push(h('button', { class: 'btn primary', onclick: () => Tabs.startRoutine(App.ctx(), { id: s0.routineId || null, name: s0.name, exercises: s0.exercises.map((ex) => ({ name: ex.name, sets: ex.sets.filter((x) => x.t !== 'W').length, reps: Math.max(...ex.sets.map((x) => +x.r)), rest: C.exSettings(ex.name).rest })) }) }, icon('repeat'), 'Do this again'));
       if (s0.source === 'app') acts.push(h('button', { class: 'btn danger', onclick: () => confirmSheet({ title: 'Delete this workout?', text: s0.merged ? 'This removes what you logged here. The watch recording stays in your Health data.' : 'This can’t be undone.', confirm: 'Delete', danger: true,
         onConfirm: () => { Store.deleteWorkout(s0.id); App.back(); toast('Workout deleted'); } }) }, icon('trash'), 'Delete'));
@@ -10499,7 +10546,8 @@ const Train = (() => {
       return view(pageHead('Exercises and records', { sub: `${plural(rows.length, 'exercise')} logged` }),
         rows.length ? h('section', { class: 'card flush' }, h('div', { class: 'list' }, rows.map(({ n, r, last }) => prow({ t: n, s: `${plural(r.sessions, 'session')} · last ${U.fmtShort(last)}`,
           right: r.e1 ? h('span', { class: 'val' }, fmtW(r.e1.v), h('small', null, wU())) : h('span', { class: 'val' }, r.reps?.v ?? '–', h('small', null, 'reps')), onclick: () => App.open('exercise', { name: n }) }))))
-          : card(emptyState('trophy', 'No exercises yet', 'Log a strength workout and your records start here.')),
+          : card(emptyState('trophy', 'No exercises yet', 'Log a strength workout and your records start here.',
+            h('button', { class: 'btn primary', onclick: () => App.go('train') }, 'Pick a routine'), h('button', { class: 'btn', onclick: () => Tabs.startEmpty(App.ctx()) }, 'Empty workout'))),
         rows.length ? h('p', { class: 'note' }, 'Right column: best estimated 1-rep max, or most reps for bodyweight moves.') : null);
     },
   };
@@ -10911,8 +10959,9 @@ const Train = (() => {
               h('button', { class: 'btn primary block', onclick: () => choose(f) }, icon('plus'), 'Choose amount'));
             lead(false);
           };
-          const choose = (f) => Sheet.portion({ food: f, onAdd: (x) => { addToPlate(x); toast(`${x.name} added to your plate`); afterAdd(); } });
-          const afterAdd = () => { if (HealthSync.native()) setTimeout(() => go(), 500); };
+          const choose = (f) => Sheet.portion({ food: f, onAdd: (x) => { addToPlate(x); afterAdd(x); } });
+          // added: say so here, with the scan button ready for the next one (the camera never reopens by itself)
+          const afterAdd = (x) => { buzz('success'); state('check', `${x.name} is on your plate`, HealthSync.native() ? 'Scan the next one, or add your plate below.' : 'Type the next number, or add your plate below.'); codeIn.value = ''; };
           async function lookup(raw) {
             const code = String(raw || '').replace(/\D/g, '');
             if (code.length < 6) { codeIn.focus(); toast('Type the 8 or 13 digits under the barcode'); return; }
@@ -10921,7 +10970,7 @@ const Train = (() => {
               const f = await FoodNet.byBarcode(code);
               if (f) { product(f); choose(f); return; }
               state('barcode', 'Not in the food database yet', `Barcode ${code}. Add it once from the label and the next scan finds it.`,
-                h('button', { class: 'btn primary block', onclick: () => Sheet.addProduct({ code, onAdd: (x) => { addToPlate(x); toast(`${x.name} added to your plate`); afterAdd(); } }) }, icon('plus'), 'Add it from the label'));
+                h('button', { class: 'btn primary block', onclick: () => Sheet.addProduct({ code, onAdd: (x) => { addToPlate(x); afterAdd(x); } }) }, icon('plus'), 'Add it from the label'));
             } catch (e) { state('info', 'Couldn’t look it up', FoodNet.errorText(e), h('button', { class: 'btn block', onclick: () => lookup(code) }, 'Try again')); }
           }
           async function go() {
@@ -11012,13 +11061,17 @@ const Train = (() => {
       return view(pageHead('Targets', { sub: 'Calories and macros, adjusted to you' }),
         h('section', { class: 'card' }, h('div', { class: 'eyebrow' }, date === C.todayStr ? 'Today’s target' : `Target · ${U.fmtShort(date)}`),
           h('div', { class: 'huge-num', style: { marginTop: '4px' } }, fmtInt(en.target), h('small', null, 'kcal')), h('div', { class: 'divider' }),
-          kv('You burn on an average day', fmtInt(en.tdee)), en.delta ? kv(en.delta < 0 ? `Deficit to lose ${Math.abs(en.rate)}% a week` : `Surplus to gain ${en.rate}% a week`, fmtSigned(en.delta, 0)) : null,
+          kv('You burn on an average day', fmtInt(en.tdee)),
+          en.custom ? kv('Your own target', fmtInt(P.kcalTarget)) : en.delta ? kv(en.delta < 0 ? `Deficit to lose ${Math.abs(en.rate)}% a week` : `Surplus to gain ${en.rate}% a week`, fmtSigned(en.delta, 0)) : null,
           en.adj ? kv('Extra for today’s training', '+' + fmtInt(en.adj)) : null,
           h('div', { class: 'divider' }),
           h('label', { class: 'switch', for: 'en-act' }, h('span', null, 'Eat more on hard training days'), h('input', { type: 'checkbox', id: 'en-act', checked: P.adjustActivity, onchange: (e) => set({ adjustActivity: e.target.checked }) }))),
         cardT('Goal', null, seg([['lose', 'Lose'], ['maintain', 'Maintain'], ['gain', 'Gain']], P.goal, (v) => set({ goal: v, ratePct: v === 'lose' ? 0.5 : v === 'gain' ? 0.25 : P.ratePct }), { label: 'Goal', cls: 'solid' }),
           h('p', { class: 'small ink2', style: { marginTop: '12px' } }, P.goal === 'maintain' ? 'Holding your weight steady while you train.' : `${P.goal === 'lose' ? 'Losing' : 'Gaining'} ${P.ratePct}% of body weight a week (about ${fmtW(rateKg, 2)} ${wU()}). ${P.goal === 'lose' ? 'Slow enough to keep strength while you train.' : 'Slow enough to keep the gain mostly muscle.'}`),
-          P.goal !== 'maintain' ? h('div', { style: { marginTop: '10px' } }, seg((P.goal === 'lose' ? [0.25, 0.5, 0.75, 1] : [0.1, 0.25, 0.5]).map((o) => [o, `${o}%`]), P.ratePct, (v) => set({ ratePct: v }), { label: 'Rate', cls: 'small' })) : null),
+          P.goal !== 'maintain' ? h('div', { style: { marginTop: '10px' } }, seg((P.goal === 'lose' ? [0.25, 0.5, 0.75, 1] : [0.1, 0.25, 0.5]).map((o) => [o, `${o}%`]), P.ratePct, (v) => set({ ratePct: v }), { label: 'Rate', cls: 'small' })) : null,
+          en.goalWeight ? h('div', { class: 'list', style: { marginTop: '8px' } }, prow({ ic: 'trend', t: `Goal weight ${fmtW(en.goalWeight)} ${wU()}`,
+            s: en.toGoal == null ? 'Weigh in to see how far' : Math.abs(en.toGoal) < 0.2 ? 'You’re there' : `${fmtW(Math.abs(en.toGoal))} ${wU()} to go${en.goalWeeks ? ` · about ${Math.max(1, Math.round(en.goalWeeks))} weeks at this rate` : ''}`,
+            onclick: () => App.open('settings', { focus: 'goal' }) })) : h('button', { class: 'link', style: { marginTop: '10px' }, onclick: () => App.open('settings', { focus: 'goal' }) }, icon('plus'), 'Set a goal weight')),
         cardT('What you burn', h('span', { class: 'xs', style: { fontWeight: 600, color: conf[1] } }, conf[0]),
           h('p', { class: 'small muted', style: { marginTop: '-6px', marginBottom: '6px' } }, en.confidence >= 0.35 ? `Worked out from ${en.logged} logged days and ${en.weighIns} weigh-ins over 3 weeks.` : 'Log food most days and weigh in 3+ times a week; the estimate then learns from you instead of formulas.'),
           Charts.line({ points: series, color: 'var(--food)', fmt: (v) => fmtInt(v), unit: ' kcal', caption: 'Estimated daily expenditure', xEvery: 14 })),
@@ -11055,6 +11108,13 @@ const Sheet = (() => {
       const bare = x.match(/\b(\d{1,3})\b/);
       return { kind: 'nap', min: mins || (bare && +bare[1] >= 5 && +bare[1] <= 240 ? +bare[1] : 20) };
     }
+    // water: "500 ml water", "2 glasses of water", "a bottle of water", "1.5 l"
+    if (/\bwater\b/.test(x) || /^\s*\d+(?:[.,]\d+)?\s*(ml|l|litres?|liters?|oz)\s*$/.test(x)) {
+      const vol = x.match(/(\d+(?:[.,]\d+)?)\s*(ml|l|litres?|liters?|fl\s*oz|oz)\b/), cnt = x.match(/(\d+|a|one|two|three)\s*(glass|glasses|cup|cups|bottle|bottles)\b/);
+      const n = cnt ? ({ a: 1, one: 1, two: 2, three: 3 }[cnt[1]] || +cnt[1]) : 0;
+      const ml = vol ? U.num(vol[1]) * (/^l|^lit/.test(vol[2]) ? 1000 : /oz/.test(vol[2]) ? U.ML_PER_OZ : 1) : cnt ? n * (/bottle/.test(cnt[2]) ? 500 : 250) : 250;
+      if (ml > 0 && ml <= 3000) return { kind: 'water', ml: Math.round(ml) };
+    }
     const w = x.match(/(\d{2,3}(?:[.,]\d)?)\s*(kg|kilo|kilos|lb|lbs|pounds)\b/);
     if (w && (/weigh|weight|scale|^\s*\d/.test(x))) return { kind: 'weight', v: U.num(w[1]), unit: /lb|pound/.test(w[2]) ? 'lb' : 'kg' };
     const dist = x.match(/(\d+(?:[.,]\d+)?)\s*(km|k|mi|miles?)\b/);
@@ -11089,11 +11149,12 @@ const Sheet = (() => {
       const p = parseSay(t);
       sh.close();
       if (p.kind === 'nap') S.nap(date, { min: p.min });
+      else if (p.kind === 'water') logWater(date, p.ml);
       else if (p.kind === 'weight') S.bodyLog(date, { weight: p.unit === 'lb' ? p.v * U.KG_PER_LB : p.v });
       else if (p.kind === 'cardio') S.cardio(date, p);
       else if (p.kind === 'strength') {
         // "leg day", "push day": start the routine with that name if there is one
-        const words = p.text.replace(/\bday\b|\bworkout\b|\bsession\b/g, '').trim().split(/\s+/).filter((w) => w.length > 2);
+        const words = p.text.replace(/\bday\b|\bworkout\b|\bsession\b/g, '').replace(/\blegs?\b/g, 'lower').replace(/\barms?\b/g, 'upper').trim().split(/\s+/).filter((w) => w.length > 2);
         const r = App.draft ? null : c.routines.find((r) => words.length && words.every((w) => r.name.toLowerCase().includes(w.replace(/s$/, ''))));
         if (App.draft) App.open('workout'); else if (r) Tabs.startRoutine(c, r); else App.go('train');
       }
@@ -11236,7 +11297,9 @@ const Sheet = (() => {
   // =============== CARDIO ===============
   S.cardio = (date = App.date || U.today(), pre = {}) => {
     const TYPES = ['Running', 'Cycling', 'Walking', 'Swimming', 'Rowing', 'HIIT', 'Soccer', 'Tennis', 'Hiking', 'Yoga', 'Other'];
-    let type = pre.type || 'Running', rpe = 6;
+    if (pre.type && !TYPES.includes(pre.type)) TYPES.unshift(pre.type);
+    // pre.id: editing an entry logged earlier (same id, so it replaces it)
+    let type = pre.type || 'Running', rpe = pre.rpe || 6;
     const isToday = date === U.today();
     const imp = units() === 'imperial';
     const typeChips = h('div', { class: 'chips wrap' }, TYPES.map((t) => h('button', { class: 'chip', 'aria-pressed': String(t === type), onclick: (e) => { type = t; for (const b of typeChips.children) b.setAttribute('aria-pressed', String(b === e.currentTarget)); } }, t)));
@@ -11246,10 +11309,10 @@ const Sheet = (() => {
     const startIn = h('input', { class: 'input', id: 'cardio-start', type: 'time', value: pre.time && (!isToday || pre.time <= nowHm) ? pre.time : isToday ? U.isoLocal(new Date(Date.now() - ((pre.min || 45) + 5) * 60000)).slice(11, 16) : '18:00' });
     const minIn = h('input', { class: 'input', id: 'cardio-min', inputmode: 'numeric', placeholder: '45', value: pre.min ? String(Math.round(pre.min)) : '' });
     const distIn = h('input', { class: 'input', id: 'cardio-dist', inputmode: 'decimal', placeholder: 'optional', value: pre.km ? String(U.round(imp ? pre.km / 1.609344 : pre.km, 2)) : '' });
-    const hrIn = h('input', { class: 'input', id: 'cardio-hr', inputmode: 'numeric', placeholder: 'optional' });
+    const hrIn = h('input', { class: 'input', id: 'cardio-hr', inputmode: 'numeric', placeholder: 'optional', value: pre.avgHr ? String(pre.avgHr) : '' });
     const err = h('p', { class: 'error-text', hidden: true });
     const sh = Sheets.open({
-      title: 'Log cardio', full: true,
+      title: pre.id ? 'Edit cardio' : 'Log cardio', full: true,
       body: [field('Type', typeChips), h('div', { class: 'grid2' }, field('Date', dateIn), field('Start', startIn), field('Minutes', minIn), field(`Distance (${imp ? 'mi' : 'km'})`, distIn)),
         field('Average heart rate (bpm)', hrIn, 'makes strain more accurate'),
         h('div', { class: 'field' }, h('span', { class: 'row', style: { justifyContent: 'space-between' } }, 'How hard was it?', h('span', null, rpeOut, ' / 10')),
@@ -11261,8 +11324,8 @@ const Sheet = (() => {
         const d = dateIn.value || date, start = `${d}T${startIn.value || '18:00'}`;
         const end = U.isoLocal(new Date(U.isoToDate(start).getTime() + min * 60000));
         const km = U.num(distIn.value, 0) * (imp ? 1.609344 : 1), avgHr = Math.round(U.num(hrIn.value, 0));
-        Store.saveWorkout({ id: 'w' + U.uid(), date: d, start, end, min, type, name: type, kind: 'cardio', km: km > 0 ? U.round(km, 2) : null, avgHr: avgHr > 40 ? avgHr : null, rpe, src: 'app' });
-        sh.close(); toast(`${type} saved`);
+        Store.saveWorkout({ id: pre.id || 'w' + U.uid(), date: d, start, end, min, type, name: type, kind: 'cardio', km: km > 0 ? U.round(km, 2) : null, avgHr: avgHr > 40 ? avgHr : null, rpe, src: pre.src || 'app' });
+        sh.close(); toast(pre.id ? `${type} updated` : `${type} saved`);
       } }, 'Save')],
     });
   };
@@ -11941,7 +12004,8 @@ const App = (() => {
     if (A.rest.end <= Date.now()) A.stopRest(); else { restAlert(); tick(); }
   };
   A.stopRest = () => { if (A.rest && A.rest.end > Date.now()) HealthSync.unnotify('rest'); A.rest = null; if (A.draft) { delete A.draft.rest; A.saveDraft(); } renderFloats(); };
-  A.elapsed = () => (A.draft ? Math.max(0, Math.floor((Date.now() - new Date(A.draft.startedAt)) / 1000)) : 0);
+  // a saved workout being edited keeps its own length; one in progress counts up
+  A.elapsed = () => (A.draft ? (A.draft.editing ? A.draft.editing.min * 60 : Math.max(0, Math.floor((Date.now() - new Date(A.draft.startedAt)) / 1000))) : 0);
 
   // ---------- render ----------
   let raf = 0;

@@ -129,6 +129,14 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - `.col` has `grid-template-columns: minmax(0, 1fr)`, so a long nowrap line can't widen a column past the screen.
 - Lifting weights show as typed (`fmtLift`, two decimals: 76.25). Finish with no ticked sets asks to keep going or discard instead of opening an empty summary. `confirmSheet` takes `cancel` for the other button's label.
 
+## Review pass (Oct 2026)
+- Barcode camera: `ScanHost` (BarcodeScanner.swift) holds the scanner and our overlay above it, because VisionKit's `overlayContainerView` doesn't take taps; the overlay passes touches through except on its buttons. Close, swipe down and the accessibility escape gesture all cancel. The page never reopens the camera by itself: after adding, the scan view says what went on the plate and the scan button is ready.
+- Settings: "Profile and units" also shows weight (trend, Weigh in). "Goals and macros" starts with the day's total, then goal and rate, calorie target (`profile.kcalTarget`: adaptive when empty, else your number; training days still add on top), goal weight (`profile.goalWeight`, kg; `energy()` returns `goalWeight`, `toGoal`, `goalWeeks`), step goal (`profile.stepGoal`, used on Today), macros and water. The Health tab's last card opens Apple Health settings and the Settings list.
+- Highlights list only clear outliers: past 1.5× the usual spread and the measure's `thr`, with how far off and the usual value.
+- Saved workouts you logged can be edited: strength opens the logger with `draft.editing = { min, end, src, keep }` (fixed length, "Editing" header, Save, "Discard changes"; no Live Activity or watch context), cardio opens `Sheet.cardio(date, workout)` (same id).
+- Tonight's sleep need adds at most an hour to your usual need (strain first, then debt).
+- The Log sheet's text box understands water ("500 ml water", "2 glasses", "a bottle", "1.5 l") and "leg day" / "arm day".
+
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
 2. ~~Honest insights~~ (done, Oct 2026): ranges and Clear / Likely / Not clear yet labels on habit and activity effects, adjusted for weekends, training load and exams, two-week experiments. Not done: Oura-style monthly stress load.

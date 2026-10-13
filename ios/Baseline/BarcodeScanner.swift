@@ -10,6 +10,7 @@ final class BarcodeScanner: NSObject, DataScannerViewControllerDelegate {
 
     private var done: ((Outcome) -> Void)?
     private weak var scanner: DataScannerViewController?
+    private weak var host: ScanHost?
     private var overlay: ScanOverlay?
 
     func scan(from view: UIView, completion: @escaping (Outcome) -> Void) {
@@ -36,19 +37,19 @@ final class BarcodeScanner: NSObject, DataScannerViewControllerDelegate {
                                                 isHighFrameRateTrackingEnabled: true, isPinchToZoomEnabled: true,
                                                 isGuidanceEnabled: false, isHighlightingEnabled: false)
         scanner.delegate = self
-        scanner.modalPresentationStyle = .fullScreen
-        scanner.overrideUserInterfaceStyle = .dark
-        let overlay = ScanOverlay(frame: scanner.overlayContainerView.bounds)
-        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        let overlay = ScanOverlay(frame: view.bounds)
         overlay.onClose = { [weak self] in self?.finish(.cancelled) }
         overlay.onManual = { [weak self] in self?.finish(.manual) }
         // only codes inside the frame count
         overlay.onFrame = { [weak scanner] rect in scanner?.regionOfInterest = rect }
-        scanner.overlayContainerView.addSubview(overlay)
+        // our own screen around the scanner: VisionKit's overlay container doesn't take taps, so the buttons sit above it
+        let host = ScanHost(scanner: scanner, overlay: overlay)
+        host.onClose = { [weak self] in self?.finish(.cancelled) }
         self.scanner = scanner
+        self.host = host
         self.overlay = overlay
         done = completion
-        top.present(scanner, animated: true) {
+        top.present(host, animated: true) {
             do { try scanner.startScanning() } catch { self.finish(.unavailable) }
         }
     }
@@ -78,11 +79,51 @@ final class BarcodeScanner: NSObject, DataScannerViewControllerDelegate {
         self.done = nil
         overlay?.setTorch(false)
         scanner?.stopScanning()
-        scanner?.dismiss(animated: true)
+        host?.dismiss(animated: true)
         scanner = nil
+        host = nil
         overlay = nil
         done(outcome)
     }
+}
+
+/// Full screen: the live scanner, the overlay above it (its buttons take taps; everywhere else touches go through to the
+/// scanner for pinch to zoom), and a swipe down or the accessibility escape gesture to close.
+final class ScanHost: UIViewController {
+    private let scanner: DataScannerViewController
+    private let overlay: ScanOverlay
+    var onClose: (() -> Void)?
+
+    init(scanner: DataScannerViewController, overlay: ScanOverlay) {
+        self.scanner = scanner
+        self.overlay = overlay
+        super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
+        overrideUserInterfaceStyle = .dark
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        addChild(scanner)
+        scanner.view.frame = view.bounds
+        scanner.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(scanner.view)
+        scanner.didMove(toParent: self)
+        overlay.frame = view.bounds
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(overlay)
+        let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swipedDown))
+        swipe.direction = .down
+        view.addGestureRecognizer(swipe)
+    }
+
+    @objc private func swipedDown() { onClose?() }
+
+    override func accessibilityPerformEscape() -> Bool { onClose?(); return true }
+    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 }
 
 /// The scanner's screen: everything but the frame dimmed, rounded corner marks, a scan line, a title,
@@ -128,7 +169,7 @@ final class ScanOverlay: UIView {
         titleLabel.font = Self.rounded(22, .semibold)
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
-        hintLabel.text = "Hold the barcode on the pack inside the frame"
+        hintLabel.text = "Hold the barcode inside the frame. Swipe down to close."
         hintLabel.font = .systemFont(ofSize: 15)
         hintLabel.textColor = UIColor.white.withAlphaComponent(0.7)
         hintLabel.textAlignment = .center
@@ -162,6 +203,12 @@ final class ScanOverlay: UIView {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    /// Only the buttons take touches; the rest goes through to the scanner underneath.
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        return hit === self ? nil : hit
+    }
 
     private static func rounded(_ size: CGFloat, _ weight: UIFont.Weight) -> UIFont {
         let base = UIFont.systemFont(ofSize: size, weight: weight)
