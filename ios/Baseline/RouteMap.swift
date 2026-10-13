@@ -27,7 +27,8 @@ enum RouteMap {
               let jpeg = shot.image.jpegData(compressionQuality: 0.8) else { return nil }
         let xy = route.map { l -> [Double] in
             let p = shot.point(for: l.coordinate)
-            return [(p.x * 10).rounded() / 10, (p.y * 10).rounded() / 10]
+            let x = Double(p.x), y = Double(p.y)
+            return [(x * 10).rounded() / 10, (y * 10).rounded() / 10]
         }
         return ["img": "data:image/jpeg;base64," + jpeg.base64EncodedString(), "w": w, "h": h, "xy": xy]
     }
