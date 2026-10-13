@@ -37,6 +37,7 @@
 		C1762699B866B4BC05C24A92 /* GlanceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FDEC922B2CA713709AD51E /* GlanceProvider.swift */; };
 		C233326AA13F1327C44B97E1 /* WorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA462A5BEA486598A6D88D7 /* WorkoutManager.swift */; };
 		CDB95EA58C61249883A4D4C7 /* WorkoutAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546E6CAB817DB66E693242BC /* WorkoutAttributes.swift */; };
+		DCA4C76A4E6ADAA4C55C4C6A /* RouteMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD34BABA23B56F2C5F2B96 /* RouteMap.swift */; };
 		DE4279B7D8DA737D3599CFBF /* WorkoutAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546E6CAB817DB66E693242BC /* WorkoutAttributes.swift */; };
 		E1DDAA6CDFDE0C4EB442B45F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0635709FE02D3D92086A5E29 /* Theme.swift */; };
 		E5D347444E82C197F5314FFE /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = EA573ECBA46052214E5DC85D /* index.html */; };
@@ -124,6 +125,7 @@
 		924C1504E79CC403AD9712B0 /* PhoneLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneLink.swift; sourceTree = "<group>"; };
 		94648AD2FE3E7B861836ADA6 /* Glance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Glance.swift; sourceTree = "<group>"; };
 		A23A3395A940692E95B857F2 /* BaselineWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BaselineWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4DD34BABA23B56F2C5F2B96 /* RouteMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMap.swift; sourceTree = "<group>"; };
 		C0FDEC922B2CA713709AD51E /* GlanceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceProvider.swift; sourceTree = "<group>"; };
 		C37761B564D5DEA73B40A2B5 /* HealthReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthReader.swift; sourceTree = "<group>"; };
 		CAC6C2A9B00ADEDA55343E85 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 				C37761B564D5DEA73B40A2B5 /* HealthReader.swift */,
 				6E856551B299D6CC49555591 /* LiveWorkout.swift */,
 				D60FBF9901968FD692CB45BD /* Notifier.swift */,
+				B4DD34BABA23B56F2C5F2B96 /* RouteMap.swift */,
 				461C9E0C900D09FB79DA1842 /* WatchLink.swift */,
 				E0CCBEF6530C7B335B7C172E /* WebView.swift */,
 			);
@@ -391,6 +394,7 @@
 				2A1AE957C1AD94F5458745D9 /* HealthReader.swift in Sources */,
 				137343A21AA3479588A093A6 /* LiveWorkout.swift in Sources */,
 				BD8D8D1957B9B6E300369BD4 /* Notifier.swift in Sources */,
+				DCA4C76A4E6ADAA4C55C4C6A /* RouteMap.swift in Sources */,
 				94A2CE2C3975D4EBF03BA679 /* WatchLink.swift in Sources */,
 				07307E9BAEDC776079F671AD /* WebView.swift in Sources */,
 				DE4279B7D8DA737D3599CFBF /* WorkoutAttributes.swift in Sources */,

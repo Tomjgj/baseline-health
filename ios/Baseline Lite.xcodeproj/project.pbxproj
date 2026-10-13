@@ -30,6 +30,7 @@
 		DCAE65B95951ACDBCEA2DBCB /* Glance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA6D601E69BF67FAAFC821F /* Glance.swift */; };
 		E07222011B6E5B334673B817 /* PhoneLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549EE71BC3FD9D4A2F2267B9 /* PhoneLink.swift */; };
 		E1CC56C033891699E7F573BF /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81F9203599A82EFB178785D /* Lift.swift */; };
+		E643C0ED9E59D9E6F41E8CAE /* RouteMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5920FD76CD1F6426F79281A /* RouteMap.swift */; };
 		EE36DB93CC6834BDBABD089A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD643626B04956132B4E0032 /* Assets.xcassets */; };
 		F55FAF71CF3DE5149D6159D6 /* BaselineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F32D8C9AE5271AD87274A5 /* BaselineApp.swift */; };
 /* End PBXBuildFile section */
@@ -77,6 +78,7 @@
 		B14E466EBB7F6109AA2BD0F1 /* WorkoutAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutAttributes.swift; sourceTree = "<group>"; };
 		B5F9FADE462E4BDFE7A13B95 /* BaselineWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BaselineWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF05787275ACF57A829361CA /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
+		C5920FD76CD1F6426F79281A /* RouteMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMap.swift; sourceTree = "<group>"; };
 		D29A34F35A2DE9F6C239331D /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		D7F32D8C9AE5271AD87274A5 /* BaselineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineApp.swift; sourceTree = "<group>"; };
 		E13C310AB7BFCE8F0D116711 /* LiftView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftView.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				0F245065038C89E104A05E2F /* HealthReader.swift */,
 				6DAE60371921458EA5FE96C5 /* LiveWorkout.swift */,
 				BF05787275ACF57A829361CA /* Notifier.swift */,
+				C5920FD76CD1F6426F79281A /* RouteMap.swift */,
 				7D536680EA988B449D2E0FAD /* WatchLink.swift */,
 				233B5E2194190D45E509ABD3 /* WebView.swift */,
 			);
@@ -271,6 +274,7 @@
 				AC711A29561DCD4D73F52B9C /* HealthReader.swift in Sources */,
 				60C89A01B464DB3A2174E124 /* LiveWorkout.swift in Sources */,
 				4FE558DA9041620202E545FC /* Notifier.swift in Sources */,
+				E643C0ED9E59D9E6F41E8CAE /* RouteMap.swift in Sources */,
 				73437CECC515828B75A030FA /* WatchLink.swift in Sources */,
 				1C8556B784BA9797FBC4786E /* WebView.swift in Sources */,
 				6ACC16EFE1CB49149D8DB3D7 /* WorkoutAttributes.swift in Sources */,
