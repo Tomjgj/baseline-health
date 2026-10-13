@@ -13,6 +13,7 @@ struct WatchContext: Codable {
     var tired: [String]?           // muscles still recovering, most tired first
     var water: Water?              // today's water (missing in contexts from older versions of the page, like library)
     var library: [Ex]?             // exercises that can be added to a running workout
+    var healthWrite: Bool?         // save workouts to Apple Health (the phone's Settings switch; off when missing)
 
     struct Water: Codable {
         var ml: Double

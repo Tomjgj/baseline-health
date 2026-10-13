@@ -39,6 +39,7 @@ final class PhoneLink: NSObject, ObservableObject, WCSessionDelegate {
         let before = context
         context = ctx
         UserDefaults.standard.set(json, forKey: saved)
+        UserDefaults.standard.set(ctx.healthWrite ?? false, forKey: WorkoutManager.saveKey)
         // taps the phone has counted come off the optimistic extra; a new day, or a quiet while, clears it
         if before?.day?.date != ctx.day?.date || Date().timeIntervalSince(lastWaterTap) > 10 {
             waterAdded = 0

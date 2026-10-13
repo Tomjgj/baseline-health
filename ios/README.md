@@ -23,7 +23,7 @@ Both come from the same spec (`common.yml`, included by `project.yml` and `proje
 - **Live Activity** during a strength workout: on the lock screen and in the Dynamic Island, the workout's time (or the rest left), the exercise and set, and how many sets are done. The page starts, updates and ends it (`{ type: "live", action }`).
 - **Background updates**: Health wakes the app when new sleep or a workout is saved (straight away) and when HRV, resting heart rate or water change (at most hourly). The widgets reload, and the page syncs if it's open.
 - **Morning notification** (if you turn it on in the app): once last night's sleep reaches Health, between 4:00 and 13:00, "Your recovery is ready" with how long you slept. At most once a morning, and only after at least 3 hours asleep.
-- **Water to Apple Health**: water you log is saved to Health as dietary water (removing it removes the sample), so other apps see it. The sync skips the app's own samples so they aren't counted twice.
+- **Save to Apple Health** (off until you turn it on in Settings): water, food, weigh-ins, naps and workouts you log are saved to Health (editing or deleting an entry changes or removes it there), so other apps see them. The sync skips the app's own samples so they aren't counted twice.
 
 ## The Claude coach with your own key
 
@@ -113,7 +113,7 @@ To work in Xcode instead: `cd ios && xcodegen generate && open Baseline.xcodepro
 
 Read: heart rate, resting heart rate, HRV, breathing rate, blood oxygen, wrist temperature, VO₂ max, steps, active and resting energy, time in daylight, caffeine, water, alcoholic drinks, blood pressure, weight, body fat, lean mass, waist, height, food energy and macros, sleep stages, mindful minutes, workouts, date of birth and sex.
 
-Written: water you log in Baseline (iPhone), and workouts you track on the watch.
+Written, only once you turn on **Save to Apple Health** in Settings → Apple Health (off until then): water, food (calories and macros), weigh-ins (weight, body fat, waist), naps and workouts you log in Baseline, and workouts you track on the watch. Each sample carries the entry's id, so editing or deleting an entry in Baseline changes or removes it in Health, and *Remove what Baseline saved* deletes all of it. The sync skips Baseline's own samples, so nothing is counted twice.
 
 ## Next
 

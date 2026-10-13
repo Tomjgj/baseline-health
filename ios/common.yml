@@ -38,7 +38,7 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSHealthShareUsageDescription: Baseline reads your sleep, heart rate, HRV, activity, workouts, daylight, caffeine, water and body measurements to work out recovery, strain and stress against your own baselines. Your Health data stays on your iPhone; only what you ask the coach goes to Anthropic.
-        NSHealthUpdateUsageDescription: Baseline saves the water you log to Apple Health so your other apps see it.
+        NSHealthUpdateUsageDescription: When you turn on Save to Apple Health in Settings, Baseline saves the water, food, weigh-ins, naps and workouts you log so your other apps see them. It's off until you turn it on.
         NSCameraUsageDescription: Baseline uses the camera to scan food barcodes. Nothing is recorded or stored.
         UILaunchScreen:
           UIColorName: LaunchBackground
@@ -75,7 +75,7 @@ targets:
         WKCompanionAppBundleIdentifier: $(BASE_BUNDLE_ID)
         WKBackgroundModes: [workout-processing]
         NSHealthShareUsageDescription: Baseline reads your heart rate and energy during workouts.
-        NSHealthUpdateUsageDescription: Baseline saves the workouts you track on your watch to Apple Health.
+        NSHealthUpdateUsageDescription: When you turn on Save to Apple Health in Baseline on your iPhone, workouts you track on your watch are saved to Apple Health.
     entitlements:
       properties:
         com.apple.developer.healthkit: true

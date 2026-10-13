@@ -116,6 +116,9 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
     ///   { type: "coachKey", id, action: "status" | "prompt" | "clear" } → { set }; the key itself never reaches the page
     ///   { type: "coachCancel", id }                                 → stops the coach reply with that id
     ///   { type: "haptic", id, kind: "light" | "medium" | "success" } → a tap from the Taptic Engine, no answer
+    ///   { type: "hkAuth", id }                                     → asks to write to Health; { ok } when anything may be written
+    ///   { type: "hkSave", id, items: [{ id, kind, … }] }           → saves entries (water, food, body, nap, workout); { saved, failed }
+    ///   { type: "hkDelete", id, ids } / { type: "hkDeleteAll", id } → deletes what Baseline saved for those entries / ever (HealthWriter)
     ///   { type: "log", id, text }                                   → a page error, written to the app log, no answer
     ///   { type: "coach", id, messages }                             → no answer here: the reply streams through
     ///     BaselineBridge.coach(id, { t: "text", v } … then { t: "done", message } or { t: "error", code, message }) (Coach)
@@ -155,6 +158,33 @@ final class WebController: NSObject, ObservableObject, WKScriptMessageHandler, W
             return
         case "share":
             share(id: id, filename: body["filename"] as? String ?? "baseline-export.json", text: body["text"] as? String ?? "")
+            return
+        case "hkAuth":
+            Task {
+                let ok = await HealthWriter.shared.authorize()
+                await MainActor.run { self.reply(["id": id, "ok": true, "payload": ["ok": ok]]) }
+            }
+            return
+        case "hkSave":
+            let items = body["items"] as? [[String: Any]] ?? []
+            Task {
+                let r = await HealthWriter.shared.save(items)
+                log.notice("health write: \(r.saved.count) saved, \(r.failed.count) not")
+                await MainActor.run { self.reply(["id": id, "ok": true, "payload": ["saved": r.saved, "failed": r.failed]]) }
+            }
+            return
+        case "hkDelete":
+            let ids = body["ids"] as? [String] ?? []
+            Task {
+                await HealthWriter.shared.delete(ids)
+                await MainActor.run { self.reply(["id": id, "ok": true, "payload": [:] as [String: Any]]) }
+            }
+            return
+        case "hkDeleteAll":
+            Task {
+                await HealthWriter.shared.deleteAll()
+                await MainActor.run { self.reply(["id": id, "ok": true, "payload": [:] as [String: Any]]) }
+            }
             return
         case "log":
             // the page's errors (see the script after <main id="view"> in index.html), for Console.app

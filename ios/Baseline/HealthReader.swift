@@ -89,9 +89,10 @@ final class HealthReader {
     private func authorize() async throws {
         guard HKHealthStore.isHealthDataAvailable() else { throw Failure(code: "unavailable") }
         if authorized { return }
-        // iOS never says which types were refused; refused ones simply come back empty. The only type written is water.
+        // iOS never says which types were refused; refused ones simply come back empty. Writing is asked for separately, when the
+        // person turns on "Save to Apple Health" (HealthWriter).
         let read = hasAsked ? readTypes : readTypes.union(Self.detailTypes)
-        try await store.requestAuthorization(toShare: [HKQuantityType(.dietaryWater)], read: read)
+        try await store.requestAuthorization(toShare: [], read: read)
         authorized = true
         UserDefaults.standard.set(true, forKey: Self.askedKey)
         observe()
@@ -286,8 +287,8 @@ final class HealthReader {
         let ownBundle = Bundle.main.bundleIdentifier
         for (key, unit, found) in rawResults {
             for case let q as HKQuantitySample in found {
-                // the water the app saved itself is already in the page's log
-                if key == "water", q.sourceRevision.source.bundleIdentifier == ownBundle { continue }
+                // what the app saved itself (water, food, weigh-ins; HealthWriter) is already in the page's log
+                if q.sourceRevision.source.bundleIdentifier == ownBundle { continue }
                 var v = q.quantity.doubleValue(for: unit)
                 let t = local.string(from: q.startDate), src = q.sourceRevision.source.name
                 switch key {
@@ -310,6 +311,8 @@ final class HealthReader {
         for (t, r) in bp { if let s = r.sys, let d = r.dia { samples["bp", default: []].append([t, s, d]) } }
 
         for case let c as HKCategorySample in try await sleepFound {
+            // naps logged in Baseline and saved from here are already in the page's log
+            if c.sourceRevision.source.bundleIdentifier == ownBundle { continue }
             let stage: String
             switch HKCategoryValueSleepAnalysis(rawValue: c.value) ?? .asleepUnspecified {
             case .inBed: stage = "inBed"
@@ -327,6 +330,8 @@ final class HealthReader {
 
         var workouts: [[String: Any]] = []
         for case let w as HKWorkout in try await workoutFound {
+            // workouts logged on the iPhone and saved from here are already in the page's log (the watch app's have their own source)
+            if w.sourceRevision.source.bundleIdentifier == ownBundle { continue }
             var o: [String: Any] = ["start": local.string(from: w.startDate), "end": local.string(from: w.endDate),
                                     "type": Self.workoutName(w.workoutActivityType), "min": w.duration / 60, "source": w.sourceRevision.source.name]
             if let e = w.statistics(for: HKQuantityType(.activeEnergyBurned))?.sumQuantity() { o["kcal"] = e.doubleValue(for: .kilocalorie()) }

@@ -25,7 +25,7 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Baseline reads your heart rate and energy during workouts.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Baseline saves the workouts you track on your watch to Apple Health.</string>
+	<string>When you turn on Save to Apple Health in Baseline on your iPhone, workouts you track on your watch are saved to Apple Health.</string>
 	<key>WKApplication</key>
 	<true/>
 	<key>WKBackgroundModes</key>

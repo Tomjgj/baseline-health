@@ -34,7 +34,7 @@
   --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.4);
   --ink: #f4f5f7;
   --ink-2: #b9bfca;
-  --muted: #8b919d;
+  --muted: #969ca8;
   --faint: #5d636f;
   --accent: #f4f5f7;
   --on-accent: #08090c;
@@ -66,7 +66,7 @@
   --stress-bg: rgba(219, 106, 36, 0.17); --stress-ink: #ffb486;
   --hrv-bg: rgba(26, 163, 148, 0.17); --hrv-ink: #74e2d4;
   --hr-bg: rgba(224, 82, 110, 0.16); --hr-ink: #ffa3b5;
-  --food-bg: rgba(26, 163, 148, 0.16); --food-ink: #74e2d4;
+  --food: #1aa394; --food-bg: rgba(26, 163, 148, 0.16); --food-ink: #74e2d4;
   --water: #3aaee0; --water-bg: rgba(58, 174, 224, 0.16); --water-ink: #8fd6f5;
   --claude: #c9bbff; --claude-bg: rgba(143, 123, 240, 0.13); --claude-bg-2: rgba(143, 123, 240, 0.22);
   --shade-sleep: rgba(143, 123, 240, 0.14);
@@ -101,7 +101,7 @@
     --good-bg: rgba(31, 154, 85, 0.12); --warn-bg: rgba(185, 130, 0, 0.13); --crit-bg: rgba(214, 60, 60, 0.11);
     --strain-bg: rgba(42, 120, 214, 0.1); --strain-ink: #1d5fae; --sleep-bg: rgba(106, 88, 220, 0.1); --sleep-ink: #4a3ab6;
     --stress-bg: rgba(210, 96, 26, 0.11); --stress-ink: #a2470e; --hrv-bg: rgba(19, 145, 127, 0.11); --hrv-ink: #0b6d60;
-    --hr-bg: rgba(210, 63, 95, 0.1); --hr-ink: #ad2749; --food-bg: rgba(19, 145, 127, 0.1); --food-ink: #0b6d60;
+    --hr-bg: rgba(210, 63, 95, 0.1); --hr-ink: #ad2749; --food: #13917f; --food-bg: rgba(19, 145, 127, 0.1); --food-ink: #0b6d60;
     --water: #1f8fc4; --water-bg: rgba(31, 143, 196, 0.11); --water-ink: #136a93;
     --claude: #5641c4; --claude-bg: rgba(106, 88, 220, 0.09); --claude-bg-2: rgba(106, 88, 220, 0.15);
     --shade-sleep: rgba(106, 88, 220, 0.1); --shade-active: rgba(42, 120, 214, 0.13);
@@ -126,7 +126,7 @@
   --good-bg: rgba(31, 154, 85, 0.12); --warn-bg: rgba(185, 130, 0, 0.13); --crit-bg: rgba(214, 60, 60, 0.11);
   --strain-bg: rgba(42, 120, 214, 0.1); --strain-ink: #1d5fae; --sleep-bg: rgba(106, 88, 220, 0.1); --sleep-ink: #4a3ab6;
   --stress-bg: rgba(210, 96, 26, 0.11); --stress-ink: #a2470e; --hrv-bg: rgba(19, 145, 127, 0.11); --hrv-ink: #0b6d60;
-  --hr-bg: rgba(210, 63, 95, 0.1); --hr-ink: #ad2749; --food-bg: rgba(19, 145, 127, 0.1); --food-ink: #0b6d60;
+  --hr-bg: rgba(210, 63, 95, 0.1); --hr-ink: #ad2749; --food: #13917f; --food-bg: rgba(19, 145, 127, 0.1); --food-ink: #0b6d60;
   --water: #1f8fc4; --water-bg: rgba(31, 143, 196, 0.11); --water-ink: #136a93;
   --claude: #5641c4; --claude-bg: rgba(106, 88, 220, 0.09); --claude-bg-2: rgba(106, 88, 220, 0.15);
   --shade-sleep: rgba(106, 88, 220, 0.1); --shade-active: rgba(42, 120, 214, 0.13);
@@ -166,7 +166,7 @@ h1, h2, h3 { text-wrap: balance; }
 .row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .row.top { align-items: flex-start; }
 .row.base { align-items: baseline; }
-.col { display: grid; gap: 10px; min-width: 0; }
+.col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0; }
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .up { color: var(--good-ink); } .down { color: var(--crit-ink); } .warnc { color: var(--warn-ink); }
@@ -539,16 +539,17 @@ a.btn { text-decoration: none; }
 .fold-body .mtile:nth-child(even) .spark { right: 0; }
 .mtile { position: relative; border: 0; text-align: left; color: inherit; background: var(--surface); border-radius: var(--r-lg); padding: 14px 14px 12px; display: grid; gap: 2px; overflow: hidden; min-width: 0;
   box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
-.mtile .k { font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mtile .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(30 * var(--fs)); font-weight: 650; line-height: 1.12; letter-spacing: -0.02em; white-space: nowrap; }
-.mtile .v small { font-family: var(--font); font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
-.mtile .d { font-size: calc(12.5 * var(--fs)); font-weight: 500; color: var(--muted); padding-right: 60px; line-height: 1.35; min-height: 17px; }
+/* the name reads first (in the measure's colour), then the number with its unit at a readable size, then what it means */
+.mtile .k { font-size: calc(14 * var(--fs)); font-weight: 600; color: var(--c, var(--ink-2)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mtile .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(26 * var(--fs)); font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; white-space: nowrap; margin-top: 2px; }
+.mtile .v small { font-family: var(--font); font-size: calc(15 * var(--fs)); font-weight: 500; color: var(--ink-2); margin-left: 4px; letter-spacing: 0; }
+.mtile .d { font-size: calc(13 * var(--fs)); font-weight: 400; color: var(--ink-2); padding-right: 60px; line-height: 1.35; min-height: 17px; }
 .mtile .spark { position: absolute; right: 12px; bottom: 12px; width: 58px; height: 24px; }
 .tile2 { background: color-mix(in srgb, var(--ink) 4%, transparent); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
-.tile2 .k { font-size: calc(12 * var(--fs)); font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile2 .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(22 * var(--fs)); font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile2 .v small { font-family: var(--font); font-size: calc(12 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 2px; }
-.tile2 .d { font-size: calc(11.5 * var(--fs)); font-weight: 500; color: var(--muted); margin-top: 1px; }
+.tile2 .k { font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile2 .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(21 * var(--fs)); font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.tile2 .v small { font-family: var(--font); font-size: calc(13 * var(--fs)); font-weight: 500; color: var(--ink-2); margin-left: 3px; }
+.tile2 .d { font-size: calc(12 * var(--fs)); font-weight: 400; color: var(--ink-2); margin-top: 1px; }
 /* inside a card, tiles sit on the card split by hairlines rather than as boxes */
 .card :is(.grid2, .grid3):has(> .tile2) { gap: 0; }
 .card :is(.grid2, .grid3) > .tile2 { background: transparent; border-radius: 0; padding: 6px 12px; }
@@ -817,19 +818,21 @@ a.btn { text-decoration: none; }
 .meal-head { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; color: inherit; text-align: left; padding: 13px 0; }
 .meal-head .tx { flex: 1; min-width: 0; }
 .meal-head .nm { font-size: calc(16.5 * var(--fs)); font-weight: 600; }
-.meal-head .nm span { font-family: var(--font-num); font-size: calc(13.5 * var(--fs)); font-weight: 500; color: var(--muted); margin-left: 6px; }
-.meal-head .sm { font-size: calc(13 * var(--fs)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meal-head .nm span { font-family: var(--font-num); font-size: calc(13.5 * var(--fs)); font-weight: 500; color: var(--ink-2); margin-left: 6px; }
+.meal-head .sm { font-size: calc(13 * var(--fs)); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meal-head .kc { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(19 * var(--fs)); font-weight: 600; }
 .meal-head .tg { width: 30px; height: 30px; display: grid; place-items: center; color: var(--muted); flex: none; transition: transform 0.25s var(--ease); }
 .meal-head .tg svg { width: 18px; height: 18px; }
 .meal[aria-expanded="true"] .tg { transform: rotate(180deg); }
-.meal-body { display: grid; gap: 6px; padding-bottom: 12px; }
+.meal-body { display: grid; gap: 0; padding-bottom: 8px; }
 .meal-body > * { min-width: 0; }
-.food-li { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; text-align: left; color: inherit; background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
+.food-li { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; text-align: left; color: inherit; background: none; border-radius: 0; padding: 10px 0; }
+.food-li + .food-li { border-top: 1px solid var(--line); }
 .food-li .tx { flex: 1; min-width: 0; }
-.food-li .t { font-size: calc(14.5 * var(--fs)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.food-li .s { font-size: calc(12.5 * var(--fs)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.food-li .kc { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(16 * var(--fs)); font-weight: 600; }
+.food-li .t { font-size: calc(15 * var(--fs)); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.food-li .s { font-size: calc(13 * var(--fs)); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.food-li .kc { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(16 * var(--fs)); font-weight: 600; white-space: nowrap; }
+.food-li .kc::after, .res .kc b::after { content: ' kcal'; font-family: var(--font); font-size: calc(12 * var(--fs)); font-weight: 500; color: var(--ink-2); }
 .add-line { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--food-ink); font-size: calc(14 * var(--fs)); font-weight: 600; padding: 8px 0 4px; }
 .add-line svg { width: 16px; height: 16px; }
 .flow-top { display: flex; align-items: center; gap: 12px; padding-top: 10px; }
@@ -845,13 +848,13 @@ a.btn { text-decoration: none; }
 .res { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 14px; border-radius: 18px; background: var(--surface); box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
 .res .tx { flex: 1; min-width: 0; border: 0; background: none; color: inherit; text-align: left; padding: 0; }
 .res .t { font-size: calc(15.5 * var(--fs)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.res .s { font-size: calc(12.5 * var(--fs)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res .s { font-size: calc(13 * var(--fs)); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .res .kc { text-align: right; flex: none; }
-.res .kc b { display: block; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(17 * var(--fs)); font-weight: 600; }
+.res .kc b { display: block; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: calc(16 * var(--fs)); font-weight: 600; white-space: nowrap; }
 .res .kc span { font-size: calc(11.5 * var(--fs)); font-weight: 600; color: var(--food-ink); }
-.add-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-family: var(--font-num); font-weight: 600; font-size: calc(15 * var(--fs)); transition: transform 0.12s var(--ease), background 0.2s; }
+.add-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none; display: grid; place-items: center; background: var(--food-bg); color: var(--food-ink); font-family: var(--font-num); font-weight: 600; font-size: calc(15 * var(--fs)); transition: transform 0.12s var(--ease), background 0.2s; }
 .add-btn svg { width: 18px; height: 18px; stroke-width: 2.4; }
-.add-btn.on { background: var(--food-bg); color: var(--food-ink); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--food-ink) 45%, transparent); }
+.add-btn.on { background: var(--food); color: var(--on-accent); box-shadow: none; }
 .plate-bar { border-radius: 26px; padding: 12px; background: var(--glass-strong); box-shadow: inset 0 0 0 1px var(--glass-line), var(--shadow); -webkit-backdrop-filter: blur(26px) saturate(1.8); backdrop-filter: blur(26px) saturate(1.8); display: grid; gap: 10px; animation: barIn 0.38s var(--spring) both; }
 .plate-sum { display: flex; align-items: center; gap: 12px; }
 .plate-sum .cnt { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--food-bg); color: var(--food-ink); font-family: var(--font-num); font-size: calc(18 * var(--fs)); font-weight: 600; flex: none; }
@@ -5738,10 +5741,10 @@ function toast(text, { action, onAction, ms = 3800 } = {}) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, ms);
 }
-function confirmSheet({ title, text, confirm = 'Confirm', danger = false, onConfirm }) {
+function confirmSheet({ title, text, confirm = 'Confirm', cancel = 'Cancel', danger = false, onConfirm }) {
   const sh = Sheets.open({
     title, body: [h('p', { class: 'ink2' }, text)],
-    foot: [h('button', { class: 'btn ghost', onclick: () => sh.close() }, 'Cancel'),
+    foot: [h('button', { class: 'btn ghost', onclick: () => sh.close() }, cancel),
       h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), onclick: () => { sh.close(); onConfirm(); } }, confirm)],
   });
   return sh;
@@ -5776,9 +5779,10 @@ function prow({ ic, tone = '', t, s: sub, right = null, onclick = null, chevron 
     right != null || chevron ? h('span', { class: 'rt' }, right, chevron ? icon('chevR') : null) : null];
   return onclick ? h('button', { class: 'prow tap', onclick, 'aria-label': label }, kids) : h('div', { class: 'prow' }, kids);
 }
-function mtile({ k, v, unit, d, dCls = '', spark = null, onclick = null, label = null }) {
+function mtile({ k, v, unit, d, dCls = '', spark = null, onclick = null, label = null, tone = null }) {
   const kids = [h('span', { class: 'k' }, k), h('span', { class: 'v' }, v ?? '–', v != null && unit ? h('small', null, unit) : null), h('span', { class: 'd ' + dCls }, d || ''), spark];
-  return onclick ? h('button', { class: 'mtile tap', onclick, 'aria-label': label }, kids) : h('div', { class: 'mtile' }, kids);
+  const style = tone ? { '--c': `var(--${tone})` } : null;
+  return onclick ? h('button', { class: 'mtile tap', onclick, style, 'aria-label': label || `${k}: ${v ?? 'no data'}${v != null && unit ? ' ' + unit : ''}. ${d || ''}` }, kids) : h('div', { class: 'mtile', style }, kids);
 }
 const stat = (v, k, cls = '') => h('div', { class: 'stat ' + cls }, h('div', { class: 'v' }, v), h('div', { class: 'k' }, k));
 const tile2 = (k, v, unit, d) => h('div', { class: 'tile2' }, h('div', { class: 'k' }, k), h('div', { class: 'v' }, v ?? '–', v != null && unit ? h('small', null, unit) : null), d ? h('div', { class: 'd' }, d) : null);
@@ -5886,6 +5890,8 @@ const fmtW = (kg, d = 1) => {
   const v = U.round(U.kgTo(kg, units()), d);
   return v % 1 === 0 ? String(v) : v.toFixed(d).replace(/0+$/, '').replace(/\.$/, '');
 };
+/** A lifting weight: up to two decimals, as typed (76.25, not 76.3). */
+const fmtLift = (kg) => fmtW(kg, 2);
 const wU = () => U.wUnit(units());
 const clockOf = (b) => `${U.pad(Math.floor(b / 2))}:${b % 2 ? '30' : '00'}`;
 const fmtMMSS = (sec) => { sec = Math.max(0, Math.round(sec)); const hh = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60; return hh ? `${hh}:${U.pad(m)}:${U.pad(x)}` : `${m}:${U.pad(x)}`; };
@@ -6400,24 +6406,24 @@ const Tabs = (() => {
     const left = en.target - it.kcal;
     const sx = C.stress(date);
     const tiles = [
-      mtile({ k: 'HRV', v: day.hrv != null ? Math.round(day.hrv) : null, unit: 'ms', d: hrvPct == null ? 'Overnight average' : Math.abs(hrvPct) < 8 ? 'Normal range' : `${Math.round(Math.abs(hrvPct))}% ${hrvPct < 0 ? 'under' : 'over'} normal`,
+      mtile({ k: 'HRV', tone: 'hrv', v: day.hrv != null ? Math.round(day.hrv) : null, unit: 'ms', d: hrvPct == null ? 'Overnight average' : Math.abs(hrvPct) < 8 ? 'Normal range' : `${Math.round(Math.abs(hrvPct))}% ${hrvPct < 0 ? 'under' : 'over'} normal`,
         dCls: hrvPct == null || Math.abs(hrvPct) < 8 ? '' : hrvPct < 0 ? 'down' : 'up', spark: Charts.sparkline(series(14, (d) => C.days[d]?.hrv ?? null), { color: 'var(--hrv)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'hrv', date }) }),
-      mtile({ k: 'Resting heart rate', v: day.rhr ?? null, unit: 'bpm', d: rd == null ? 'Overnight' : Math.abs(rd) < 2.5 ? 'Normal range' : `${fmtSigned(rd, 0)} vs normal`, dCls: rd == null || Math.abs(rd) < 2.5 ? '' : rd > 0 ? 'down' : 'up',
+      mtile({ k: 'Resting heart rate', tone: 'hr', v: day.rhr ?? null, unit: 'bpm', d: rd == null ? 'Overnight' : Math.abs(rd) < 2.5 ? 'Normal range' : `${fmtSigned(rd, 0)} vs normal`, dCls: rd == null || Math.abs(rd) < 2.5 ? '' : rd > 0 ? 'down' : 'up',
         spark: Charts.sparkline(series(14, (d) => C.days[d]?.rhr ?? null), { color: 'var(--hr)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'rhr', date }) }),
-      mtile({ k: 'Steps', v: day.steps != null ? fmtInt(day.steps) : null, d: day.steps == null ? '' : day.steps >= 10000 ? 'Goal of 10,000 met' : `${fmtInt(10000 - day.steps)} to go`, dCls: day.steps >= 10000 ? 'up' : '',
+      mtile({ k: 'Steps', tone: 'strain', v: day.steps != null ? fmtInt(day.steps) : null, d: day.steps == null ? '' : day.steps >= 10000 ? 'Goal of 10,000 met' : `${fmtInt(10000 - day.steps)} to go`, dCls: day.steps >= 10000 ? 'up' : '',
         spark: Charts.sparkline(series(14, (d) => C.days[d]?.steps ?? null), { color: 'var(--strain)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'steps', date }) }),
-      mtile({ k: left >= 0 ? 'Calories left' : 'Calories over', v: fmtInt(Math.abs(left)), unit: 'kcal', d: `${fmtInt(it.kcal)} of ${fmtInt(en.target)}`, spark: Charts.meter(it.kcal, en.target, 'var(--food)', { over: left < 0, h: 5 }), onclick: () => App.go('food') }),
-      mtile({ k: 'Weight trend', v: en.trendWeight != null ? fmtW(en.trendWeight) : null, unit: wU(), d: en.weekChange != null ? `${fmtSigned(U.kgTo(en.weekChange, units()), 1)} ${wU()} this week` : 'Weigh in to start',
+      mtile({ k: left >= 0 ? 'Calories left' : 'Calories over', tone: 'food', v: fmtInt(Math.abs(left)), unit: 'kcal', d: `${fmtInt(it.kcal)} of ${fmtInt(en.target)}`, spark: Charts.meter(it.kcal, en.target, 'var(--food)', { over: left < 0, h: 5 }), onclick: () => App.go('food') }),
+      mtile({ k: 'Weight trend', tone: 'ink-2', v: en.trendWeight != null ? fmtW(en.trendWeight) : null, unit: wU(), d: en.weekChange != null ? `${fmtSigned(U.kgTo(en.weekChange, units()), 1)} ${wU()} this week` : 'Weigh in to start',
         spark: Charts.sparkline(series(30, (d) => C.trendWeight(d)), { color: 'var(--ink-2)', w: 58, h: 24, area: false }), onclick: () => App.open('energy', { date }) }),
-      (() => { const w = C.water(date), [n, u] = mlParts(w.ml); return mtile({ k: 'Water', v: n, unit: u, d: w.ml >= w.goal ? `Goal of ${mlText(w.goal)} met` : `${mlText(w.left)} to go`, dCls: w.ml >= w.goal ? 'up' : '',
+      (() => { const w = C.water(date), [n, u] = mlParts(w.ml); return mtile({ k: 'Water', tone: 'water', v: n, unit: u, d: w.ml >= w.goal ? `Goal of ${mlText(w.goal)} met` : `${mlText(w.left)} to go`, dCls: w.ml >= w.goal ? 'up' : '',
         spark: Charts.meter(w.ml, w.goal, 'var(--water)', { h: 5 }), onclick: () => App.open('water', { date }) }); })(),
-      mtile({ k: 'Active energy', v: day.active != null ? fmtInt(day.active) : null, unit: 'kcal', d: (() => { const am = C.activeMean(date); return day.active == null || am == null ? 'Move, workouts included' : date === C.todayStr ? `usual day ${fmtInt(am)}` : `${fmtSigned((day.active / am - 1) * 100, 0, '%')} vs usual`; })(),
+      mtile({ k: 'Active energy', tone: 'go', v: day.active != null ? fmtInt(day.active) : null, unit: 'kcal', d: (() => { const am = C.activeMean(date); return day.active == null || am == null ? 'Move, workouts included' : date === C.todayStr ? `usual day ${fmtInt(am)}` : `${fmtSigned((day.active / am - 1) * 100, 0, '%')} vs usual`; })(),
         spark: Charts.sparkline(series(14, (d) => (d === C.todayStr ? null : C.days[d]?.active ?? null)), { color: 'var(--strain)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'active', date }) }),
     ];
     // from the Watch and other apps, when they're there
-    if (day.daylight) tiles.push(mtile({ k: 'Daylight', v: day.daylight.min, unit: 'min', d: `${day.daylight.am} min before noon`, dCls: day.daylight.am >= 10 ? 'up' : '',
+    if (day.daylight) tiles.push(mtile({ k: 'Daylight', tone: 'warn', v: day.daylight.min, unit: 'min', d: `${day.daylight.am} min before noon`, dCls: day.daylight.am >= 10 ? 'up' : '',
       spark: Charts.sparkline(series(14, (d) => C.days[d]?.daylight?.min ?? null), { color: 'var(--warn)', w: 58, h: 24 }), onclick: () => App.open('metric', { key: 'daylight', date }) }));
-    if (day.caffeine) tiles.push(mtile({ k: 'Caffeine', v: day.caffeine.mg, unit: 'mg', d: day.caffeine.late ? `${day.caffeine.late} mg after 2 pm` : 'none after 2 pm', dCls: day.caffeine.late ? 'warnc' : 'up',
+    if (day.caffeine) tiles.push(mtile({ k: 'Caffeine', tone: 'carbs', v: day.caffeine.mg, unit: 'mg', d: day.caffeine.late ? `${day.caffeine.late} mg after 2 pm` : 'none after 2 pm', dCls: day.caffeine.late ? 'warnc' : 'up',
       spark: Charts.sparkline(series(14, (d) => C.days[d]?.caffeine?.mg ?? null), { color: 'var(--carbs)', w: 58, h: 24 }), onclick: () => App.open('habit', { id: 'caffeine_late', date }) }));
     // the person's own choice and order, else the default (which keeps the grid even)
     const KEYS = ['hrv', 'rhr', 'steps', 'calories', 'weight', 'water', 'active', 'daylight', 'caffeine'];
@@ -7106,7 +7112,7 @@ const Tabs = (() => {
     const answers = Object.keys(C.journal || {}).length;
     const ex = currentExperiment(C);
     const ha = C.healthAge(date);
-    return h('section', { class: 'card flush', 'aria-label': 'Insights' }, h('div', { class: 'card-title', style: { padding: '14px 16px 2px' } }, h('h2', null, 'Insights')),
+    return h('section', { class: 'card flush', 'aria-label': 'Insights' }, h('div', { class: 'card-title', style: { padding: '12px 0 2px' } }, h('h2', null, 'Insights')),
       h('div', { class: 'list' },
         ex ? prow({ ic: 'flask', tone: 'claude', t: `Experiment: ${C.habits.find((hb) => hb.id === ex.habit)?.name || 'habit'}`, s: 'Two weeks, compared with the four before', onclick: () => App.open('experiment', { id: ex.id }) }) : null,
         prow({ ic: 'check', tone: 'good', t: 'What goes with your recovery', s: answers >= 14 ? 'Habits linked to better or worse recovery and sleep' : 'Answer the morning check-in for two weeks to see', onclick: () => App.open('tracker', { date }) }),
@@ -7538,7 +7544,7 @@ const Pages = {};
         cardT('Last 7 days', h('span', { class: 'small muted' }, `goal met ${met} of 7`), Charts.bars({ items: wk, height: 140, ref: w.goal, refLabel: 'goal', fmt: (v) => mlText(v).replace(' fl oz', ''), caption: 'Water, last 7 days' }),
           h('button', { class: 'btn block', style: { marginTop: '12px' }, onclick: () => App.open('metric', { key: 'water', date }) }, 'Longer history')),
         h('section', { class: 'card tight' }, prow({ ic: 'trend', tone: 'water', t: `Daily goal: ${mlText(w.goal)}`, s: Store.state().profile.waterGoal > 0 ? 'Your own goal' : 'Based on your weight, about 33 ml per kg', onclick: () => Sheet.waterGoal() })),
-        h('p', { class: 'note' }, HealthSync.native() ? `Water other apps save to Apple Health counts too.${Store.state().profile.waterToHealth === false ? '' : ' Water you log here is saved to Apple Health as well.'}` : 'Water logged as food counts too.'));
+        h('p', { class: 'note' }, HealthSync.native() ? `Water other apps save to Apple Health counts too.${Store.state().profile.healthWrite === true ? ' Water you log here is saved to Apple Health as well.' : ''}` : 'Water logged as food counts too.'));
     },
   };
   // =============== WELCOME (first run in the iPhone app) ===============
@@ -8463,6 +8469,32 @@ ${ctx}`;
   };
 
   // =============== SETTINGS ===============
+  /** The one switch for saving what you log to Apple Health, what it covers, and a way to take it all back out. */
+  function healthWriteRow(P) {
+    const on = P.healthWrite === true, stt = HealthOut.status;
+    const note = on
+      ? stt && !stt.ok ? `Couldn’t save to Apple Health: ${stt.error === 'not allowed' ? 'allow Baseline to write in the Health app (Sharing → Apps → Baseline)' : 'it will try again with your next entry'}.`
+        : stt?.ok ? `${plural(stt.n, 'entry', 'entries')} from the last 30 days in Apple Health.` : 'Your entries from the last 30 days go in now, and new ones as you log them.'
+      : 'Off: nothing you log here is written to Apple Health.';
+    return h('div', { class: 'hw' },
+      h('label', { class: 'switch', for: 'set-hk-write' }, h('span', null, h('b', { style: { display: 'block' } }, 'Save to Apple Health'), h('span', { class: 'xs muted' }, 'Water, food, weigh-ins, naps and workouts you log here')),
+        h('input', { type: 'checkbox', id: 'set-hk-write', checked: on, onchange: async (e) => {
+          const want = e.target.checked;
+          e.target.disabled = true;
+          const ok = await HealthOut.set(want);
+          if (!ok) { e.target.checked = false; toast('Apple Health didn’t allow it. You can allow it in the Health app under Sharing → Apps → Baseline.', { ms: 6000 }); }
+          else toast(want ? 'Saving to Apple Health' : 'No longer saving to Apple Health');
+          App.render();
+        } })),
+      h('p', { class: 'note' }, note),
+      h('button', { class: 'btn block ghost', onclick: () => confirmSheet({ title: 'Remove Baseline’s entries from Apple Health?', text: 'Everything Baseline ever saved to Apple Health is deleted there: water, food, weigh-ins, naps and workouts logged on the iPhone. Your entries in Baseline stay.', confirm: 'Remove from Apple Health', danger: true,
+        onConfirm: async () => {
+          if (P.healthWrite) await HealthOut.set(false);
+          try { await HealthOut.removeAll(); toast('Removed from Apple Health'); } catch { toast('Couldn’t remove them right now. Try again in a moment.'); }
+          App.render();
+        } }) }, icon('trash'), 'Remove what Baseline saved'));
+  }
+
   Pages.settings = {
     render(C, args) {
       setTint('#8f7bf0', '#3b8deb');
@@ -8518,8 +8550,7 @@ ${ctx}`;
           HealthSync.native() ? HealthSync.row() : null,
           h('button', { class: 'btn block', onclick: () => App.open('import') }, icon('upload'), HealthSync.native() ? 'Import older history from an export' : 'Import Apple Health data'),
           st.meta?.lastImport ? h('p', { class: 'note' }, `Last import ${U.fmtDay(st.meta.lastImport.at.slice(0, 10))}: ${st.meta.lastImport.days} days${st.meta.lastImport.from ? `, ${U.fmtShort(st.meta.lastImport.from)}–${U.fmtShort(st.meta.lastImport.to)}` : ''}.`) : null,
-          HealthSync.native() ? h('label', { class: 'switch', for: 'set-water-hk' }, h('span', null, h('b', { style: { display: 'block' } }, 'Save water to Apple Health'), h('span', { class: 'xs muted' }, 'So your other apps see what you drink')),
-            h('input', { type: 'checkbox', id: 'set-water-hk', checked: P.waterToHealth !== false, onchange: (e) => set({ waterToHealth: e.target.checked }) })) : null,
+          HealthSync.native() ? healthWriteRow(P) : null,
           HealthSync.native() ? h('p', { class: 'note' }, 'Pull down on any screen to sync now. New sleep and workouts also come in while the app is closed.') : null),
         sec('data', 'Your data',
           HealthSync.native() && !Store.demo ? null : h('label', { class: 'switch', for: 'set-demo' }, h('span', null, 'Show sample data'), h('input', { type: 'checkbox', id: 'set-demo', checked: Store.demo, onchange: (e) => { Store.setDemo(e.target.checked); toast(e.target.checked ? 'Showing sample data' : 'Showing your data'); App.render(); } })),
@@ -8557,7 +8588,7 @@ ${ctx}`;
         goal: `${{ lose: 'Lose', maintain: 'Maintain', gain: 'Gain' }[P.goal] || 'Maintain'}${P.goal !== 'maintain' ? ` ${P.ratePct}% a week` : ''} · protein ${P.proteinPerKg} g/kg`,
         sleep: `Sleep need ${fmtDur(P.sleepNeedH * 60)} · max heart rate ${P.hrMaxOverride || 'estimated'}`,
         notify: on.length ? on.join(', ').replace(/^./, (c) => c.toUpperCase()) : 'Off',
-        health: HealthSync.native() ? (l ? `Synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)}` : 'Not synced yet') : 'Import your export',
+        health: HealthSync.native() ? `${l ? `Synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)}` : 'Not synced yet'} · saving ${st.profile.healthWrite === true ? 'on' : 'off'}` : 'Import your export',
         watch: 'Scores, workouts and water on your wrist',
         coach: Coach.available() ? 'Ready' : 'Not set up',
         look: { system: 'Match the iPhone', light: 'Light', dark: 'Dark' }[theme],
@@ -8627,7 +8658,7 @@ ${ctx}`;
           fileIn, choose, prog, status),
         h('p', { class: 'note' }, 'The file is read on this device. Only daily summaries are saved (sleep, heart rate, HRV through the day, activity, workouts, weight), not the raw export.'));
       return view(pageHead('Import Apple Health', { sub: 'From your iPhone and Apple Watch' }),
-        HealthSync.native() ? [HealthSync.row(), h('p', { class: 'note' }, 'The app syncs on its own when you open it. A full export below is only needed to bring in older history.')] : null, body);
+        HealthSync.native() ? h('section', { class: 'card tight' }, HealthSync.row(), h('p', { class: 'note' }, 'The app syncs on its own when you open it. A full export below is only needed to bring in older history.')) : null, body);
     },
   };
 
@@ -9480,12 +9511,8 @@ const HealthSync = (() => {
     ask({ type: 'live', action, json }, 10000).catch(() => {});
   };
   // ---------- water you log, saved to Apple Health too (Baseline's own samples are skipped when reading back) ----------
-  S.waterOut = (op, x) => {
-    if (!S.native() || Store.demo || Store.state().profile.waterToHealth === false || !x) return;
-    // `key` names the entry (the request's own id is for the reply)
-    if (op === 'add') ask({ type: 'water', key: x.id, ml: x.ml, at: x.at }, 15000).catch(() => {});
-    else ask({ type: 'unwater', key: x.id }, 15000).catch(() => {});
-  };
+  // water goes to Apple Health with everything else you log, when that's on (HealthOut)
+  S.waterOut = () => HealthOut.schedule();
   S.ask = ask;
   /** A request the app doesn't answer through receive(). */
   S.post = (msg) => { if (S.native()) try { handler().postMessage({ id: 'p' + U.uid(), ...msg }); } catch {} };
@@ -9574,8 +9601,9 @@ const HealthSync = (() => {
   S.row = () => {
     const l = last();
     const sub = busy ? 'Syncing…' : filling ? 'Bringing in older months…' : lastError ? S.errorText(lastError) : l ? `Last synced ${U.fmtShort(l.at.slice(0, 10))} at ${l.at.slice(11, 16)} · ${plural(l.days || 0, 'day')} updated` : 'Not synced yet';
-    return h('section', { class: 'card tight' }, prow({ ic: 'heart', tone: 'hr', t: 'Apple Health', s: sub,
-      right: h('button', { class: 'btn sm primary', disabled: !!busy, onclick: (e) => { e.stopPropagation(); S.sync().catch(() => {}); App.render(); } }, busy ? 'Syncing…' : 'Sync now') }));
+    // a plain row: it sits inside the Settings card, so no box of its own
+    return h('div', { class: 'hs-row' }, prow({ ic: 'heart', tone: 'hr', t: 'Apple Health', s: sub,
+      right: h('button', { class: 'btn sm', disabled: !!busy, onclick: (e) => { e.stopPropagation(); S.sync().catch(() => {}); App.render(); } }, busy ? 'Syncing…' : 'Sync now') }));
   };
   return S;
 })();
@@ -9583,6 +9611,94 @@ const HealthSync = (() => {
 /* ===== notify.js — the reminders the person turned on (Settings → Notifications), planned while the app is open =====
    The app shows them only while Baseline isn't open. "Recovery is ready" is the app's own: it fires when Apple Health
    delivers last night's sleep in the background, so the page only passes the preference on. */
+/* ===== healthout.js — what you log in Baseline, saved to Apple Health, only when you turn it on =====
+   One switch, profile.healthWrite, off until you turn it on. Rather than hooking every place something can be logged, a reconciler
+   compares what should be in Health (your own entries of the last 30 days: water, food, weigh-ins, workouts logged on the
+   iPhone, naps) with what it saved before (a ledger in localStorage) and sends only the difference: { type: 'hkSave', items }
+   and { type: 'hkDelete', ids }. Each sample carries the entry's id, so saving again replaces it. The sync skips the app's own
+   samples when reading, so nothing counts twice. Workouts from the watch app are saved by the watch itself. */
+const HealthOut = (() => {
+  const DAYS = 30, WATER = /^water\b/i;
+  const O = {};
+  let busy = false, again = false, timer = null;
+  O.status = null; // { ok, at, n } or { ok: false, error }
+  O.on = () => HealthSync.native() && !Store.demo && Store.state().profile.healthWrite === true;
+  const ledger = () => { try { return JSON.parse(Store.lsGet('hkLedger') || '{}') || {}; } catch { return {}; } };
+  const keep = (l) => Store.lsSet('hkLedger', JSON.stringify(l));
+  const r1 = (x) => Math.round((+x || 0) * 10) / 10;
+  /** Everything of yours from the last 30 days that belongs in Health, by entry id. */
+  O.wanted = () => {
+    const C = App.ctx(), st = Store.state(), out = {};
+    const add = (d, x) => { out[x.id] = { ...x, d }; };
+    for (let i = DAYS - 1; i >= 0; i--) {
+      const d = U.addDays(C.todayStr, -i), doc = st.food?.[d];
+      for (const x of doc?.water || []) if (x.ml > 0) add(d, { id: x.id, kind: 'water', ml: Math.round(x.ml), at: x.at || d + 'T12:00' });
+      for (const it of doc?.items || []) {
+        const at = it.at || mealAt(d, it.meal);
+        if (WATER.test(it.name || '')) { const ml = Math.round(+(it.grams ?? (/^(ml|g)$/.test(it.unit || '') ? it.qty : 0)) || 0); if (ml > 0) add(d, { id: it.id, kind: 'water', ml, at }); continue; }
+        if (!(+it.kcal > 0)) continue;
+        add(d, { id: it.id, kind: 'food', at, name: String(it.name || 'Food').slice(0, 80), kcal: Math.round(+it.kcal), p: r1(it.p), c: r1(it.c), f: r1(it.f), fiber: r1(it.fiber) });
+      }
+      const b = st.body?.[d];
+      if (b?.src === 'app' && (b.weight > 0 || b.bodyFat > 0 || b.waist > 0))
+        add(d, { id: 'body-' + d, kind: 'body', at: b.at || d + 'T08:00', kg: b.weight > 0 ? b.weight : null, fat: b.bodyFat > 0 ? b.bodyFat : null, waistCm: b.waist > 0 ? b.waist : null });
+      for (const n of st.naps?.[d]?.items || []) if (n.start && n.min > 0) add(d, { id: n.id, kind: 'nap', start: n.start, end: U.isoLocal(new Date(U.isoToDate(n.start).getTime() + n.min * 60e3)).slice(0, 16) });
+      // workouts logged on the iPhone that Health doesn't already have (the watch saves its own; a watch recording merged with a log is already there)
+      for (const s0 of C.sessions(d)) {
+        if (s0.source !== 'app' || s0.merged || s0.src === 'watch' || !s0.start || !s0.end) continue;
+        add(d, { id: s0.id, kind: 'workout', start: s0.start, end: s0.end, type: s0.type || 'Workout', name: s0.name || s0.type || 'Workout', kcal: s0.kcal > 0 ? Math.round(s0.kcal) : null, km: s0.km > 0 ? s0.km : null });
+      }
+    }
+    return out;
+  };
+  const hashOf = (x) => { const { d, ...rest } = x; return JSON.stringify(rest); };
+  /** Send what changed. Entries that slip out of the 30 days are forgotten, never deleted from Health. */
+  O.reconcile = async () => {
+    if (!O.on()) return;
+    if (busy) { again = true; return; }
+    busy = true;
+    try {
+      const want = O.wanted(), led = ledger(), from = U.addDays(U.today(), -(DAYS - 1));
+      const save = Object.values(want).filter((x) => led[x.id]?.h !== hashOf(x));
+      const del = Object.keys(led).filter((id) => !want[id] && led[id].d >= from);
+      for (const id of Object.keys(led)) if (!want[id] && led[id].d < from) delete led[id];
+      if (del.length) { await HealthSync.ask({ type: 'hkDelete', ids: del }, 60000); for (const id of del) delete led[id]; keep(led); }
+      for (let i = 0; i < save.length; i += 40) {
+        const chunk = save.slice(i, i + 40);
+        const r = await HealthSync.ask({ type: 'hkSave', items: chunk.map(({ d, ...x }) => x) }, 120000);
+        for (const id of r?.saved || []) { const x = want[id]; if (x) led[id] = { h: hashOf(x), d: x.d }; }
+        keep(led);
+        if (r?.failed?.length) throw new Error(r.failed.length === chunk.length ? 'not allowed' : 'some entries');
+      }
+      O.status = { ok: true, at: Date.now(), n: Object.keys(led).length };
+    } catch (e) {
+      O.status = { ok: false, at: Date.now(), error: String(e?.message || e) };
+    } finally {
+      busy = false;
+      if (again) { again = false; O.schedule(); }
+    }
+  };
+  /** After a change: a moment later, so a burst of edits goes in one go. */
+  O.schedule = () => { if (!O.on()) return; clearTimeout(timer); timer = setTimeout(O.reconcile, 1500); };
+  /** Turn saving on (asks for Health access first) or off. */
+  O.set = async (on) => {
+    if (!on) { Store.setProfile({ healthWrite: false }); Watch.push(); return true; }
+    const r = await HealthSync.ask({ type: 'hkAuth' }, 10 * 60e3).catch(() => null);
+    if (!r?.ok) return false;
+    Store.setProfile({ healthWrite: true });
+    Watch.push();
+    await O.reconcile();
+    return true;
+  };
+  /** Remove every sample Baseline saved to Apple Health, whenever it saved it. */
+  O.removeAll = async () => {
+    const r = await HealthSync.ask({ type: 'hkDeleteAll' }, 120000);
+    keep({});
+    return r;
+  };
+  return O;
+})();
+
 const Notify = (() => {
   const N = {};
   let timer = null, lastPrefs = '';
@@ -9643,6 +9759,8 @@ const Watch = (() => {
       day: { date: d, recovery: r && !r.calibrating ? r.score : null, band: r && !r.calibrating ? r.band : null, strain: st ? U.round(st.value, 1) : null,
         lo: tgt[0], hi: tgt[1], sleep: ss?.score ?? null, asleep: ss ? Math.round(ss.s.asleep) : null, hrv: day.hrv != null ? Math.round(day.hrv) : null, rhr: day.rhr ?? null },
       next, routines: C.routines.slice(0, 8).map((x) => planOf(C, x, null)), draft,
+      // whether the watch saves its workouts to Apple Health (the same switch as everything else)
+      healthWrite: Store.state().profile.healthWrite === true,
       water: (() => { const w = C.water(d); return { ml: w.ml, goal: w.goal, glass: Math.round(waterSizes()[0]) }; })(),
       // exercises to add during a workout on the watch: the ones used most, set up the way the logger would
       library: libraryNames(C).map((n, i) => exOut(C, Train.draftExercise(C, n), 'lib' + i)),
@@ -9689,6 +9807,14 @@ const Watch = (() => {
       App.saveDraft(); App.render();
     } else if (msg.kind === 'discard' && mine) {
       App.draft = null; App.saveDraft(); App.stopRest(); App.render();
+    } else if (msg.kind === 'cardio' && msg.startedAt && msg.endedAt) {
+      const t0 = new Date(msg.startedAt), t1 = new Date(msg.endedAt), min = Math.max(1, Math.round((t1 - t0) / 60000));
+      if (min < 2) return;
+      const start = U.isoLocal(t0).slice(0, 16), end = U.isoLocal(t1).slice(0, 16), type = String(msg.type || 'Workout');
+      Store.saveWorkout({ id: String(msg.id || 'wc' + U.uid()), date: start.slice(0, 10), start, end, min, type, name: type, kind: 'cardio', src: 'watch',
+        ...(msg.km > 0 ? { km: U.round(+msg.km, 2) } : {}), ...(msg.avgHr > 0 ? { avgHr: +msg.avgHr } : {}), ...(msg.maxHr > 0 ? { maxHr: +msg.maxHr } : {}), ...(msg.kcal > 0 ? { kcal: +msg.kcal } : {}) });
+      App.render();
+      toast(`${type} from your watch saved`);
     } else if (msg.kind === 'finish') {
       const exs = (msg.exercises || []).map(exIn).map((ex) => ({ name: ex.name, sets: ex.sets.filter((x) => x.done && +x.r > 0)
         .map((x) => ({ w: +x.w || 0, r: +x.r, t: x.t === 'N' ? undefined : x.t, done: true })) })).filter((ex) => ex.sets.length);
@@ -9866,18 +9992,18 @@ const Train = (() => {
     return { id: U.uid(), name, rest: o.rest ?? cfg.rest, group: o.group || null, sets };
   };
   const wDisp = (kg) => (kg === '' || kg == null ? '' : String(U.round(U.kgTo(+kg, units()), 2)));
-  const setStr = (x) => `${+x.w > 0 ? fmtW(+x.w) : 'BW'} × ${x.r}`;
+  const setStr = (x) => `${+x.w > 0 ? fmtLift(+x.w) : 'BW'} × ${x.r}`;
   T.setStr = setStr;
   function progressionText(pr) {
     if (!pr) return null;
     const last = pr.last.sets.filter((x) => x.t !== 'W');
-    const lastTxt = `${+last[0].w > 0 ? fmtW(pr.top) + ' ' + wU() + ' × ' : ''}${pr.lastReps.join(', ')}${pr.rpe ? ` at RPE ${pr.rpe}` : ''}`;
+    const lastTxt = `${+last[0].w > 0 ? fmtLift(pr.top) + ' ' + wU() + ' × ' : ''}${pr.lastReps.join(', ')}${pr.rpe ? ` at RPE ${pr.rpe}` : ''}`;
     switch (pr.kind) {
-      case 'weight': return `Last time ${lastTxt}: every set reached ${pr.hi}. Go up to ${fmtW(pr.w)} ${wU()} and start again at ${pr.lo}.`;
-      case 'easy': return `Last time ${lastTxt}. That was comfortable, so go up to ${fmtW(pr.w)} ${wU()} today.`;
+      case 'weight': return `Last time ${lastTxt}: every set reached ${pr.hi}. Go up to ${fmtLift(pr.w)} ${wU()} and start again at ${pr.lo}.`;
+      case 'easy': return `Last time ${lastTxt}. That was comfortable, so go up to ${fmtLift(pr.w)} ${wU()} today.`;
       case 'bw': return `Last time ${pr.lastReps.join(', ')} reps. Aim for one more rep on each set.`;
       case 'time': return `Last time ${pr.lastReps.join(', ')} seconds. Add five seconds a set.`;
-      default: return `Last time ${lastTxt}. Add a rep per set until you reach ${pr.hi}, then go up ${fmtW(pr.step)} ${wU()}.`;
+      default: return `Last time ${lastTxt}. Add a rep per set until you reach ${pr.hi}, then go up ${fmtLift(pr.step)} ${wU()}.`;
     }
   }
   T.progressionText = progressionText;
@@ -10027,7 +10153,12 @@ const Train = (() => {
           h('div', { class: 'wk-top' },
             h('button', { class: 'icon-btn', 'aria-label': 'Minimize workout', onclick: () => App.back() }, icon('chevD')),
             h('div', { class: 'mid' }, nameIn, statsEl),
-            h('button', { class: 'btn go sm', style: { height: '44px', paddingInline: '18px' }, onclick: () => App.open('summary') }, 'Finish')),
+            h('button', { class: 'btn go sm', style: { height: '44px', paddingInline: '18px' }, onclick: () => {
+              // nothing ticked yet: say so here rather than on an empty summary
+              if (App.draft?.exercises?.some((ex) => ex.sets.some((x) => x.done && +x.r > 0))) return App.open('summary');
+              confirmSheet({ title: 'No sets ticked yet', text: 'Tick the sets you finished, then tap Finish. Or discard this workout.', confirm: 'Discard workout', cancel: 'Keep going', danger: true,
+                onConfirm: () => { App.draft = null; App.saveDraft(); App.stopRest(); App.go('train'); toast('Workout discarded'); } });
+            } }, 'Finish')),
           h('div', { class: 'wk-progress' }, bar)),
         list,
         h('p', { class: 'note', style: { marginInline: '4px' } }, 'Tap a set number to switch it between normal, warm-up (W), drop set (D) and failure (F). Tap a previous value to copy it. RPE is how hard the set felt, 10 being all-out.'),
@@ -10084,7 +10215,7 @@ const Train = (() => {
         h('div', null, h('div', { class: 'eyebrow', style: { color: 'var(--good-ink)' } }, 'Workout complete'), h('h1', { style: { fontSize: 'calc(32 * var(--fs))', fontWeight: 600, letterSpacing: '-0.02em', marginTop: '4px' } }, d.name)),
         h('div', { class: 'tiles' },
           tileK('Duration', fmtMMSS(sec), null),
-          tileK('Volume', h('span', null, fmtInt(U.kgTo(vol, units())), h('small', null, wU())), prevVol ? h('span', { class: vol >= prevVol ? 'up' : '' }, `${vol >= prevVol ? '+' : '−'}${fmtInt(Math.abs(U.kgTo(vol - prevVol, units())))} ${wU()} vs last time`) : null),
+          tileK('Volume', h('span', null, fmtInt(U.kgTo(vol, units())), h('small', null, wU())), prevVol && vol > 0 ? h('span', { class: vol >= prevVol ? 'up' : '' }, `${vol >= prevVol ? '+' : '−'}${fmtInt(Math.abs(U.kgTo(vol - prevVol, units())))} ${wU()} vs last time`) : null),
           tileK('Hard sets', hard, `${plural(done.length, 'exercise')}`),
           h('div', { class: 'mtile' }, h('span', { class: 'k' }, 'Strain'), strainEl, strainSub)),
         prs.length ? h('section', { class: 'card', style: { background: 'linear-gradient(160deg, var(--warn-bg), transparent 75%), var(--surface)' } },
@@ -11040,7 +11171,7 @@ const Sheet = (() => {
   };
 
   // =============== NAP ===============
-  S.nap = (date, pre = {}) => {
+  S.nap = (date = App.date || U.today(), pre = {}) => {
     const isToday = date === U.today();
     let min = pre.min || 20;
     const dateIn = h('input', { class: 'input', id: 'nap-date', type: 'date', value: date, max: U.today() });
@@ -11066,7 +11197,7 @@ const Sheet = (() => {
   };
 
   // =============== WATER ===============
-  S.water = (date) => {
+  S.water = (date = App.date || U.today()) => {
     const imp = units() === 'imperial', isToday = date === U.today();
     const presets = imp ? [8, 12, 16, 24, 32].map((oz) => oz * U.ML_PER_OZ) : [150, 250, 330, 500, 750, 1000];
     const asNum = (ml) => String(imp ? Math.round(ml / U.ML_PER_OZ) : Math.round(ml));
@@ -11103,7 +11234,7 @@ const Sheet = (() => {
   };
 
   // =============== CARDIO ===============
-  S.cardio = (date, pre = {}) => {
+  S.cardio = (date = App.date || U.today(), pre = {}) => {
     const TYPES = ['Running', 'Cycling', 'Walking', 'Swimming', 'Rowing', 'HIIT', 'Soccer', 'Tennis', 'Hiking', 'Yoga', 'Other'];
     let type = pre.type || 'Running', rpe = 6;
     const isToday = date === U.today();
@@ -11137,7 +11268,7 @@ const Sheet = (() => {
   };
 
   // =============== WEIGH-IN ===============
-  S.bodyLog = (date, pre = {}) => {
+  S.bodyLog = (date = App.date || U.today(), pre = {}) => {
     const st = Store.state(), cur = st.body[date] || {}, imp = units() === 'imperial';
     // Delete is for the entry this sheet opened on, so it goes away once another date is picked
     const dateIn = h('input', { class: 'input', id: 'body-date', type: 'date', value: date, max: U.today(), onchange: () => { const b = document.getElementById('body-del'); if (b) b.hidden = dateIn.value !== date; } });
@@ -11188,10 +11319,11 @@ const Sheet = (() => {
     const chips = h('div', { class: 'chips wrap' }, opts.map((o, i) => h('button', { class: 'chip', 'aria-pressed': String(i === sel), onclick: (e) => { sel = i; amount = 1; for (const b of chips.children) b.setAttribute('aria-pressed', String(b === e.currentTarget)); update(); } }, o.label)));
     function update() {
       amountEl.textContent = (amount % 1 ? amount.toFixed(2).replace(/0$/, '') : String(amount)) + '×';
-      put(amountRow, isUnit(sel) ? h('div', { class: 'input-unit grow' }, gramsInput, h('em', null, foodUnit(food.liquid))) : stepper, h('span', { class: 'small muted grow' }, isUnit(sel) ? '' : opts[sel].label));
       const n = calc();
-      put(nutri, kv('Calories', fmtInt(n.kcal)), kv('Protein', `${fmt1(n.p)} g`), kv('Carbs', `${fmt1(n.c)} g`), kv('Fat', `${fmt1(n.f)} g`), kv('Fiber', `${fmt1(n.fiber)} g`),
-        h('p', { class: 'note' }, n.grams ? qtyText({ qty: n.grams, unit: food.liquid ? 'ml' : 'g' }) : `${n.qty} × ${food.serving || 'serving'}`));
+      const total = n.grams ? qtyText({ qty: n.grams, unit: food.liquid ? 'ml' : 'g' }) : null;
+      put(amountRow, isUnit(sel) ? h('div', { class: 'input-unit grow' }, gramsInput, h('em', null, foodUnit(food.liquid))) : stepper,
+        h('span', { class: 'small ink2 grow' }, isUnit(sel) ? '' : amount === 1 ? opts[sel].label : `${opts[sel].label.replace(/\s*\(.*\)/, '')}${total ? ` · ${total}` : ''}`));
+      put(nutri, kv('Calories', `${fmtInt(n.kcal)} kcal`), kv('Protein', `${fmt1(n.p)} g`), kv('Carbs', `${fmt1(n.c)} g`), kv('Fat', `${fmt1(n.f)} g`), kv('Fiber', `${fmt1(n.fiber)} g`));
     }
     const pic = food.img || food.brand ? h('div', { class: 'scan-hit small' }, food.img ? h('img', { src: food.img, alt: '', onerror: (e) => e.target.remove() }) : null, h('div', { class: 'tx' }, h('span', null, [food.brand, food.src === 'usda' ? 'USDA food database' : null].filter(Boolean).join(' · ')))) : null;
     const sh = Sheets.open({ title: food.brand ? food.name.replace(` (${food.brand})`, '') : food.name, body: [pic, chips, amountRow, nutri], foot: [h('button', { class: 'btn primary', onclick: () => {
@@ -11990,6 +12122,7 @@ const App = (() => {
       Watch.push();
       HealthSync.pushWidget();
       Notify.plan();
+      HealthOut.schedule();
     });
     renderNow();
     const cl = window.claude;
@@ -12018,6 +12151,7 @@ const App = (() => {
     Notify.plan();
     HealthSync.planBedtime();
     Watch.push();
+    HealthOut.schedule();
   }
 
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); HealthSync.maybeSync(); Notify.plan(); } else HealthSync.pushWidget(); });

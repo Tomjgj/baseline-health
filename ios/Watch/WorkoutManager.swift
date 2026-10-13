@@ -2,10 +2,13 @@ import Foundation
 import HealthKit
 import WatchKit
 
-/// Runs the HealthKit workout session: live heart rate and energy while you train, and the workout saved to Health at the end.
+/// Runs the HealthKit workout session: live heart rate and energy while you train, and the workout saved to Health at the end
+/// when "Save to Apple Health" is on in the phone's Settings (otherwise the session is discarded; the phone keeps its own log).
 @MainActor
 final class WorkoutManager: NSObject, ObservableObject, HKWorkoutSessionDelegate, HKLiveWorkoutBuilderDelegate {
     let store = HKHealthStore()
+    /// Set from the phone's context: whether finished workouts go to Apple Health.
+    static let saveKey = "baseline.healthWrite"
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
 
@@ -59,7 +62,7 @@ final class WorkoutManager: NSObject, ObservableObject, HKWorkoutSessionDelegate
         if paused { s.resume() } else { s.pause() }
     }
 
-    /// Ends the session and saves the workout to Health. Returns what the phone needs for its log.
+    /// Ends the session and, when saving is on, saves the workout to Health. Returns what the phone needs for its log.
     func end() async -> (avgHr: Int?, maxHr: Int?, kcal: Int?) {
         let summary = (avgHr: avgHeartRate > 0 ? Int(avgHeartRate.rounded()) : nil, maxHr: maxHeartRate > 0 ? Int(maxHeartRate.rounded()) : nil, kcal: kcal > 0 ? Int(kcal.rounded()) : nil)
         running = false; paused = false
@@ -67,7 +70,7 @@ final class WorkoutManager: NSObject, ObservableObject, HKWorkoutSessionDelegate
         s.end()
         do {
             try await b.endCollection(at: Date())
-            _ = try await b.finishWorkout()
+            if UserDefaults.standard.bool(forKey: Self.saveKey) { _ = try await b.finishWorkout() } else { b.discardWorkout() }
         } catch {
             wlog.error("watch: workout could not be saved: \(error.localizedDescription, privacy: .public)")
         }
