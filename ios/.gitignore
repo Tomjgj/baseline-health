@@ -1,0 +1,6 @@
+# Baseline.xcodeproj and Baseline Lite.xcodeproj are committed (CI regenerates them from the specs) so they open with a double-click
+build/
+build-lite/
+DerivedData/
+xcuserdata/
+*.xcuserstate

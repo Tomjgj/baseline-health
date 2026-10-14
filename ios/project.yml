@@ -1,0 +1,91 @@
+# XcodeGen spec for Baseline: the iPhone app, its Apple Watch app, the iPhone widgets and Live Activity, and the watch
+# complications. Generate the Xcode project with:
+#   brew install xcodegen && cd ios && xcodegen generate && open Baseline.xcodeproj
+# The app and watch app are in common.yml (shared with project-lite.yml). The widgets read today's numbers from an
+# App Group the apps write to; a free Apple ID's Personal Team may not allow App Groups, so then use Baseline Lite.xcodeproj.
+include:
+  - common.yml
+name: Baseline
+targets:
+  Baseline:
+    dependencies:
+      - target: BaselineWidgets
+    info:
+      path: Baseline/Info.plist
+      properties:
+        NSSupportsLiveActivities: true
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+    entitlements:
+      path: Baseline/Baseline.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
+  BaselineWatch:
+    dependencies:
+      - target: BaselineWatchWidgets
+    info:
+      path: Watch/Info.plist
+      properties:
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+    entitlements:
+      path: Watch/BaselineWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
+  # home-screen and lock-screen widgets, and the workout Live Activity
+  BaselineWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+        excludes: [Info.plist, "*.entitlements"]
+      - path: Shared/Glance.swift
+      - path: Shared/GlanceProvider.swift
+      - path: Shared/WorkoutAttributes.swift
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Baseline
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widgets/BaselineWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID).widgets
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
+  # watch-face complications
+  BaselineWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: WatchWidgets
+        excludes: [Info.plist, "*.entitlements"]
+      - path: Shared/Glance.swift
+      - path: Shared/GlanceProvider.swift
+    info:
+      path: WatchWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Baseline
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        BaselineAppGroup: group.$(BASE_BUNDLE_ID)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: WatchWidgets/BaselineWatchWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(BASE_BUNDLE_ID)]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BASE_BUNDLE_ID).watchkitapp.widgets
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "4"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
