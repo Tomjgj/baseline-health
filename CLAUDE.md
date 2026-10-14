@@ -13,7 +13,7 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 `Store.init()` uses `window.claude.use('db')` when running inside Claude and falls back to `localStorage` otherwise. Standalone, only the localStorage path runs.
 
 ## Next steps (in order)
-1. Polish: Today screen on about 1.5 screens, one add button on Food, 44 px touch targets and 11 px+ text, forgiving streaks, lazy-draw the Health screen.
+1. Polish: Today screen on about 1.5 screens, 44 px touch targets and 11 px+ text outside Train and Food (the Today rings still use 10 px labels), lazy-draw the Health screen. Food and Train are done (one add button, forgiving streaks): see `docs/`.
 2. Honest insights: ranges and Clear / Likely / Not clear yet labels on habit effects (training progress already has them, see `docs/fitness-overhaul.md`), corrections for weekday, strain and exams, two-week experiments.
 3. Claude coach with editable memory and confirm/undo actions (needs the backend).
 4. Data pipeline from Apple Health, then the iOS app.

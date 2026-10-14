@@ -17,6 +17,7 @@ Then visit http://localhost:8000. Outside Claude the app stores your logs in the
 - Styles: the first ~800 lines (design tokens and light/dark themes).
 - Store (data layer): search for `async function init()`. It picks `db` mode (Claude artifact runtime) or `local` mode (localStorage).
 - App boot: the last lines (`App.boot()`).
+- Food: the nutrition models sit after the training ones in `E.context` (search for `food: the week`); the Food tab is `T.food` in the Tabs module; the logger and Targets page are in `ui-food.js`. See `docs/food-overhaul.md`.
 - Fitness: the engine's training models sit near the end of `E.context` (search for `progress: lifts`); the Train tab is `T.train` in the Tabs module; the logger and the Strength, Cardio fitness, Exercise and Muscles pages are in the Train module. See `docs/fitness-overhaul.md`.
 - Claude runtime hooks that only work inside Claude: `window.claude.use('db' | 'user' | 'sample' | 'downloads')`. Replace these when moving to a real backend.
 

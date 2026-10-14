@@ -250,7 +250,7 @@ body.past-title .minihead { opacity: 1; transform: none; pointer-events: auto; }
 .btn-row > .btn { flex: 1 1 130px; }
 .link { border: 0; background: none; padding: 4px 0; font-size: 14px; font-weight: 700; color: var(--ink-2); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .link svg { width: 16px; height: 16px; }
-:is(.btn, .icon-btn, .ask, .chip, .tap, .pick, .score, .fab, .tab):active:not(:disabled) { transform: scale(0.965); }
+:is(.btn, .icon-btn, .ask, .chip, .tap, .score, .fab, .tab):active:not(:disabled) { transform: scale(0.965); }
 .tap { cursor: pointer; transition: transform 0.14s var(--ease), background 0.2s; }
 
 /* ---------- cards & sections ---------- */
@@ -587,7 +587,7 @@ a.btn { text-decoration: none; }
 .plates { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; background: var(--surface-2); font-size: 13px; line-height: 1.45; }
 .plates svg { flex: none; }
 .plates b { font-weight: 800; }
-.rest-bar, .wk-bar, .logbar, .plate-bar, .composer-wrap {
+.rest-bar, .wk-bar, .plate-bar, .composer-wrap {
   position: fixed; z-index: 45; left: 12px; right: 12px; max-width: 536px; margin-inline: auto;
   bottom: calc(var(--dock-h) + 20px + env(safe-area-inset-bottom, 0px));
 }
@@ -603,20 +603,15 @@ a.btn { text-decoration: none; }
 .rest-bar .nx b { display: block; color: var(--ink); font-weight: 800; }
 .rest-bar .btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .rest-bar .btns .btn { height: 44px; }
-.wk-bar, .logbar { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 999px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line), var(--shadow-sm); -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8); animation: barIn 0.38s var(--spring) both; }
+.wk-bar { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 999px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--glass-line), var(--shadow-sm); -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8); animation: barIn 0.38s var(--spring) both; }
 .wk-bar { padding-left: 16px; border: 0; color: inherit; text-align: left; width: auto; }
 .wk-bar .tx { flex: 1; min-width: 0; }
 .wk-bar .t { font-size: 14.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wk-bar .s { font-size: 12.5px; color: var(--muted); font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .wk-bar .go { height: 42px; padding-inline: 16px; border-radius: 999px; background: var(--go); color: var(--on-go); font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
 .wk-bar .go svg { width: 16px; height: 16px; }
-.logbar .search { flex: 1; min-width: 0; height: 44px; border: 0; border-radius: 999px; background: var(--surface-3); color: var(--ink); font-weight: 750; display: flex; align-items: center; gap: 8px; padding-inline: 14px; font-size: 15px; font-weight: 600; text-align: left; }
-.logbar .search svg { width: 18px; height: 18px; flex: none; color: var(--food-ink); stroke-width: 2.4; }
-.logbar .icon-btn { background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-.logbar .icon-btn.claude { color: var(--claude); }
 
 /* ---------- food ---------- */
-.left-card .row.base { justify-content: space-between; }
 .macro-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
 .macro .nm { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 750; }
 .macro .nm i { width: 8px; height: 8px; border-radius: 50%; }
@@ -624,13 +619,6 @@ a.btn { text-decoration: none; }
 .macro .v small { font-family: var(--font); font-size: 12px; color: var(--muted); font-weight: 650; margin-left: 2px; }
 .macro .meter { margin-block: 6px 4px; }
 .macro .of { font-size: 11.5px; font-weight: 650; color: var(--muted); font-variant-numeric: tabular-nums; }
-.picks { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px; scroll-snap-type: x mandatory; }
-.picks::-webkit-scrollbar { display: none; }
-.pick { flex: none; width: 168px; border-radius: var(--r-lg); background: var(--surface); padding: 14px 12px 12px; display: grid; gap: 4px; scroll-snap-align: start;
-  box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
-.pick .t { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pick .s { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
-.pick .btn { height: 38px; font-size: 13.5px; }
 .meal + .meal { border-top: 1px solid var(--line); }
 .meal-head { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; color: inherit; text-align: left; padding: 13px 0; }
 .meal-head .tx { flex: 1; min-width: 0; }
@@ -640,8 +628,10 @@ a.btn { text-decoration: none; }
 .meal-head .kc { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 750; }
 .meal-head .tg { width: 30px; height: 30px; display: grid; place-items: center; color: var(--muted); flex: none; transition: transform 0.25s var(--ease); }
 .meal-head .tg svg { width: 18px; height: 18px; }
+.meal-head .kc { margin-right: -4px; }
 .meal[aria-expanded="true"] .tg { transform: rotate(180deg); }
-.meal-body { display: grid; gap: 6px; padding-bottom: 12px; }
+.meal-body { display: grid; gap: 0; padding-bottom: 8px; margin-top: -4px; }
+.meal-body .food-li { background: none; border-radius: 12px; padding: 7px 36px 7px 12px; min-height: 44px; box-shadow: inset 2px 0 0 var(--line); }
 .food-li { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; text-align: left; color: inherit; background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
 .food-li .tx { flex: 1; min-width: 0; }
 .food-li .t { font-size: 14.5px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -698,6 +688,30 @@ a.btn { text-decoration: none; }
 .photo-prev { width: 100%; max-height: 220px; object-fit: cover; border-radius: var(--r-md); display: block; }
 .nutri { display: grid; }
 .nutri .kv:first-child { font-size: 17px; }
+
+/* ---------- food: the week ---------- */
+.fw { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.fw-day { border: 0; background: none; color: inherit; padding: 6px 0 6px; border-radius: 14px; display: grid; justify-items: center; gap: 6px; min-width: 0; min-height: 44px; }
+.fw-day .dl { font-size: 11px; font-weight: 750; color: var(--muted); }
+.fw-day .dn { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 750; color: var(--ink-2); }
+.fw-day.sel { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.fw-day.today .dn { color: var(--ink); }
+.fw-day.future { opacity: 0.45; }
+.fw-bar { position: relative; width: 22px; height: 64px; border-radius: 7px; background: var(--surface-2); overflow: hidden; }
+.fw-day.sel .fw-bar { background: var(--surface-3); }
+.fw-bar .tg { position: absolute; left: 0; right: 0; bottom: 75%; height: 2px; background: var(--axis); z-index: 1; }
+.fw-bar b { position: absolute; left: 0; right: 0; bottom: 0; background: color-mix(in srgb, var(--hrv) 75%, transparent); }
+.fw-bar b.over { background: var(--warn); }
+.fw-bar b.part { opacity: 0.5; }
+.fw-dot { width: 7px; height: 7px; border-radius: 50%; }
+.fw-dot.hit { background: var(--protein); }
+.fw-dot.miss { box-shadow: inset 0 0 0 1.5px var(--faint); }
+.log-sec { display: grid; gap: 8px; }
+.log-sec + .log-sec { margin-top: 8px; }
+.log-sec > .row { justify-content: space-between; margin: 6px 4px 0; }
+.yday { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 18px; background: var(--food-bg); }
+.yday .grow b { display: block; font-size: 15px; font-weight: 800; }
+.yday .grow span { display: block; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 
 /* ---------- check-in ---------- */
 .feel { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
@@ -928,10 +942,6 @@ button.hint-box { width: 100%; border: 0; text-align: left; font: inherit; font-
 .factor.sub { grid-template-columns: minmax(0, 1fr) 84px 44px; padding-block: 8px; }
 
 /* ---------- food: meal sections ---------- */
-.meal-add { width: 36px; height: 36px; border-radius: 50%; border: 0; flex: none; display: grid; place-items: center; background: var(--food-bg); color: var(--food-ink); transition: transform 0.12s var(--ease); }
-.meal-add svg { width: 19px; height: 19px; stroke-width: 2.4; }
-.meal-add:active { transform: scale(0.92); }
-.logbar .search .meal-tag { margin-left: auto; font-size: 12.5px; font-weight: 800; color: var(--food-ink); background: var(--food-bg); border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
 
 
 /* ---------- activities (stress) ---------- */
@@ -1034,7 +1044,7 @@ body.sheet-open #app ~ #toast { animation-name: toastDown; }
 @keyframes toastDown { from { transform: translateY(-16px); opacity: 0; } to { transform: none; opacity: 1; } }
 .toast button { border: 0; background: var(--accent); color: var(--on-accent); border-radius: 999px; height: 32px; padding-inline: 12px; font-weight: 800; font-size: 13px; }
 #app.flow ~ .toast, body.flow .toast { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
-/* above a floating bar (food log bar, workout bar, rest timer) */
+/* above a floating bar (workout bar, rest timer, plate) */
 #app.has-bar ~ .toast { bottom: calc(var(--dock-h) + 92px + env(safe-area-inset-bottom, 0px)); }
 #app.flow.has-bar ~ .toast { bottom: calc(184px + env(safe-area-inset-bottom, 0px)); }
 .banner { display: flex; gap: 12px; align-items: center; padding: 12px 12px 12px 16px; border-radius: var(--r-lg); background: var(--surface-2); font-size: 13.5px; box-shadow: inset 0 0 0 1px var(--line); }
@@ -1057,7 +1067,7 @@ body.sheet-open #app ~ #toast { animation-name: toastDown; }
 @media (min-width: 600px) {
   body { padding-inline: 24px; }
   .phead, .wk-head, .stickyfoot { margin-inline: -24px; padding-inline: 24px; }
-  .chips, .picks { margin-inline: -24px; padding-inline: 24px; }
+  .chips { margin-inline: -24px; padding-inline: 24px; }
 }
 @media (max-width: 370px) {
   .thead h1 { font-size: 30px; }
@@ -1297,10 +1307,39 @@ const FOODS = (() => {
     ['Schnitzel, breaded', 230, 20, 11, 12, 0.5, '1 schnitzel (180 g):180', 'Meals'],
     ['Caesar salad with chicken', 130, 9, 5, 8, 1.5, '1 bowl (300 g):300', 'Meals'],
     ['Sushi', 150, 6, 25, 2.5, 0.8, '1 piece (30 g):30|8 pieces (240 g):240', 'Meals'],
+    // added in version 8. Stored entries point at foods by position ('f' + index), so new foods only ever go at the end.
+    ['Porridge, made with milk', 95, 4.2, 14, 2.2, 1.5, '1 bowl (250 g):250', 'Grains'],
+    ['Bulgur, cooked', 83, 3.1, 18.6, 0.2, 4.5, '1 cup (182 g):182', 'Grains'],
+    ['Rice noodles, cooked', 108, 1.8, 24, 0.2, 1, '1 cup (175 g):175', 'Grains'],
+    ['Kidney beans, cooked', 127, 8.7, 22.8, 0.5, 6.4, '1/2 cup (89 g):89', 'Protein'],
+    ['Scrambled eggs', 149, 10, 1.6, 11, 0, '2 eggs (120 g):120|3 eggs (180 g):180', 'Protein'],
+    ['Green peas', 81, 5.4, 14.5, 0.4, 5.1, '1/2 cup (80 g):80', 'Vegetables'],
+    ['Sweet corn', 86, 3.3, 19, 1.4, 2, '1/2 cup (82 g):82', 'Vegetables'],
+    ['Zucchini', 17, 1.2, 3.1, 0.3, 1, '1 medium (200 g):200', 'Vegetables'],
+    ['Pear', 57, 0.4, 15.2, 0.1, 3.1, '1 medium (180 g):180', 'Fruit'],
+    ['Kiwi', 61, 1.1, 14.7, 0.5, 3, '1 kiwi (75 g):75', 'Fruit'],
+    ['Mango', 60, 0.8, 15, 0.4, 1.6, '1 cup (165 g):165', 'Fruit'],
+    ['Pineapple', 50, 0.5, 13.1, 0.1, 1.4, '1 cup (165 g):165', 'Fruit'],
+    ['Watermelon', 30, 0.6, 7.6, 0.2, 0.4, '1 wedge (280 g):280', 'Fruit'],
+    ['Peanuts, roasted', 585, 24, 21, 50, 8, 'Handful (30 g):30', 'Nuts'],
+    ['Mixed nuts', 607, 20, 21, 54, 7, 'Handful (30 g):30', 'Nuts'],
+    ['Kefir', 45, 3.4, 4, 1.5, 0, '1 glass (250 ml):250', 'Dairy'],
+    ['Fruit smoothie', 50, 0.7, 11.5, 0.3, 1.2, '1 bottle (250 ml):250', 'Drinks'],
+    ['Energy gel', 280, 0, 70, 0, 0, '1 gel (40 g):40', 'Snacks'],
+    ['Granola bar', 470, 8, 64, 20, 5, '1 bar (40 g):40', 'Snacks'],
+    ['Banana bread', 326, 4.3, 54.6, 10.5, 1.1, '1 slice (60 g):60', 'Sweets'],
+    ['Rice pudding (Milchreis)', 115, 3.2, 19, 2.8, 0.2, '1 bowl (200 g):200', 'Sweets'],
+    ['Ham and cheese sandwich', 260, 14, 26, 11, 2, '1 sandwich (150 g):150', 'Meals'],
+    ['Chicken wrap', 200, 12, 20, 8, 2, '1 wrap (250 g):250', 'Meals'],
+    ['Poke bowl with salmon', 145, 8, 18, 4.5, 1.5, '1 bowl (450 g):450', 'Meals'],
+    ['Falafel', 333, 13.3, 31.8, 17.8, 4.9, '4 pieces (68 g):68', 'Meals'],
+    ['Ramen with pork', 90, 4.5, 11, 3, 0.8, '1 bowl (550 g):550', 'Meals'],
+    ['Pad thai with chicken', 175, 9, 22, 6, 1.5, '1 plate (350 g):350', 'Meals'],
+    ['Chili con carne', 110, 8, 9, 4.5, 3, '1 bowl (350 g):350', 'Meals'],
   ];
   const list = raw.map(([name, kcal, p, c, f, fiber, serv, group], i) => ({
     id: 'f' + i, name, kcal, p, c, f, fiber, group,
-    liquid: group === 'Drinks' || /milk|drink|juice|shake/i.test(name),
+    liquid: group === 'Drinks' || /milk|drink|juice|shake|kefir|smoothie/i.test(name),
     servings: serv.split('|').map((s) => { const k = s.lastIndexOf(':'); return { label: s.slice(0, k), g: +s.slice(k + 1) }; }),
   }));
   const byName = Object.fromEntries(list.map((f) => [f.name, f]));
@@ -1314,16 +1353,20 @@ const FOODS = (() => {
     };
   }
 
+  // accents don't matter ("doner" finds Döner), and a few other spellings map to the names used here
+  const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const ALIAS = { yoghurt: 'yogurt', crisps: 'chips', courgette: 'zucchini', prawns: 'shrimp', prawn: 'shrimp', capsicum: 'bell pepper', mince: 'ground', minced: 'ground' };
   function search(q, extra = []) {
-    q = q.trim().toLowerCase();
+    q = norm(q.trim());
     const all = [...extra, ...list];
     if (!q) return all.slice(0, 40);
-    const words = q.split(/\s+/);
+    const words = q.split(/\s+/).map((w) => ALIAS[w] || w);
     return all
       .map((f) => {
-        const n = f.name.toLowerCase();
+        const n = norm(f.name);
         if (!words.every((w) => n.includes(w))) return null;
-        return { f, s: (n.startsWith(q) ? 0 : 1) + n.length / 100 };
+        // names that start with the query come first, then a word that starts with it, then shorter names
+        return { f, s: (n.startsWith(words[0]) ? 0 : n.includes(' ' + words[0]) || n.includes('(' + words[0]) ? 0.5 : 1) + n.length / 100 };
       })
       .filter(Boolean).sort((a, b) => a.s - b.s).map((x) => x.f).slice(0, 40);
   }
@@ -2573,8 +2616,82 @@ const E = (() => {
       return { vo2, runs, runFit, mix };
     });
 
+    // ---------- food: the week, a logging streak, usual foods, weight against the goal ----------
+    /** A day counts as logged once at least 40% of its calorie target is in. Today counts only when it's over, so a half-logged morning never drags a week down. */
+    const loggedDay = (d) => { if (d >= todayStr) return false; const it = intake(d); return !!it && it.kcal >= 0.4 * energy(d).target; };
+    const nutritionWeekM = m('nweek', (mon) => {
+      const o = { mon, days: [], logged: 0, kcalAvg: null, targetAvg: null, pAvg: null, ptAvg: null, proteinHit: 0, onTarget: 0 };
+      const kc = [], tg = [], pp = [], pt = [];
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(mon, i);
+        if (d > todayStr) { o.days.push({ d, future: true }); continue; }
+        const it = intake(d), en = energy(d), logged = loggedDay(d);
+        const day = { d, kcal: it?.kcal ?? null, target: en.target, p: it?.p ?? null, pt: en.protein, logged, today: d === todayStr,
+          pHit: !!it && en.protein > 0 && it.p >= 0.9 * en.protein, onTarget: !!it && Math.abs(it.kcal - en.target) <= 0.1 * en.target };
+        o.days.push(day);
+        if (!logged) continue;
+        o.logged++; kc.push(it.kcal); tg.push(en.target); pp.push(it.p); pt.push(en.protein);
+        if (day.pHit) o.proteinHit++;
+        if (day.onTarget) o.onTarget++;
+      }
+      if (kc.length) Object.assign(o, { kcalAvg: mean(kc), targetAvg: mean(tg), pAvg: mean(pp), ptAvg: mean(pt) });
+      return o;
+    });
+    const nutritionWeek = (d) => nutritionWeekM(monOf(d));
+    /** The n weeks up to the one holding d, oldest first. */
+    const nutritionWeeks = (d, n = 8) => { const mon = monOf(d); return Array.from({ length: n }, (_, k) => nutritionWeekM(addDays(mon, -7 * (n - 1 - k)))); };
+    /** Logged days in a row before d; one missed day in any seven is forgiven, and d itself never breaks it. */
+    const loggingStreak = m('lstreak', (d) => {
+      let streak = loggedDay(d) ? 1 : 0, rest = 0, missAt = null;
+      for (let k = 1; k <= 400; k++) {
+        if (loggedDay(addDays(d, -k))) { streak++; continue; }
+        if (missAt == null || k - missAt >= 7) { missAt = k; rest++; continue; }
+        // the forgiven day just before the run started isn't part of it
+        if (missAt === k - 1) rest--;
+        break;
+      }
+      let last7 = 0;
+      for (let k = 1; k <= 7; k++) if (loggedDay(addDays(d, -k))) last7++;
+      return { streak, rest: streak ? Math.max(0, rest) : 0, last7 };
+    });
+    /** What you log most at a meal over the 4 weeks before d (twice or more), with the amount you had most recently. */
+    const usualFoodsM = m('usual', (k) => {
+      const [d, meal] = k.split('@'), seen = new Map();
+      for (let i = 1; i <= 28; i++) {
+        const x = addDays(d, -i);
+        for (const it of food[x]?.items || []) {
+          if (it.meal !== meal) continue;
+          const key = it.name.toLowerCase(), cur = seen.get(key);
+          if (cur) cur.count++; else seen.set(key, { ...it, count: 1, lastDate: x });
+        }
+      }
+      return [...seen.values()].filter((x) => x.count >= 2).sort((a, b) => b.count - a.count);
+    });
+    const usualFoods = (d, meal) => usualFoodsM(d + '@' + meal);
+    /**
+     * Weekly weight change from a straight line through the weigh-ins of the last 28 days, with its 80% range and label,
+     * against the rate your goal is built on: on track, faster, slower (gaining or losing when maintaining), or unclear.
+     */
+    const weightRate = m('wrate', (d) => {
+      const from = addDays(d, -28), pts = [];
+      for (const bd of bodyDates) { if (bd <= from || bd > d) continue; const w = body[bd].weight; if (w > 0) pts.push({ x: U.daysBetween(from, bd), v: w, date: bd }); }
+      const fit = trendFit(pts, 7, 0.1);
+      const w = trendWeight(d) ?? latestBody(d, 'weight')?.value ?? null;
+      const rate = P.goal === 'lose' ? -Math.abs(P.ratePct) : P.goal === 'gain' ? Math.abs(P.ratePct) : 0;
+      const goal = w ? (rate / 100) * w : 0;
+      let verdict = 'unclear';
+      if (fit.change != null && pts.length >= 4) {
+        const diff = fit.change - goal, tol = Math.max(0.1, Math.abs(goal) * 0.25);
+        if (Math.abs(diff) <= tol) verdict = 'on track';
+        // off pace only when the goal sits outside the likely range
+        else if (goal < fit.lo || goal > fit.hi) verdict = rate === 0 ? (diff > 0 ? 'gaining' : 'losing') : diff * Math.sign(rate) > 0 ? 'faster' : 'slower';
+      }
+      return { pts, fit, perWeek: fit.change, goal, rate, verdict, n: pts.length, w };
+    });
+
     return {
       liftTrend, strengthSummary, sessionZones, monOf, week: weekM, trainingWeeks, weekGoal, muscleVolume, cardioFitness,
+      loggedDay, nutritionWeek, nutritionWeeks, loggingStreak, usualFoods, weightRate,
       training, routines, routineInfo, suggestRoutine, lastSets, records, prCheck, prsOf, progression, exSettings, workoutsSorted,
       dayStates, hrvDayBase, sleepWindows, activeWindows,
       P, todayStr, days, food, body, workouts, allDates, bodyDates,
@@ -5449,10 +5566,71 @@ const Tabs = (() => {
   }
   T.logItem = logItem;
 
+  /** Open the food logger for a meal; the dock's + does this on the Food tab. */
+  const addFood = (date, meal) => App.open('foodlog', { date, meal: meal || (date === U.today() ? mealForNow() : 'snack') });
+  T.addFood = addFood;
+
+  // ---------- the week: calories against target each day, protein hits, days logged ----------
+  function foodWeekCard(C, date) {
+    const wk = C.nutritionWeek(date), ls = C.loggingStreak(C.todayStr);
+    const cols = wk.days.map((x, i) => {
+      const dl = 'MTWTFSS'[i], dn = U.parseYmd(x.d).getDate();
+      if (x.future) return h('div', { class: 'fw-day future', 'aria-hidden': 'true' }, h('span', { class: 'dl' }, dl), h('span', { class: 'fw-bar' }), h('span', { class: 'fw-dot' }), h('span', { class: 'dn' }, dn));
+      // bars fill to the target line at 75% of the height, so a day over target shows above it
+      const f = x.kcal != null && x.target ? Math.min(1.33, x.kcal / x.target) : 0;
+      const over = x.kcal != null && x.kcal > 1.1 * x.target;
+      const label = `${U.fmtDayLong(x.d)}: ${x.kcal != null ? `${fmtInt(x.kcal)} of ${fmtInt(x.target)} kcal, protein ${Math.round(x.p)} of ${x.pt} g${x.pHit ? ', protein target hit' : ''}` : 'nothing logged'}${x.today ? ', today so far' : ''}`;
+      return h('button', { class: 'fw-day tap' + (x.d === date ? ' sel' : '') + (x.today ? ' today' : ''), 'aria-label': label, 'aria-pressed': String(x.d === date), onclick: () => App.setDate(x.d) },
+        h('span', { class: 'dl' }, dl),
+        h('span', { class: 'fw-bar' }, h('i', { class: 'tg' }), f > 0 ? h('b', { class: (over ? 'over' : '') + (x.today ? ' part' : ''), style: { height: `${(f * 75).toFixed(1)}%` } }) : null),
+        h('span', { class: 'fw-dot' + (x.kcal == null ? '' : x.pHit ? ' hit' : ' miss') }),
+        h('span', { class: 'dn' }, dn));
+    });
+    const thisWeek = C.monOf(date) === C.monOf(C.todayStr), past = wk.days.filter((x) => !x.future && !x.today).length;
+    const stats = h('div', { class: 'wk-stats', style: { marginTop: '14px', marginBottom: 0 } },
+      tile2('Avg kcal', wk.kcalAvg != null ? fmtInt(wk.kcalAvg) : '–', null, wk.targetAvg != null ? `target ${fmtInt(wk.targetAvg)}` : 'no full days yet'),
+      tile2('Protein hit', wk.logged ? String(wk.proteinHit) : '–', wk.logged ? `/ ${wk.logged}` : null, wk.pAvg != null ? `avg ${Math.round(wk.pAvg)} of ${Math.round(wk.ptAvg)} g` : 'days at 90%+'),
+      tile2('Logged', String(wk.logged), `/ ${past || 0}`, thisWeek ? 'days so far' : 'days'));
+    return h('section', { class: 'card', 'aria-label': 'This week' },
+      h('div', { class: 'card-title' }, h('h2', null, thisWeek ? 'This week' : `Week of ${U.fmtShort(wk.mon)}`), h('span', { class: 'r' }, 'calories vs target')),
+      h('div', { class: 'fw', role: 'group', 'aria-label': 'Days of the week' }, cols),
+      h('div', { style: { marginTop: '10px' } }, legend(['On target', 'color-mix(in srgb, var(--hrv) 75%, transparent)'], ['Over by 10%+', 'var(--warn)'], ['Protein hit', 'var(--protein)', 'dot'])),
+      stats,
+      ls.streak >= 2 ? h('p', { class: 'small ink2', style: { marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' } }, h('span', { class: 'flame', style: { display: 'inline-grid' } }, icon('flame')),
+        h('span', null, h('b', null, `${ls.streak}-day logging streak`), ls.rest ? ` with ${plural(ls.rest, 'day')} off` : '', '. Your burn estimate learns from the days you log.')) :
+        h('p', { class: 'small muted', style: { marginTop: '12px' } }, 'Log most days and your burn estimate learns from you instead of formulas. A missed day now and then doesn’t break your streak.'));
+  }
+
+  // ---------- weight: the rate from your weigh-ins, against the rate your goal is built on ----------
+  const WVERDICT = { 'on track': ['on pace for your goal', 'var(--good-ink)'], faster: ['faster than planned', 'var(--warn-ink)'], slower: ['slower than planned', 'var(--warn-ink)'],
+    gaining: ['drifting up', 'var(--warn-ink)'], losing: ['drifting down', 'var(--warn-ink)'], unclear: ['not clear yet', 'var(--muted)'] };
+  T.WVERDICT = WVERDICT;
+  const perWeekTxt = (kg, d = 2) => `${fmtSigned(U.kgTo(kg, units()), d)} ${wU()} a week`;
+  T.perWeekTxt = perWeekTxt;
+  function weightCard(C, date) {
+    const wr = C.weightRate(date), en = C.energy(date);
+    const conf = en.confidence >= 0.75 ? 'high confidence' : en.confidence >= 0.35 ? 'still learning' : 'from your size until it learns';
+    const burn = prow({ ic: 'bolt', tone: 'food', t: `You burn about ${fmtInt(en.tdee)} kcal a day`, s: `${conf} · target ${fmtInt(en.target)}`, onclick: () => App.open('energy', { date }) });
+    if (!wr.w) return cardT('Weight', null, h('p', { class: 'small ink2', style: { marginTop: '-6px' } }, 'Weigh in a few mornings a week. The trend shows whether you’re moving at the pace your target is built for.'),
+      h('button', { class: 'btn block', style: { marginTop: '12px' }, onclick: () => Sheet.bodyLog(date) }, icon('scale'), 'Weigh in'), h('div', { class: 'list', style: { marginTop: '6px' } }, burn));
+    const [vt, vc] = WVERDICT[wr.verdict];
+    const spark = []; for (let k = 27; k >= 0; k--) spark.push(C.trendWeight(addDays(date, -k)));
+    const goalTxt = wr.rate === 0 ? 'goal: hold steady' : `goal ${perWeekTxt(wr.goal)}`;
+    return h('section', { class: 'card', 'aria-label': 'Weight' },
+      h('div', { class: 'card-title' }, h('h2', null, 'Weight'), h('button', { class: 'link', onclick: () => App.open('energy', { date }) }, 'Targets', icon('chevR'))),
+      h('div', { class: 'row', style: { alignItems: 'flex-end', marginTop: '-4px' } },
+        h('div', { class: 'grow' }, h('div', { class: 'big-num' }, fmtW(wr.w), h('small', null, `${wU()} trend`)),
+          h('div', { class: 'prog-head' }, h('div', { class: 's' }, wr.perWeek != null ? h('span', { style: { color: 'var(--ink)' } }, perWeekTxt(wr.perWeek)) : h('span', { class: 'muted' }, `${plural(wr.n, 'weigh-in')} in 4 weeks`), Tabs.confPill(wr.fit)))),
+        Charts.sparkline(spark, { color: 'var(--ink-2)', w: 96, h: 44, end: true })),
+      h('p', { class: 'small', style: { marginTop: '8px', fontWeight: 700 } }, h('span', { style: { color: vc } }, wr.verdict === 'unclear' && wr.n < 4 ? 'Needs 4 weigh-ins in 4 weeks' : vt[0].toUpperCase() + vt.slice(1)), h('span', { class: 'muted' }, ` · ${goalTxt}`)),
+      wr.verdict === 'faster' || wr.verdict === 'slower' ? h('p', { class: 'note', style: { marginTop: '4px' } }, 'Your calorie target adjusts by itself as the burn estimate learns from what you eat and weigh.') : null,
+      h('div', { class: 'list', style: { marginTop: '6px' } }, burn));
+  }
+
   T.food = (C, date) => {
     setTint('#1aa394', '#ba8420');
     const isToday = date === C.todayStr;
-    const en = C.energy(date), it = C.intake(date) || { kcal: 0, p: 0, c: 0, f: 0 };
+    const en = C.energy(date), it = C.intake(date) || { kcal: 0, p: 0, c: 0, f: 0, fiber: 0 };
     const mode = App.ui.foodMode || 'left';
     const left = en.target - it.kcal;
     const dateNav = h('div', { class: 'datebar' },
@@ -5470,60 +5648,33 @@ const Tabs = (() => {
         Charts.meter(eaten, target, color, { over: eaten > target * 1.05, h: 5 }), h('div', { class: 'of' }, `${Math.round(eaten)} of ${target} g`));
     };
     out.push(h('section', { class: 'card left-card', 'aria-label': 'Calories and macros' },
-      h('div', { class: 'row base' }, h('div', null, h('div', { class: 'eyebrow' }, mode === 'left' ? (left >= 0 ? 'Left today' : 'Over today') : 'Eaten today'),
-        h('div', { class: 'huge-num', style: { marginTop: '4px' } }, fmtInt(mode === 'left' ? Math.abs(left) : it.kcal), h('small', null, 'kcal'))),
-        h('button', { class: 'btn sm', onclick: () => { App.ui.foodMode = mode === 'left' ? 'eaten' : 'left'; App.saveUi(); App.render(); } }, mode === 'left' ? 'Show eaten' : 'Show left')),
+      h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '-6px' } }, h('div', { class: 'eyebrow' }, mode === 'left' ? (left >= 0 ? (isToday ? 'Left today' : 'Left that day') : (isToday ? 'Over today' : 'Over that day')) : (isToday ? 'Eaten today' : 'Eaten that day')),
+        h('button', { class: 'btn sm', style: { marginRight: '-6px' }, onclick: () => { App.ui.foodMode = mode === 'left' ? 'eaten' : 'left'; App.saveUi(); App.render(); } }, mode === 'left' ? 'Show eaten' : 'Show left')),
+      h('div', { class: 'huge-num', style: { marginTop: '2px' } }, fmtInt(mode === 'left' ? Math.abs(left) : it.kcal), h('small', null, 'kcal')),
       h('div', { style: { marginTop: '12px' } }, Charts.meter(it.kcal, en.target, 'var(--accent)', { over: left < -50, h: 8 })),
-      h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '6px' } }, h('span', { class: 'xs muted' }, `${fmtInt(it.kcal)} eaten`), h('span', { class: 'xs muted' }, `target ${fmtInt(en.target)}`)),
+      h('div', { class: 'row', style: { justifyContent: 'space-between', marginTop: '6px' } }, h('span', { class: 'xs muted' }, `${fmtInt(it.kcal)} eaten · ${Math.round(it.fiber || 0)} g fiber`), h('span', { class: 'xs muted' }, `target ${fmtInt(en.target)}`)),
       h('div', { class: 'macro-grid' }, mac('Protein', 'var(--protein)', it.p, en.protein), mac('Carbs', 'var(--carbs)', it.c, en.carbs), mac('Fat', 'var(--fat)', it.f, en.fat)),
+      en.adj ? h('p', { class: 'note', style: { marginTop: '10px' } }, `Includes ${fmtInt(en.adj)} kcal extra for ${isToday ? 'today’s' : 'that day’s'} training.`) : null,
       it.source === 'health' ? h('p', { class: 'note', style: { marginTop: '10px' } }, 'From food logged in another app.') : null));
 
+    // meals: tap a meal to add to it, tap a food to change it
     const items = C.food[date]?.items || [];
     const meals = MEALS.map(([m, name]) => {
       const mi = items.filter((x) => x.meal === m);
-      const tot = mi.reduce((a, x) => a + (+x.kcal || 0), 0);
+      const tot = mi.reduce((a, x) => a + (+x.kcal || 0), 0), prot = mi.reduce((a, x) => a + (+x.p || 0), 0);
       const at = mi.map((x) => x.at).filter(Boolean).sort()[0];
-      const yesterday = (C.food[addDays(date, -1)]?.items || []).filter((x) => x.meal === m);
-      const prot = mi.reduce((a, x) => a + (+x.p || 0), 0);
-      const head = h('div', { class: 'meal-head' },
+      const head = h('button', { class: 'meal-head tap', 'aria-label': `${name}: ${mi.length ? `${fmtInt(tot)} kcal, ${plural(mi.length, 'food')}` : 'nothing logged'}. Add food to ${name.toLowerCase()}`, onclick: () => addFood(date, m) },
         h('span', { class: 'tx' }, h('span', { class: 'nm', style: { display: 'block' } }, name, at ? h('span', null, U.fmtClock(at)) : null),
-          h('span', { class: 'sm', style: { display: 'block' } }, mi.length ? `${fmtInt(tot)} kcal · P ${Math.round(prot)} g` : 'Nothing logged yet')),
-        h('button', { class: 'meal-add', 'aria-label': `Add food to ${name.toLowerCase()}`, onclick: () => App.open('foodlog', { date, meal: m }) }, icon('plus')));
-      return h('div', { class: 'meal' }, head,
-        mi.length || (yesterday.length && isToday && m === mealForNow()) ? h('div', { class: 'meal-body' },
-          mi.map((x) => h('button', { class: 'food-li tap', onclick: () => Sheet.foodItem(date, x) },
-            h('span', { class: 'tx' }, h('span', { class: 't', style: { display: 'block' } }, x.name), h('span', { class: 's', style: { display: 'block' } }, [x.qty && x.unit ? `${U.round(x.qty, 1)} ${x.unit}` : null, `P ${Math.round(x.p)} · C ${Math.round(x.c)} · F ${Math.round(x.f)}`].filter(Boolean).join(' · '))),
-            h('span', { class: 'kc' }, fmtInt(x.kcal)))),
-          !mi.length && yesterday.length && isToday && m === mealForNow() ? h('button', { class: 'add-line', style: { color: 'var(--ink-2)', paddingTop: 0 }, onclick: () => {
-            const copy = yesterday.map((x) => ({ ...x, id: U.uid(), at: isToday ? U.isoLocal(new Date()) : `${date}T12:00` }));
-            Store.addFood(date, copy);
-            toast(`Copied ${plural(copy.length, 'item')} from yesterday`, { action: 'Undo', onAction: () => { for (const c of copy) Store.removeFood(date, c.id); } });
-          } }, icon('repeat'), `Same as yesterday · ${fmtInt(yesterday.reduce((a, x) => a + (+x.kcal || 0), 0))} kcal`) : null) : null);
+          h('span', { class: 'sm', style: { display: 'block' } }, mi.length ? `P ${Math.round(prot)} g · ${plural(mi.length, 'food')}` : 'Nothing logged yet')),
+        mi.length ? h('span', { class: 'kc' }, fmtInt(tot)) : null, h('span', { class: 'tg' }, icon('chevR')));
+      return h('div', { class: 'meal' }, head, mi.length ? h('div', { class: 'meal-body' },
+        mi.map((x) => h('button', { class: 'food-li tap', onclick: () => Sheet.foodItem(date, x) },
+          h('span', { class: 'tx' }, h('span', { class: 't', style: { display: 'block' } }, x.name), h('span', { class: 's', style: { display: 'block' } }, [x.qty && x.unit ? `${U.round(x.qty, 1)} ${x.unit}` : null, `P ${Math.round(x.p)} · C ${Math.round(x.c)} · F ${Math.round(x.f)}`].filter(Boolean).join(' · '))),
+          h('span', { class: 'kc' }, fmtInt(x.kcal))))) : null);
     });
     out.push(h('section', { class: 'card flush', 'aria-label': 'Meals' }, meals));
-    const meal = isToday ? mealForNow() : 'snack';
-    const picks = isToday ? fitsLeft(C, date) : [];
-    if (picks.length) {
-      out.push(sectionT('Fits what’s left', new Date().getHours() >= 17 ? 'evening picks' : 'quick picks'));
-      out.push(h('div', { class: 'picks' }, picks.map((x) => h('div', { class: 'pick' }, h('div', { class: 't' }, x.name.replace(/,.*$/, '')),
-        h('div', { class: 's' }, `${x.label} · ${fmtInt(x.kcal)} kcal · P ${Math.round(x.p)}`),
-        h('button', { class: 'btn', onclick: () => logItem(date, meal, x) }, `Add to ${mealName(meal).toLowerCase()}`)))));
-    }
-
-    const goalText = en.rate === 0 ? 'maintaining' : `${en.rate < 0 ? 'losing' : 'gaining'} ${fmtW(Math.abs(en.rate / 100) * (en.trendWeight || 75), 2)} ${wU()} a week`;
-    out.push(h('section', { class: 'card tight' }, prow({ ic: 'trend', tone: 'food', t: `Your target: ${fmtInt(en.target)} kcal`, s: `You burn ~${fmtInt(en.tdee)} a day · ${goalText}`, onclick: () => App.open('energy', { date }) })));
-    out.push(h('button', { class: 'btn quiet', style: { justifySelf: 'center' }, onclick: () => Sheet.copyMeal(date) }, icon('copy'), 'Copy a meal from another day'));
+    out.push(foodWeekCard(C, date), weightCard(C, date));
     return h('div', { class: 'view' }, out);
-  };
-
-  T.logBar = (C, date) => {
-    const meal = date === C.todayStr ? mealForNow() : 'snack';
-    const go = (mode) => App.open('foodlog', { date, meal, mode });
-    return h('div', { class: 'logbar', role: 'group', 'aria-label': 'Log food' },
-      h('button', { class: 'search', onclick: () => go('search'), 'aria-label': `Add food to ${mealName(meal).toLowerCase()}` }, icon('plus'), 'Add food', h('span', { class: 'meal-tag' }, mealName(meal))),
-      h('button', { class: 'icon-btn', 'aria-label': 'Scan a barcode', onclick: () => go('scan') }, icon('barcode')),
-      App.sample ? h('button', { class: 'icon-btn claude', 'aria-label': 'Describe a meal for Claude to estimate', onclick: () => go('describe') }, icon('spark')) : null,
-      h('button', { class: 'icon-btn', 'aria-label': 'Quick add calories', onclick: () => go('quick') }, icon('bolt')));
   };
 
   // ---------- TRAIN ----------
@@ -6850,6 +7001,10 @@ const Pages = {};
     if (items.length) L.push('Food logged on the selected day: ' + MEALS.map(([m, n]) => { const mi = items.filter((x) => x.meal === m); return mi.length ? `${n}: ` + mi.map((x) => `${x.name} (${x.qty ?? ''} ${x.unit ?? ''}, ${Math.round(x.kcal)} kcal, P${Math.round(x.p)} C${Math.round(x.c)} F${Math.round(x.f)})`).join(', ') : null; }).filter(Boolean).join('. '));
     const en = C.energy(d);
     L.push(`Energy: estimated expenditure ${en.tdee} kcal/day (confidence ${Math.round(en.confidence * 100)}%), target ${en.target} kcal, macros P${en.protein} C${en.carbs} F${en.fat} g. Trend weight ${en.trendWeight ? U.round(en.trendWeight, 1) + ' kg' : 'unknown'}${en.weekChange != null ? `, ${U.round(en.weekChange, 2)} kg over the last week` : ''}.`);
+    // nutrition over the week and weight against the goal, with how sure the rate is
+    const nw = C.nutritionWeeks(d, 2), wr = C.weightRate(d), lstk = C.loggingStreak(C.todayStr);
+    L.push('Nutrition by week (Monday start; averages over logged days): ' + nw.map((w) => `week of ${w.mon}: ${w.logged} days logged${w.kcalAvg != null ? `, ${Math.round(w.kcalAvg)} of ${Math.round(w.targetAvg)} kcal a day, protein ${Math.round(w.pAvg)} of ${Math.round(w.ptAvg)} g, protein hit ${w.proteinHit} days` : ''}`).join('; ') + `. Logging streak ${lstk.streak} days.`);
+    if (wr.perWeek != null) L.push(`Weight rate over 4 weeks of weigh-ins: ${U.round(wr.perWeek, 2)} kg/week (80% range ${U.round(wr.fit.lo, 2)} to ${U.round(wr.fit.hi, 2)}, ${wr.fit.label}); the goal is ${U.round(wr.goal, 2)} kg/week; verdict: ${wr.verdict}.`);
     const need = C.sleepNeed(addDays(d, 1)), lo = Tabs.lightsOut(C, d);
     L.push(`Sleep need for the coming night: ${fmtDur(need.total)} (baseline ${fmtDur(need.base)}, +${need.strainAdd} min for strain, +${need.debtAdd} min for recent short nights, −${need.napCredit} for naps)${lo.time ? `, lights out by ${lo.time}` : ''}.`);
     const ha = C.healthAge(d);
@@ -8093,18 +8248,18 @@ const Train = (() => {
         try { navigator.vibrate?.(8); } catch {}
         drawPlate(); drawBody();
       };
-      const mealSel = h('select', { 'aria-label': 'Meal', onchange: (e) => { meal = e.target.value; drawHead(); drawPlate(); } }, MEALS.map(([k, n]) => h('option', { value: k, selected: k === meal }, n)));
+      const mealSel = h('select', { 'aria-label': 'Meal', onchange: (e) => { meal = e.target.value; drawHead(); drawPlate(); if (mode === 'search' && !q.trim()) drawResults(); } }, MEALS.map(([k, n]) => h('option', { value: k, selected: k === meal }, n)));
       const mealBtn = h('span', { class: 'meal-pick' });
       const drawHead = () => { put(mealBtn, mealName(meal), h('span', { class: 'num' }, date === C.todayStr ? U.isoLocal(new Date()).slice(11, 16) : U.fmtShort(date)), icon('chevD'), mealSel); mealSel.value = meal; };
       drawHead();
       const modes = [['search', 'Search'], ['scan', 'Scan'], ...(App.sample ? [['describe', 'Describe']] : []), ['quick', 'Quick']];
       const modeSeg = seg(modes, mode, (v) => { mode = v; drawBody(); }, { label: 'How to log', cls: 'solid' });
 
-      // ---- result row ----
+      // ---- result row: tap the name to choose an amount, tap + for your usual ----
       const resRow = (x, sub, onOpen) => {
         const cur = inPlate(x);
         return h('div', { class: 'res' },
-          h('button', { class: 'tx', onclick: onOpen || (() => addToPlate(x)) }, h('span', { class: 't', style: { display: 'block' } }, x.name), h('span', { class: 's', style: { display: 'block' } }, sub)),
+          h('button', { class: 'tx', 'aria-label': `${x.name}, ${sub}. Choose an amount`, onclick: onOpen || (() => openPortion(x)) }, h('span', { class: 't', style: { display: 'block' } }, x.name), h('span', { class: 's', style: { display: 'block' } }, sub)),
           h('span', { class: 'kc' }, h('b', null, fmtInt(x.kcal)), h('span', null, `P ${Math.round(x.p)}`)),
           h('button', { class: 'add-btn' + (cur ? ' on' : ''), 'aria-label': cur ? `Add another ${x.name}, ${cur.m} on your plate` : `Add ${x.name} to your plate`, onclick: () => addToPlate(x) }, cur ? `×${cur.m}` : icon('plus')));
       };
@@ -8113,22 +8268,52 @@ const Train = (() => {
         const n = FOODS.portion(f, sv.g);
         return { name: f.name, ...n, qty: sv.g, unit: f.liquid ? 'ml' : 'g', grams: sv.g, src: 'db', foodId: f.id, label: sv.label };
       };
+      /** The amount sheet for something you logged before, starting from the amount you had. */
+      const openPortion = (x) => {
+        const mine = (st.myFoods || []).find((f) => f.id === x.foodId);
+        const f = x.foodId ? FOODS.list.find((ff) => ff.id === x.foodId && ff.name === x.name) || (mine ? { ...mine, custom: true } : null) : null;
+        if (f) { Sheet.portion({ food: f, grams: f.custom ? null : x.grams, qty: f.custom ? x.qty : null, onAdd: addToPlate }); return; }
+        // estimated or quick-added entries: scale what was logged
+        Sheet.portion({ food: { custom: true, id: null, name: x.name, kcal: x.kcal, p: x.p, c: x.c, f: x.f, fiber: x.fiber || 0, serving: x.qty && x.unit ? `${U.round(x.qty, 1)} ${x.unit}` : '1 serving' },
+          onAdd: (y) => addToPlate({ ...y, src: x.src, foodId: x.foodId || null, unit: x.unit || 'serving', qty: U.round((x.qty || 1) * y.qty, 2), grams: x.grams ? Math.round(x.grams * y.qty) : null }) });
+      };
+      const amountTxt = (x) => (x.qty && x.unit ? `${U.round(x.qty, 1)} ${x.unit}` : '1 serving');
 
       // ---- modes ----
       const searchIn = h('input', { class: 'input', id: 'food-q', type: 'search', placeholder: 'Search foods', 'aria-label': 'Search foods', autocomplete: 'off', oninput: (e) => { q = e.target.value; drawResults(); } });
       const results = h('div', { class: 'col', style: { gap: '8px' } });
+      const sec = (title, right, rows) => (rows.length ? h('div', { class: 'log-sec' }, h('div', { class: 'row' }, h('span', { class: 'eyebrow' }, title), right ? h('span', { class: 'xs muted', style: { fontWeight: 650 } }, right) : null), rows) : null);
+      /** Before you type: yesterday's same meal, your usual for this meal, what fits what's left, then recent foods. */
+      function drawLanding() {
+        const isToday = date === C.todayStr, mealN = mealName(meal).toLowerCase();
+        const todays = (C.food[date]?.items || []).filter((x) => x.meal === meal);
+        const yday = (C.food[addDays(date, -1)]?.items || []).filter((x) => x.meal === meal);
+        const shown = new Set();
+        const take = (list, n) => list.filter((x) => !shown.has(x.name.toLowerCase())).slice(0, n).map((x) => { shown.add(x.name.toLowerCase()); return x; });
+        const usual = take(C.usualFoods(date, meal), 5);
+        const fits = isToday ? take(Tabs.fitsLeft(C, date), 3) : [];
+        const recent = take(recents, 5);
+        const yKcal = yday.reduce((a, x) => a + (+x.kcal || 0), 0);
+        const kLeft = C.energy(date).target - (C.intake(date)?.kcal || 0);
+        put(results,
+          yday.length && !todays.length ? h('div', { class: 'yday' }, h('div', { class: 'grow' }, h('b', null, `Same as yesterday’s ${mealN}`), h('span', null, `${yday.map((x) => x.name.replace(/,.*$/, '')).join(', ')} · ${fmtInt(yKcal)} kcal`)),
+            h('button', { class: 'btn sm primary', onclick: () => { for (const x of yday) addToPlate(x); toast(`${plural(yday.length, 'item')} on your plate`); } }, 'Add all')) : null,
+          sec(`Usual for ${mealN}`, 'tap + for your usual amount', usual.map((x) => resRow(x, `${amountTxt(x)} · ${x.count}× in 4 weeks`))),
+          sec('Fits what’s left', `${fmtInt(Math.max(0, kLeft))} kcal left, protein first`, fits.map((x) => resRow(x, x.label))),
+          sec('Recent', null, recent.map((x) => resRow(x, amountTxt(x)))),
+          !usual.length && !fits.length && !recent.length ? h('p', { class: 'muted small', style: { padding: '8px 4px' } }, 'Search the food list, or create your own food.') : null,
+          h('section', { class: 'card flush', style: { marginTop: '6px' } }, h('div', { class: 'list' },
+            prow({ ic: 'copy', tone: 'food', t: 'Copy a meal from another day', s: `Goes onto your plate for ${mealN}`, onclick: () => Sheet.copyMeal(date, { onPick: (list) => { for (const x of list) addToPlate(x); toast(`${plural(list.length, 'item')} on your plate`); } }) }),
+            prow({ ic: 'plus', t: 'Create a food', s: 'Your own recipe or a packaged food', onclick: () => Sheet.customFood({ name: '', onAdd: (x) => addToPlate(x) }) }))));
+      }
       function drawResults() {
         const qq = q.trim().toLowerCase();
-        if (!qq) {
-          put(results, recents.length ? [h('div', { class: 'row', style: { justifyContent: 'space-between', margin: '6px 4px 0' } }, h('span', { class: 'eyebrow' }, 'Recent and frequent'), h('span', { class: 'xs muted' }, 'tap + to add your usual amount')),
-            recents.map((r) => resRow(r, `${r.qty && r.unit ? `${U.round(r.qty, 1)} ${r.unit}` : '1 serving'} · your usual`))] : h('p', { class: 'muted small', style: { padding: '8px 4px' } }, 'Search the food list, or create your own food.'));
-          return;
-        }
+        if (!qq) { drawLanding(); return; }
         const mine = (st.myFoods || []).map((f) => ({ ...f, custom: true }));
         const res = FOODS.search(qq, mine).slice(0, 25);
         const rec = recents.filter((r) => r.name.toLowerCase().includes(qq));
-        put(results, rec.map((r) => resRow(r, `${r.qty && r.unit ? `${U.round(r.qty, 1)} ${r.unit}` : '1 serving'} · your usual`)),
-          res.map((f) => { const it = dbItem(f, f.custom ? null : f.servings[0]); return resRow(it, `${it.label}${f.custom ? ' · my food' : ''}`, () => Sheet.portion({ food: f, onAdd: (x) => addToPlate(x) })); }),
+        put(results, rec.map((r) => resRow(r, `${amountTxt(r)} · your usual`)),
+          res.filter((f) => !rec.some((r) => r.name === f.name)).map((f) => { const it = dbItem(f, f.custom ? null : f.servings[0]); return resRow(it, `${it.label}${f.custom ? ' · my food' : ''}`, () => Sheet.portion({ food: f, onAdd: (x) => addToPlate(x) })); }),
           !res.length && !rec.length ? h('p', { class: 'muted small', style: { padding: '8px 4px' } }, `Nothing matches “${q}”.${App.sample ? ' Try Describe, or create it as your own food.' : ' Create it as your own food.'}`) : null,
           h('button', { class: 'btn ghost block', onclick: () => Sheet.customFood({ name: q, onAdd: (x) => addToPlate(x) }) }, icon('plus'), 'Create a food'));
       }
@@ -8261,8 +8446,6 @@ const Train = (() => {
       const series = [];
       for (let k = 29; k >= 0; k--) { const d = addDays(date, -k); series.push({ label: U.fmtShort(d), full: U.fmtDay(d), v: C.tdee(d) }); }
       const conf = en.confidence >= 0.75 ? ['high confidence', 'var(--good-ink)'] : en.confidence >= 0.35 ? ['learning', 'var(--warn-ink)'] : ['estimate from your size', 'var(--muted)'];
-      const wk = [];
-      for (let k = 6; k >= 0; k--) { const d = addDays(date, -k), it = C.intake(d), t = C.energy(d).target; wk.push({ label: k ? U.wd(d) : 'Today', full: U.fmtDay(d), v: it ? it.kcal : null, color: k ? 'var(--ink-2)' : 'var(--accent)', faint: !!k, tip: it ? `<b>${U.fmtDay(d)}</b><br>${fmtInt(it.kcal)} of ${fmtInt(t)} kcal` : null }); }
       const rateKg = Math.abs(en.rate / 100) * (en.trendWeight || 75);
       return view(pageHead('Targets', { sub: 'Calories and macros, adjusted to you' }),
         h('section', { class: 'card' }, h('div', { class: 'eyebrow' }, date === C.todayStr ? 'Today’s target' : `Target · ${U.fmtShort(date)}`),
@@ -8277,15 +8460,34 @@ const Train = (() => {
         cardT('What you burn', h('span', { class: 'xs', style: { fontWeight: 800, color: conf[1] } }, conf[0]),
           h('p', { class: 'small muted', style: { marginTop: '-6px', marginBottom: '6px' } }, en.confidence >= 0.35 ? `Worked out from ${en.logged} logged days and ${en.weighIns} weigh-ins over 3 weeks.` : 'Log food most days and weigh in 3+ times a week; the estimate then learns from you instead of formulas.'),
           Charts.line({ points: series, color: 'var(--food)', fmt: (v) => fmtInt(v), unit: ' kcal', caption: 'Estimated daily expenditure', xEvery: 14 })),
-        cardT('Weight trend', en.trendWeight ? h('span', { class: 'small' }, h('b', { class: 'num', style: { fontSize: '17px' } }, fmtW(en.trendWeight)), ` ${wU()}${en.weekChange != null ? ` · ${fmtSigned(U.kgTo(en.weekChange, units()), 2)} this week` : ''}`) : null,
-          Tabs.weightChart(C, date, 60)),
+        (() => {
+          // the rate is a fitted line through 4 weeks of weigh-ins, with how sure it is, against the goal's rate
+          const wr = C.weightRate(date), [vt, vc] = Tabs.WVERDICT[wr.verdict], kg = (x) => fmtSigned(U.kgTo(x, units()), 2);
+          return cardT('Weight', h('button', { class: 'btn sm', onclick: () => Sheet.bodyLog(date) }, icon('plus'), 'Weigh in'),
+            en.trendWeight != null ? h('div', { class: 'big-num' }, fmtW(en.trendWeight), h('small', null, `${wU()} trend`)) : null,
+            wr.perWeek != null ? h('div', { class: 'prog-head' }, h('div', { class: 's' }, h('span', null, Tabs.perWeekTxt(wr.perWeek)), Tabs.confPill(wr.fit))) : null,
+            wr.fit.lo != null ? h('p', { class: 'xs muted', style: { marginTop: '4px', fontWeight: 650 } }, `80% range: ${kg(wr.fit.lo)} to ${kg(wr.fit.hi)} ${wU()} a week`) : null,
+            en.trendWeight != null ? h('p', { class: 'small', style: { marginTop: '6px', fontWeight: 700 } }, h('span', { style: { color: vc } }, wr.verdict === 'unclear' && wr.n < 4 ? 'Needs 4 weigh-ins in 4 weeks' : vt[0].toUpperCase() + vt.slice(1)),
+              h('span', { class: 'muted' }, wr.rate === 0 ? ' · goal: hold steady' : ` · goal ${Tabs.perWeekTxt(wr.goal)}`)) : null,
+            h('div', { style: { marginTop: '10px' } }, Tabs.weightChart(C, date, 60)),
+            h('p', { class: 'note', style: { marginTop: '6px' } }, 'The rate is a straight line through your weigh-ins from the last 4 weeks. Day to day, weight swings with water and food, so the label says how sure the rate is.'));
+        })(),
         cardT('Macros', h('button', { class: 'link', onclick: () => App.open('settings', { focus: 'goal' }) }, 'Edit'),
           h('div', { class: 'list' },
             prow({ t: h('span', { class: 'row', style: { gap: '8px' } }, h('i', { class: 'status-dot', style: { background: 'var(--protein)' } }), 'Protein', h('span', { class: 'xs muted' }, `${P.proteinPerKg} g per kg`)), right: h('span', { class: 'val' }, en.protein, h('small', null, 'g')) }),
             prow({ t: h('span', { class: 'row', style: { gap: '8px' } }, h('i', { class: 'status-dot', style: { background: 'var(--fat)' } }), 'Fat', h('span', { class: 'xs muted' }, `${Math.round(P.fatPct * 100)}% of calories`)), right: h('span', { class: 'val' }, en.fat, h('small', null, 'g')) }),
             prow({ t: h('span', { class: 'row', style: { gap: '8px' } }, h('i', { class: 'status-dot', style: { background: 'var(--carbs)' } }), 'Carbs', h('span', { class: 'xs muted' }, 'the rest')), right: h('span', { class: 'val' }, en.carbs, h('small', null, 'g')) }))),
-        cardT('Eaten vs target, 7 days', null, Charts.bars({ items: wk, height: 140, ref: U.mean(wk.map((_, i) => C.energy(addDays(date, -(6 - i))).target)), refLabel: 'target', fmt: (v) => (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v))), caption: 'Calories eaten, last 7 days' }),
-          h('p', { class: 'note', style: { marginTop: '8px' } }, 'Dashed line: target. The estimate updates a little every day from what you ate and how your trend weight moved, so one unusual day doesn’t swing it.')));
+        (() => {
+          const ws = C.nutritionWeeks(date, 8), last4 = ws.slice(-4).filter((w) => w.logged);
+          const tg = ws.filter((w) => w.targetAvg != null).map((w) => w.targetAvg);
+          const hit = last4.reduce((a, w) => a + w.proteinHit, 0), days = last4.reduce((a, w) => a + w.logged, 0);
+          return cardT('Weekly averages', 'calories a logged day', Charts.bars({ height: 140, xEvery: 2, ref: tg.length ? U.mean(tg) : null, refLabel: 'target', caption: 'Average calories per logged day, last 8 weeks',
+            fmt: (v) => (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v))),
+            items: ws.map((w, i) => ({ label: U.fmtShort(w.mon), full: `Week of ${U.fmtShort(w.mon)}`, v: w.kcalAvg, color: 'var(--hrv)', faint: i === ws.length - 1,
+              tip: w.kcalAvg != null ? `<b>Week of ${U.fmtShort(w.mon)}${i === ws.length - 1 ? ' (so far)' : ''}</b><br>${fmtInt(w.kcalAvg)} of ${fmtInt(w.targetAvg)} kcal a day<br>Protein hit ${w.proteinHit} of ${w.logged} days<br>${plural(w.logged, 'day')} logged` : null })) }),
+            days ? h('p', { class: 'small ink2', style: { marginTop: '10px' } }, `Protein target hit on ${hit} of ${days} logged days over the last 4 weeks${hit / days >= 0.7 ? '. Nicely consistent.' : '. A protein-rich snack on the other days would close the gap.'}`) : null,
+            h('p', { class: 'note', style: { marginTop: '8px' } }, 'Only days with most of the food logged count. The burn estimate updates a little every day from what you ate and how your trend weight moved, so one unusual day doesn’t swing it.'));
+        })());
     },
   };
 })();
@@ -8472,7 +8674,8 @@ const Sheet = (() => {
   };
 
   // =============== FOOD: amount, custom food, edit entry, copy a meal ===============
-  S.portion = ({ food, onAdd }) => {
+  /** How much of a food: a serving, a multiple of one, or grams. `grams` (or `qty` for your own foods) starts it at the amount you had before. */
+  S.portion = ({ food, onAdd, grams = null, qty = null }) => {
     const custom = !!food.custom;
     const opts = custom ? [{ label: food.serving || '1 serving', g: null }] : [...food.servings, { label: food.liquid ? 'ml' : 'grams', g: 1 }];
     let sel = 0, amount = 1;
@@ -8480,6 +8683,12 @@ const Sheet = (() => {
     const nutri = h('div', { class: 'card nutri' });
     const amountEl = h('span');
     const gramsInput = h('input', { class: 'input', id: 'portion-g', inputmode: 'decimal', value: '100', 'aria-label': 'Amount', oninput: () => update() });
+    if (custom && qty > 0) amount = U.round(qty, 2);
+    else if (!custom && grams > 0) {
+      // a serving or a simple multiple of one when it matches, otherwise the exact grams
+      const i = food.servings.findIndex((sv) => [0.5, 1, 1.5, 2, 2.5, 3].some((r) => Math.abs(grams - sv.g * r) < 0.5));
+      if (i >= 0) { sel = i; amount = U.round(grams / food.servings[i].g, 2); } else { sel = opts.length - 1; gramsInput.value = String(Math.round(grams)); }
+    }
     const stepper = h('div', { class: 'qty' }, h('button', { type: 'button', 'aria-label': 'Less', onclick: () => { amount = Math.max(0.25, amount - (amount > 1 ? 0.5 : 0.25)); update(); } }, '−'), amountEl,
       h('button', { type: 'button', 'aria-label': 'More', onclick: () => { amount = Math.min(20, amount + (amount >= 1 ? 0.5 : 0.25)); update(); } }, '+'));
     const amountRow = h('div', { class: 'row' });
@@ -8549,7 +8758,8 @@ const Sheet = (() => {
     });
     draw();
   };
-  S.copyMeal = (date) => {
+  /** Repeat a meal from the last two weeks: logged straight away, or handed to `onPick` (the logger puts it on the plate). */
+  S.copyMeal = (date, { onPick = null } = {}) => {
     const c = C();
     const rows = [];
     for (let k = 1; k <= 14 && rows.length < 16; k++) {
@@ -8561,9 +8771,10 @@ const Sheet = (() => {
     }
     const sh = Sheets.open({
       title: 'Copy a meal', full: true,
-      body: rows.length ? [h('p', { class: 'small muted' }, `Copies to the same meal on ${date === c.todayStr ? 'today' : U.fmtDay(date)}.`),
+      body: rows.length ? [h('p', { class: 'small muted' }, onPick ? 'Goes onto your plate, where you can change amounts before logging.' : `Copies to the same meal on ${date === c.todayStr ? 'today' : U.fmtDay(date)}.`),
         h('div', { class: 'list' }, rows.map((r) => prow({ t: `${r.name} · ${U.fmtDay(r.d)}`, s: r.mi.map((x) => x.name).join(', '), right: h('span', { class: 'val' }, fmtInt(r.mi.reduce((a, x) => a + (+x.kcal || 0), 0)), h('small', null, 'kcal')),
           onclick: () => {
+            if (onPick) { sh.close(); onPick(r.mi.map((x) => ({ ...x }))); return; }
             const copy = r.mi.map((x) => ({ ...x, id: U.uid(), at: date === c.todayStr ? U.isoLocal(new Date()) : `${date}T12:00` }));
             Store.addFood(date, copy); sh.close();
             toast(`Copied ${r.name.toLowerCase()} from ${U.fmtShort(r.d)}`, { action: 'Undo', onAction: () => { for (const x of copy) Store.removeFood(date, x.id); } });
@@ -9041,6 +9252,7 @@ const App = (() => {
     document.getElementById('app').classList.toggle('flow', flow);
     document.getElementById('dock').hidden = flow;
     for (const btn of document.querySelectorAll('.tab')) btn.setAttribute('aria-current', !top && btn.dataset.tab === A.tab ? 'page' : 'false');
+    document.getElementById('fab').setAttribute('aria-label', !top && A.tab === 'food' ? 'Add food' : 'Log something');
     const view = document.getElementById('view');
     view.className = anim ? 'anim-' + anim : '';
     anim = null;
@@ -9075,7 +9287,6 @@ const App = (() => {
     if (P?.float) { const f = P.float(A.ctx(), top.args || {}, top); if (f) items.push(f); }
     if (A.rest && A.draft && top?.page === 'workout') items.push(restBar());
     else if (A.draft && top?.page !== 'workout' && !P?.flow && !P?.float) items.push(workoutBar());
-    if (!top && A.tab === 'food' && Store.ready) items.push(Tabs.logBar(A.ctx(), A.date));
     put(host, items);
     document.getElementById('app').classList.toggle('has-bar', items.length > 0);
     tick();
@@ -9123,7 +9334,8 @@ const App = (() => {
   function buildShell() {
     const nav = document.getElementById('tabs');
     put(nav, TABS.map(([id, name, ic]) => h('button', { class: 'tab', 'data-tab': id, 'aria-current': 'false', onclick: () => A.go(id) }, icon(ic), name)));
-    document.getElementById('fab').onclick = () => Sheet.add();
+    // on the Food tab the dock's + adds food; everywhere else it opens the log sheet
+    document.getElementById('fab').onclick = () => (!A.stack.length && A.tab === 'food' ? Tabs.addFood(A.date) : Sheet.add());
     document.getElementById('fab').replaceChildren(icon('plus'));
   }
 
