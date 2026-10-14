@@ -79,3 +79,15 @@ Everything in the scope above, in `index.html`:
 - Logger, summary, exercise, muscles, load and plan pages updated as listed. The weekly goal is edited on the Weekly plan page.
 
 Left for later: the Today tab's ring labels are still 10 px (outside the fitness sections), and progress labels for habits (CLAUDE.md next step 2) can reuse `E.trendFit`.
+
+## Merged with the iPhone app branch (version 1.5)
+
+This work was first built on the web app alone, then carried onto the branch that added the iPhone and Watch apps, the coach backend and Apple Health sync. Where both had changed the same screen, the fuller version was kept:
+
+- **Train tab:** this overhaul's layout (Today card, schedule with week stats, Progress, load, one library list), with the other branch's additions folded in: the detailed 19-muscle map in the Today card, "Rest up tonight" after 8 pm, Apple Health wording in the iPhone app, load gauges that wait for enough data, and the Sunday/Monday week recap.
+- **Logger:** the other branch's live record alerts, editing saved workouts and Watch sync stay; this overhaul's one-line targets, rest picker, warm-up ramp, optional RPE column and 44 px rows are added. Loads use the other branch's `fmtLift`.
+- **Muscles page:** the other branch's 19-muscle page stays; the weekly-sets view gains a "By muscle group" card with the guide and your 4-week average.
+- **Labels:** trends use the other branch's label style (`.elab`: filled dot for Clear, half dot for Likely, ring for Not clear yet, dash for Holding steady).
+- **Exercise library:** the 25 added moves each have a line in `EX_PARTS`, so they show on the muscle map.
+
+Dropped from the other branch's Train tab: the routine carousel, the separate "Start a workout" section with Empty workout and Log cardio buttons (all in *Choose a workout* now), the Recent card (the Workout history row), and the "strain a day" subtitle (sessions to go and the streak instead).

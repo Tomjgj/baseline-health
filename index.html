@@ -248,7 +248,7 @@ body.swiping #view { background: var(--bg); box-shadow: -18px 0 36px rgba(0, 0, 
 .mu-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 44px; gap: 12px; align-items: center; width: 100%; min-height: 52px; padding: 6px 16px; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font: inherit; }
 .mu-row.on { background: color-mix(in srgb, var(--ink) 5%, transparent); }
 .mu-row .n { font-size: calc(15 * var(--fs)); font-weight: 500; min-width: 0; }
-.mu-row .n small { display: block; font-size: calc(12 * var(--fs)); font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mu-row .n small { display: block; font-size: calc(12.5 * var(--fs)); font-weight: 400; color: var(--ink-2); line-height: 1.35; margin-top: 1px; }
 .mu-row .v { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
 .mu-bar { position: relative; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
 .mu-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
@@ -342,10 +342,10 @@ body.past-title .minihead { opacity: 1; transform: none; pointer-events: auto; }
 .link svg { width: 16px; height: 16px; }
 :is(.btn, .icon-btn, .ask, .chip, .fab, .tab):active:not(:disabled) { transform: scale(0.965); }
 /* rows and cards dim when pressed, like iOS lists, instead of squashing */
-:is(.tap, .pick, .score):active:not(:disabled) { opacity: 0.62; transition: none; }
+:is(.tap, .score):active:not(:disabled) { opacity: 0.62; transition: none; }
 /* 44 pt touch targets: small controls keep their look, and an invisible layer grows the area you can tap to at least 44 × 44 */
-:is(.btn.sm, .seg button, .link, .icon-btn.sm, .datebar .icon-btn, .cal-nav .icon-btn, .chip, button.pill, .add-line, .ask, .qty button, .yn button, .toast button, .pager button, .pick .btn, .icon-btn.plain, .mini-btn) { position: relative; }
-:is(.btn.sm, .seg button, .link, .icon-btn.sm, .datebar .icon-btn, .cal-nav .icon-btn, .chip, button.pill, .add-line, .ask, .qty button, .yn button, .toast button, .pager button, .pick .btn, .icon-btn.plain, .mini-btn)::after {
+:is(.btn.sm, .seg button, .link, .icon-btn.sm, .datebar .icon-btn, .cal-nav .icon-btn, .chip, button.pill, .add-line, .ask, .qty button, .yn button, .toast button, .pager button, .icon-btn.plain, .mini-btn) { position: relative; }
+:is(.btn.sm, .seg button, .link, .icon-btn.sm, .datebar .icon-btn, .cal-nav .icon-btn, .chip, button.pill, .add-line, .ask, .qty button, .yn button, .toast button, .pager button, .icon-btn.plain, .mini-btn)::after {
   content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
 }
 .tap { cursor: pointer; transition: transform 0.14s var(--ease), background 0.2s; }
@@ -743,29 +743,15 @@ a.btn { text-decoration: none; }
 .done-tag svg { width: 15px; height: 15px; }
 
 /* ---------- training ---------- */
-.ready-card .pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.ready-card h3 { font-size: calc(21 * var(--fs)); font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; margin-top: 12px; }
 .tomorrow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; text-align: left; color: inherit; background: transparent; border-top: 1px solid var(--line); padding: 14px 0 0; margin-top: 14px; }
 .tomorrow svg.body-map { width: 84px; flex: none; }
 .tomorrow b { display: block; font-size: calc(15 * var(--fs)); font-weight: 600; color: var(--ink); }
 .tomorrow .grow > span { display: block; font-size: calc(13 * var(--fs)); color: var(--muted); line-height: 1.4; }
 .tomorrow > svg:last-child { width: 18px; height: 18px; color: var(--faint); flex: none; }
-.routine-card .eyebrow { color: var(--good-ink); }
-.routine-card h3 { font-size: calc(24 * var(--fs)); font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; }
-.routine-card .meta { font-size: calc(13 * var(--fs)); color: var(--muted); margin-top: 2px; }
 .ex-lines { display: grid; gap: 6px; margin: 14px 0 16px; }
 .ex-lines div { display: flex; justify-content: space-between; gap: 12px; font-size: calc(14.5 * var(--fs)); }
 .ex-lines div span:first-child { font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ex-lines div span:last-child { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
-.routines { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px; scroll-snap-type: x mandatory; }
-.routines::-webkit-scrollbar { display: none; }
-.rcard { flex: none; width: 152px; border: 0; text-align: left; color: inherit; background: var(--surface); border-radius: var(--r-lg); padding: 14px 12px; display: grid; gap: 2px; scroll-snap-align: start;
-  box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
-.rcard .t { font-size: calc(15.5 * var(--fs)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rcard .s { font-size: calc(12.5 * var(--fs)); color: var(--muted); }
-.rcard .st { display: flex; align-items: center; gap: 6px; font-size: calc(12.5 * var(--fs)); font-weight: 500; margin-top: 8px; }
-.rcard.new { display: grid; place-items: center; color: var(--ink-2); font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
-.rcard.new svg { width: 22px; height: 22px; }
 
 /* ---------- fitness: today card, week stats, progress rows, volume bars ---------- */
 .today-card .pills { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -893,13 +879,6 @@ button.hint-box { width: 100%; border: 0; text-align: left; font: inherit; font-
 .macro .v small { font-family: var(--font); font-size: calc(12 * var(--fs)); color: var(--muted); font-weight: 500; margin-left: 2px; }
 .macro .meter { margin-block: 6px 4px; }
 .macro .of { font-size: calc(11.5 * var(--fs)); font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
-.picks { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px; scroll-snap-type: x mandatory; }
-.picks::-webkit-scrollbar { display: none; }
-.pick { flex: none; width: 168px; border-radius: var(--r-lg); background: var(--surface); padding: 14px 12px 12px; display: grid; gap: 4px; scroll-snap-align: start;
-  box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), var(--card-shadow); }
-.pick .t { font-size: calc(15 * var(--fs)); font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.pick .s { font-size: calc(12.5 * var(--fs)); color: var(--muted); margin-bottom: 8px; }
-.pick .btn { height: 38px; font-size: calc(13.5 * var(--fs)); }
 .meal + .meal { border-top: 1px solid var(--line); }
 .meal-head { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; color: inherit; text-align: left; padding: 13px 0; }
 .meal-head .tx { flex: 1; min-width: 0; }
@@ -1407,7 +1386,7 @@ body.sheet-open #app ~ #toast { animation-name: toastDown; }
 @media (min-width: 600px) {
   body { padding-inline: 24px; }
   .phead, .wk-head, .stickyfoot { margin-inline: -24px; padding-inline: 24px; }
-  .chips, .routines, .picks { margin-inline: -24px; padding-inline: 24px; }
+  .chips { margin-inline: -24px; padding-inline: 24px; }
 }
 /* ---------- liquid glass ----------
    Only what floats over content is glass: the tab bar and add button, header buttons, pagers, sheets, floating bars, toasts and tooltips.
@@ -6394,7 +6373,7 @@ function mealAt(date, meal, d = new Date()) {
   return `${date}T${usual}` < now ? `${date}T${usual}` : now;
 }
 const units = () => Store.state().profile.units || 'metric';
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const mlText = (ml) => U.mlText(ml, units());
 /** Water as [number, unit] for big numbers: "1.25" "L", "750" "ml" or "25" "fl oz". */
 const mlParts = (ml) => (units() === 'imperial' ? [String(Math.round(ml / U.ML_PER_OZ)), 'fl oz'] : ml < 1000 ? [String(Math.round(ml)), 'ml'] : [String(+(ml / 1000).toFixed(2)), 'L']);
@@ -7615,16 +7594,23 @@ const Tabs = (() => {
     const out = [tabHead('Train', sub, askBtn('What should I train today?'), settingsBtn()), todayCard(C, date), scheduleCard(C, date)];
     const rc = weekRecap(C, date);
     if (rc) out.push(rc);
-    // progress, measured against your own last weeks
-    out.push(sectionT('Progress'), strengthCard(C, date), cardioCard(C, date));
-    // training load: a gauge waits until it has something to show; one line says what unlocks it
-    const ld = C.load(date), has = (x) => x && !x.building;
-    if (has(ld?.cardio) || has(ld?.muscular)) {
-      const gs = [has(ld.cardio) ? loadGauge('Cardio', 'cardio', ld.cardio, 'var(--strain)', date) : null, has(ld.muscular) ? loadGauge('Muscular', 'muscular', ld.muscular, 'var(--hrv)', date) : null].filter(Boolean);
-      out.push(sectionT('Training load', '7 days vs your 4-week normal'));
-      if (gs.length === 1) gs.push(h('p', { class: 'gauge-note' }, has(ld.cardio) ? 'Muscular load shows after 3 weeks of logged sets.' : 'Cardio load shows after 2 weeks of heart-rate data.'));
-      out.push(h('div', { class: 'gauges' }, gs));
-    } else out.push(h('section', { class: 'card tight' }, prow({ ic: 'trend', tone: 'strain', t: 'Training load', s: 'Shows after 2 weeks of workouts or 3 weeks of logged sets' })));
+    // progress, measured against your own last weeks; until there's anything to show, progress and load wait in one card
+    const ld = C.load(date), has = (x) => x && !x.building, loadReady = has(ld?.cardio) || has(ld?.muscular);
+    const cf = C.cardioFitness(date), noProgress = !C.strengthSummary(date).length && !cf.vo2 && cf.runs.length < 3 && !cf.mix.total;
+    const loadRow = prow({ ic: 'pulse', tone: 'strain', t: 'Training load', s: 'Shows after 2 weeks of workouts or 3 weeks of logged sets' });
+    if (noProgress && !loadReady) {
+      out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
+        prow({ ic: 'trend', tone: 'good', t: 'Progress', s: 'Lifts show a trend after two workouts; cardio once your watch data is in', onclick: () => App.open('strength', { date }) }), loadRow)));
+    } else {
+      out.push(sectionT('Progress'), strengthCard(C, date), cardioCard(C, date));
+      // a load gauge waits until it has something to show; one line says what unlocks the other
+      if (loadReady) {
+        const gs = [has(ld.cardio) ? loadGauge('Cardio', 'cardio', ld.cardio, 'var(--strain)', date) : null, has(ld.muscular) ? loadGauge('Muscular', 'muscular', ld.muscular, 'var(--hrv)', date) : null].filter(Boolean);
+        out.push(sectionT('Training load', '7 days vs your 4-week normal'));
+        if (gs.length === 1) gs.push(h('p', { class: 'gauge-note' }, has(ld.cardio) ? 'Muscular load shows after 3 weeks of logged sets.' : 'Cardio load shows after 2 weeks of heart-rate data.'));
+        out.push(h('div', { class: 'gauges' }, gs));
+      } else out.push(h('section', { class: 'card tight' }, loadRow));
+    }
     // the library: history, plan, exercises, muscles, routines
     let last = null;
     for (let k = 0; k <= 56 && !last; k++) { const d = addDays(date, -k), ss = C.sessions(d); if (ss.length) last = [d, ss[ss.length - 1]]; }

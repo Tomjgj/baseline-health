@@ -63,3 +63,13 @@ Everything in the scope above, in `index.html`:
 - Logger: the landing view and the consistent taps described above. `Sheet.portion` takes the previous amount (`grams`, or `qty` for your own foods); `Sheet.copyMeal` can hand a meal to the plate.
 - Targets: Weight card with the fitted rate and verdict, Weekly averages for 8 weeks with protein hits.
 - Claude coach: two weeks of nutrition and the weight rate.
+
+## Merged with the iPhone app branch (version 1.5)
+
+Carried onto the branch with the iPhone app, Open Food Facts, the USDA food list, water, saved meals and favourites. Where both had changed the same screen, the fuller version was kept:
+
+- **Food tab:** the other branch's day card, water card and meals (empty meals folded into one line, "Save as a meal", "Same as yesterday") stay. This overhaul's week strip replaces the "Last 7 days" strip and keeps its fibre figure; the Weight card replaces the target row. The day card gains fibre and the extra-activity note.
+- **Food log:** the other branch's saved meals, favourites, packaged foods and USDA results stay. Before you type, the list now runs: same as yesterday, saved meals, favourites, your usual for this meal, fits what's left, recent, then Copy a meal and Create a food. Tapping a name opens the amount sheet at the amount you had; `+` still adds your usual amount.
+- **Foods:** 18 of the 28 foods added here were already in the other branch's list; the other 10 are appended. Search keeps the other branch's alternative words and everyday matches, and now ignores accents.
+
+Dropped from the other branch's Food tab: the "Fits what's left" carousel, the "Last 7 days" strip, the target row and the "Copy a meal" button (all now in the food log or the Weight card). On Targets, the 7-day bars are replaced by eight weekly averages.

@@ -1,11 +1,12 @@
 # Baseline Health: notes for Claude Code
 
-Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exported from a Claude artifact (version 7, 2026-10-11).
+Single-file web app (`index.html`, ~13,300 lines, vanilla JS, no build step), wrapped by the iPhone and Watch apps in `ios/`. Started as a Claude artifact (version 7, 2026-10-11); now version 1.5 (`APP_VERSION`).
 
 ## Rules
 - Keep it one self-contained page unless asked to split it.
 - Dark-first "glass instrument" design: solid cards, floating glass tab bar, rounded numerals. Data colours: strain #3b8deb, sleep #8f7bf0, stress #db6a24, HRV #1aa394, heart rate #e0526e.
 - All models are measured against the person's own baselines (30-day mean ± 1 SD).
+- Trends say how sure they are: use `E.trendFit` and its labels (Clear, Likely, Not clear yet, Holding steady) rather than showing a raw first-to-last change.
 - Never put an API key in front-end code. The Claude coach needs a backend function that holds the key.
 
 ## Storage
@@ -77,7 +78,7 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Tab headers in the iPhone app say how fresh the data is (`syncedText()`, refreshed every 30 s); Food skips it.
 - Settings is a grouped list (`Pages.settings` with no `focus`); each group opens one section as its own page (`App.open('settings', { focus })`: profile, goal, sleep, notify, health, watch, coach, look, data). New settings go in a section, not on the list.
 - Today changes with the time of day: before 11 recovery leads, from 19 the focus card (wind down, tomorrow's plan) leads. `checkInCard` asks the unanswered habits inline (yesterday's until 5 pm). Key metrics follow `profile.todayTiles` (`editMetrics`). Future days on the week strip show a planned workout and open it.
-- Food: empty meals fold into one line except the one due now; `profile.favFoods` (star on a logged item) and `profile.savedMeals` ("Save as a meal") lead the search; `weekFood` is the 7-day card. Imperial shows food amounts in oz / fl oz (`qtyText`, `foodUnit`, `toGrams`, `fromGrams`); macros stay in grams.
+- Food: empty meals fold into one line except the one due now; `profile.favFoods` (star on a logged item) and `profile.savedMeals` ("Save as a meal") lead the search; the week strip (`foodWeekCard`) is the 7-day card. Imperial shows food amounts in oz / fl oz (`qtyText`, `foodUnit`, `toGrams`, `fromGrams`); macros stay in grams.
 - Train: a set that beats the lift's best says so at once (`prCheck` on set done, `draft.prSeen`). Load gauges wait for data. `weekRecap` shows on Sunday (week so far) and Monday (last week). Your own exercises carry muscles in `training.customEx` (`{ name: { p, s, bw } }`, `Sheet.exerciseMuscles`); `E.exerciseInfo` / `exerciseParts` read them (set by `context()`).
 - Health category pages start with "This month" (`trendOf`: last 30 days vs the 30 before, 12+ days in each). "Summary for your doctor" (`doctorSummary`) makes a 90-day HTML file to share.
 - Text wraps rather than clips at large sizes; check with the 135% run (bigtext.js in the scratchpad pattern: set `--fs` to 1.35px).
@@ -136,6 +137,22 @@ Single-file web app (`index.html`, ~8,500 lines, vanilla JS, no build step). Exp
 - Saved workouts you logged can be edited: strength opens the logger with `draft.editing = { min, end, src, keep }` (fixed length, "Editing" header, Save, "Discard changes"; no Live Activity or watch context), cardio opens `Sheet.cardio(date, workout)` (same id).
 - Tonight's sleep need adds at most an hour to your usual need (strain first, then debt).
 - The Log sheet's text box understands water ("500 ml water", "2 glasses", "a bottle", "1.5 l") and "leg day" / "arm day".
+
+## Training and food progress (version 1.5)
+- `E.trendFit(points, span, tol)`: a least-squares line through `{x (days), v}` with the change over `span` and its 80% range. 'clear' when the 95% range leaves out zero, 'likely' at 80%, 'steady' when even the likely range sits inside ±`tol` (6+ points), else 'unclear'; under 4 points is always 'unclear'. Show it with `Tabs.confPill(fit)` (the `.elab` dots) and colour a change only when it's clear or likely (`Tabs.changeInk`).
+- Train tab: `todayCard` makes one decision (planned session, else `suggestRoutine`, else a walk when recovery is low) with one start button, *Choose something else* (`Sheet.chooseWorkout`) and the muscle map. Then the schedule with week stats, Progress (`strengthCard`, `cardioCard`), load and one library list. Pages `strength` and `cardio`.
+- Context models: `liftTrend`, `strengthSummary`, `sessionZones`, `monOf`, `week`, `trainingWeeks`, `weekGoal` (goal from `training.weeklyGoal`, else the weekly plan up to 5, else 3; one missed week in six doesn't break the streak), `muscleVolume` (groups against `E.volumeGuide` and your 4-week average), `cardioFitness` (VO₂ max against `E.vo2Norm`, running pace at a reference heart rate, intensity mix). Records carry `repMax`.
+- Exercise library: `FOODS.EXERCISES` rows end with a kit code (`bb` barbell, `db`, `cb` cable, `mc` machine, `bw` bodyweight, `ot`; ` t` marks a timed hold). `exerciseInfo` returns `equip`, `timed` and `known`; `exSettings` takes the barbell flag from it and defaults to 5 lb steps on a 45 lb bar in imperial.
+- Logger: `progressionShort` is the one-line target (tap for `progressionText`); `Sheet.restPicker`; warm-up ramp for a heavy first barbell lift; RPE column per `App.ui.rpeCol`, else on when the last 3 workouts used it; previous sets line up by type.
+- Food: `loggedDay` (40% of the target, today never counts), `nutritionWeek(s)` (with fibre), `loggingStreak` (one missed day in seven forgiven), `usualFoods(d, meal)`, `weightRate` (fitted rate over 28 days against the goal: on track, faster, slower, gaining, losing, unclear). The Food tab ends with the week strip and the Weight card; Fits what's left, Copy a meal and Create a food live in the food log. `Sheet.portion({ grams, qty })` starts at the amount you had; `Sheet.copyMeal(date, { onPick })` hands a meal to the plate.
+
+## Liquid glass (version 1.5)
+- Only the floating layer is glass (tab bar, add button, header buttons, pagers, sheets, floating bars, toasts, tooltips); content stays on solid cards, and controls inside a card or sheet aren't glass. See `docs/liquid-glass.md`.
+- The material is the `--lg-*` tokens (dark and both light blocks). A new floating control: `background: var(--lg-sheen), var(--lg-fill); box-shadow: var(--lg-rim), var(--lg-drop); backdrop-filter: var(--lg-blur)`, and add it to the Reduce Transparency list. Reading surfaces use `--lg-strong` and `--lg-blur-strong`.
+- Selection is a sliding lens: `seg()` and header pagers get one from `addLens(wrap, index, key)`; the tab bar's `.tab-lens` follows `A.tab` (`--i`, `.moving` for the flex). The selected button itself stays transparent.
+- Scrolling down shrinks the tab bar to icons (`body.dock-min`, labels in `.tab .tl`). Headers fade content under them with a masked blur (`.minihead::before`, `.phead::before`, `.wk-head::before`), never a hard line. Sheets float 8 px in with 32 px corners.
+- Glass controls swell when pressed (1.06); solid buttons still press in (0.965) and rows dim.
+- No refraction: WebKit can't run SVG filters in `backdrop-filter`, so the look comes from rim, sheen and saturation, the same everywhere.
 
 ## Next steps (in order)
 1. ~~Polish~~ (done, Oct 2026): Today in ~1.5 screens, one add button on Food, 44 px targets and 11 px+ scalable text, forgiving streaks with pauses, lazy-drawn Health.
