@@ -75,6 +75,17 @@
   --act-line: rgba(255, 255, 255, 0.3);
   --glow: 0.6;
   --amb: 0.5;
+  /* liquid glass: a clear tinted fill, blur with saturation, light falling from above, a specular rim and depth */
+  --lg-fill: rgba(30, 33, 41, 0.42);
+  --lg-strong: rgba(22, 24, 30, 0.9);
+  --lg-lens: rgba(255, 255, 255, 0.12);
+  --lg-blur: blur(14px) saturate(1.9) brightness(1.08);
+  --lg-blur-strong: blur(28px) saturate(1.8);
+  --lg-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 58%);
+  --lg-rim: inset 1px 1.5px 0.5px -0.5px rgba(255, 255, 255, 0.4), inset -1px -1px 0.5px -0.5px rgba(255, 255, 255, 0.14), inset 0 0 0 0.5px rgba(255, 255, 255, 0.12), inset 0 0 16px rgba(255, 255, 255, 0.045);
+  --lg-drop: 0 12px 32px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.26);
+  --lg-gloss: rgba(255, 255, 255, 0.4);
+  --lg-edge: color-mix(in srgb, var(--bg) 80%, transparent);
 
   --font: -apple-system, BlinkMacSystemFont, "Manrope", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-num: ui-rounded, "SF Pro Rounded", "Nunito", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -107,6 +118,10 @@
     --shade-sleep: rgba(106, 88, 220, 0.1); --shade-active: rgba(42, 120, 214, 0.13);
     --shade-act: rgba(15, 18, 25, 0.045); --act-line: rgba(15, 18, 25, 0.28);
     --glow: 0.28; --amb: 0.26;
+    --lg-fill: rgba(255, 255, 255, 0.5); --lg-strong: rgba(250, 251, 253, 0.94); --lg-lens: rgba(15, 18, 25, 0.075);
+    --lg-blur: blur(14px) saturate(2) brightness(1.04); --lg-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 62%);
+    --lg-rim: inset 1px 1.5px 0.5px -0.5px #fff, inset -1px -1px 0.5px -0.5px rgba(255, 255, 255, 0.75), inset 0 0 0 0.5px rgba(15, 18, 25, 0.11), inset 0 0 14px rgba(255, 255, 255, 0.4);
+    --lg-drop: 0 10px 30px rgba(20, 25, 40, 0.13), 0 1px 4px rgba(20, 25, 40, 0.08); --lg-gloss: rgba(255, 255, 255, 0.2); --lg-edge: color-mix(in srgb, var(--bg) 84%, transparent);
   }
 }
 :root[data-theme="light"] {
@@ -132,6 +147,10 @@
   --shade-sleep: rgba(106, 88, 220, 0.1); --shade-active: rgba(42, 120, 214, 0.13);
   --shade-act: rgba(15, 18, 25, 0.045); --act-line: rgba(15, 18, 25, 0.28);
   --glow: 0.28; --amb: 0.26;
+  --lg-fill: rgba(255, 255, 255, 0.5); --lg-strong: rgba(250, 251, 253, 0.94); --lg-lens: rgba(15, 18, 25, 0.075);
+    --lg-blur: blur(14px) saturate(2) brightness(1.04); --lg-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 62%);
+    --lg-rim: inset 1px 1.5px 0.5px -0.5px #fff, inset -1px -1px 0.5px -0.5px rgba(255, 255, 255, 0.75), inset 0 0 0 0.5px rgba(15, 18, 25, 0.11), inset 0 0 14px rgba(255, 255, 255, 0.4);
+    --lg-drop: 0 10px 30px rgba(20, 25, 40, 0.13), 0 1px 4px rgba(20, 25, 40, 0.08); --lg-gloss: rgba(255, 255, 255, 0.2); --lg-edge: color-mix(in srgb, var(--bg) 84%, transparent);
 }
 
 /* ---------- base ---------- */
@@ -1390,6 +1409,86 @@ body.sheet-open #app ~ #toast { animation-name: toastDown; }
   .phead, .wk-head, .stickyfoot { margin-inline: -24px; padding-inline: 24px; }
   .chips, .routines, .picks { margin-inline: -24px; padding-inline: 24px; }
 }
+/* ---------- liquid glass ----------
+   Only what floats over content is glass: the tab bar and add button, header buttons, pagers, sheets, floating bars, toasts and tooltips.
+   Content stays on solid cards. Selections are a lens of glass that slides between options; the tab bar shrinks while you scroll down. */
+.tabcap, .icon-btn:not(.plain), .ask, .pager, .wk-bar, .ptr-c {
+  background: var(--lg-sheen), var(--lg-fill); box-shadow: var(--lg-rim), var(--lg-drop);
+  -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
+}
+.icon-btn:not(.plain), .ask { box-shadow: var(--lg-rim), 0 4px 14px rgba(0, 0, 0, 0.16); }
+.pager { box-shadow: var(--lg-rim); }
+.datebar .icon-btn, .cal-nav .icon-btn, .card .icon-btn, .sheet .icon-btn, .ex-card .icon-btn { background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.card .icon-btn.sm:not(.plain), .sheet-head .icon-btn:not(.plain) { background: var(--surface-3); }
+.sheet, .rest-bar, .plate-bar, .composer, .toast, .tip {
+  background: var(--lg-sheen), var(--lg-strong); box-shadow: var(--lg-rim), var(--shadow);
+  -webkit-backdrop-filter: var(--lg-blur-strong); backdrop-filter: var(--lg-blur-strong);
+}
+.tip { box-shadow: var(--lg-rim), var(--shadow-sm); }
+/* the add button is tinted glass: the accent with a gloss on top */
+.fab { background: linear-gradient(180deg, var(--lg-gloss), rgba(255, 255, 255, 0) 58%), var(--accent);
+  box-shadow: inset 1px 1.5px 0.5px -0.5px rgba(255, 255, 255, 0.75), inset -1px -1px 0.5px -0.5px rgba(255, 255, 255, 0.3), inset 0 -8px 14px rgba(0, 0, 0, 0.1), var(--lg-drop); }
+/* pressing glass makes it swell a little, the way a drop of water gives under a finger */
+:is(.icon-btn:not(.plain), .ask, .fab):active:not(:disabled) { transform: scale(1.06); }
+
+/* the tab bar: a lens slides to the selected tab and flexes as it moves */
+.tabcap { position: relative; isolation: isolate; transition: min-height 0.34s var(--spring); }
+.tab { position: relative; z-index: 1; }
+.tab[aria-current="page"] { background: transparent; }
+.tab-lens { position: absolute; z-index: 0; top: 5px; bottom: 5px; left: 5px; width: calc((100% - 10px) / 4); border-radius: 999px; pointer-events: none;
+  transform: translateX(calc(var(--i, 0) * 100%)); background: var(--lg-sheen), var(--lg-lens); box-shadow: var(--lg-rim);
+  transition: transform 0.48s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.2s; }
+.tabcap.moving .tab-lens { animation: lensFlex 0.48s ease-out; }
+@keyframes lensFlex { 30% { scale: 1.18 0.88; } 65% { scale: 0.97 1.04; } }
+.tab .tl { display: block; max-height: 16px; overflow: hidden; transition: max-height 0.3s var(--spring), opacity 0.2s; }
+/* scrolling down shrinks the bar to its icons; scrolling up brings the labels back */
+.fab { transition: transform 0.14s var(--ease), width 0.34s var(--spring), height 0.34s var(--spring); }
+body.dock-min .tabcap { min-height: 50px; }
+body.dock-min .tab .tl { max-height: 0; opacity: 0; }
+body.dock-min .fab { width: 50px; height: 50px; }
+body.dock-min .fab.wide { width: auto; padding-inline: 13px 15px; }
+
+/* segmented controls and pagers: the selection is a lens that slides */
+.seg, .pager { position: relative; isolation: isolate; }
+.seg { gap: 0; }
+.seg > .lens, .pager > .lens { position: absolute; z-index: -1; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n, 2)); border-radius: 999px; pointer-events: none;
+  transform: translateX(calc(var(--i, 0) * 100%)); transition: transform 0.4s cubic-bezier(0.3, 1.25, 0.5, 1), opacity 0.2s; }
+.seg > .lens { background: var(--seg-on); box-shadow: var(--lg-rim), 0 2px 8px rgba(0, 0, 0, 0.18); }
+.pager > .lens { background: var(--lg-sheen), var(--lg-lens); box-shadow: var(--lg-rim); }
+.seg.no-sel > .lens, .pager.no-sel > .lens { opacity: 0; }
+.seg button[aria-pressed="true"], .seg.solid button[aria-pressed="true"], .pager button[aria-current="page"] { background: transparent; box-shadow: none; }
+
+/* scroll edges: content running under a header or the tab bar softens into a blur instead of meeting a hard line */
+.minihead { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; padding-bottom: 14px; }
+.minihead::before, .phead::before, .wk-head::before { content: ""; position: absolute; z-index: -1; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none;
+  background: linear-gradient(to bottom, var(--lg-edge), color-mix(in srgb, var(--bg) 45%, transparent) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6); backdrop-filter: blur(12px) saturate(1.6);
+  -webkit-mask-image: linear-gradient(#000 58%, transparent); mask-image: linear-gradient(#000 58%, transparent); }
+.phead::before { top: calc(-1 * env(safe-area-inset-top, 0px)); bottom: -18px; opacity: 0; transition: opacity 0.25s; }
+body.scrolled .phead { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+body.scrolled .phead::before { opacity: 1; }
+.wk-head { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.wk-head::before { top: calc(-1 * env(safe-area-inset-top, 0px)); bottom: -20px; background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 90%, transparent) 65%, transparent); }
+.dock::before { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); -webkit-mask-image: linear-gradient(transparent, #000 55%); mask-image: linear-gradient(transparent, #000 55%); }
+
+/* sheets float: inset from the edges with rounded corners all round */
+.sheet { left: 8px; right: 8px; bottom: calc(8px + var(--kb, 0px)); border-radius: 32px; transform: translateY(calc(100% + 24px));
+  max-height: calc(100% - 32px - env(safe-area-inset-top, 0px) - var(--kb, 0px)); }
+.sheet.in { transform: none; }
+.sheet.full { height: calc(100% - 32px - env(safe-area-inset-top, 0px)); }
+.sheet-body { padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px) * 0.5); }
+.sheet-foot { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px) * 0.5); }
+
+/* reduce transparency: every glass surface turns solid */
+@media (prefers-reduced-transparency: reduce) {
+  :root:root:root { --lg-fill: var(--surface-2); --lg-strong: var(--surface); --lg-lens: var(--surface-3); --lg-sheen: linear-gradient(transparent, transparent); --lg-edge: var(--bg); }
+  .tabcap, .icon-btn, .ask, .pager, .wk-bar, .ptr-c, .sheet, .rest-bar, .plate-bar, .composer, .toast, .tip, .minihead::before, .phead::before, .wk-head::before, .dock::before { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .minihead::before, .phead::before, .wk-head::before { background: var(--bg); -webkit-mask-image: none; mask-image: none; bottom: 0; }
+}
+@media (prefers-contrast: more) {
+  .tabcap, .icon-btn:not(.plain), .ask, .pager, .wk-bar, .sheet, .rest-bar, .plate-bar, .toast { outline: 1px solid var(--axis); outline-offset: -1px; }
+}
+
 @media (max-width: 370px) {
   .thead h1 { font-size: calc(30 * var(--fs)); }
   .ring-v { font-size: calc(24 * var(--fs)); }
@@ -6158,10 +6257,28 @@ const card = (...kids) => h('div', { class: 'card' }, ...kids);
 const cardT = (title, right, ...kids) => h('section', { class: 'card', 'aria-label': typeof title === 'string' ? title : null },
   h('div', { class: 'card-title' }, h('h2', null, title), right == null ? null : typeof right === 'string' ? h('span', { class: 'r' }, right) : right), ...kids);
 const sectionT = (title, right) => h('div', { class: 'section-title' }, h('h2', null, title), right == null ? null : typeof right === 'string' ? h('span', { class: 'r' }, right) : right);
+/**
+ * The selection lens of a segmented control or pager: a piece of glass behind the selected button that slides to the next one.
+ * A control drawn again within a moment (the screen re-renders after a tap) starts where the last one was and slides on.
+ */
+const lensMem = new Map();
+function addLens(wrap, i, key) {
+  wrap.style.setProperty('--n', wrap.querySelectorAll(':scope > button').length);
+  wrap.prepend(h('span', { class: 'lens', 'aria-hidden': 'true' }));
+  const set = (j) => { wrap.style.setProperty('--i', Math.max(0, j)); wrap.classList.toggle('no-sel', j < 0); if (key) lensMem.set(key, { i: j, t: Date.now() }); };
+  const prev = key ? lensMem.get(key) : null;
+  if (prev && prev.i >= 0 && i >= 0 && prev.i !== i && Date.now() - prev.t < 1500) {
+    wrap.style.setProperty('--i', prev.i);
+    requestAnimationFrame(() => requestAnimationFrame(() => set(i)));
+  } else set(i);
+  return set;
+}
 function seg(options, value, onChange, { label, cls = '' } = {}) {
+  const same = (a, b) => a === b || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, k) => x === b[k]));
   const wrap = h('div', { class: 'seg ' + cls, role: 'group', 'aria-label': label || null });
-  const btns = options.map(([v, text]) => h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: () => { for (const b of btns) b.setAttribute('aria-pressed', String(b === btns[options.findIndex((o) => o[0] === v)])); onChange(v); } }, text));
+  const btns = options.map(([v, text], k) => h('button', { type: 'button', 'aria-pressed': String(same(v, value)), onclick: () => { for (const b of btns) b.setAttribute('aria-pressed', String(b === btns[k])); move(k); onChange(v); } }, text));
   wrap.append(...btns);
+  const move = addLens(wrap, options.findIndex(([v]) => same(v, value)), 'seg:' + (label || options.map((o) => o[1]).join('|')));
   return wrap;
 }
 const field = (labelText, control, hint) => {
@@ -6217,6 +6334,10 @@ const getHealth = () => (HealthSync.native() ? ['Sync Apple Health', () => { Hea
 function useMyData() { Store.setDemo(false); if (!Store.hasRealData() && !HealthSync.native()) Sheet.welcome({ start: true }); else HealthSync.maybeSync(); }
 /** Sticky header for a pushed page: back, then a title or a pager. */
 function pageHead(title, { sub = null, right = null, center = null, onBack = null, backIcon = 'chevL', backLabel = 'Back' } = {}) {
+  if (center?.classList?.contains('pager') && !center.querySelector(':scope > .lens')) {
+    const bs = [...center.querySelectorAll(':scope > button')];
+    addLens(center, bs.findIndex((b) => b.getAttribute('aria-current') === 'page'), 'pager:' + (center.getAttribute('aria-label') || ''));
+  }
   return h('header', { class: 'phead' },
     h('button', { class: 'icon-btn', 'aria-label': backLabel, onclick: onBack || (() => App.back()) }, icon(backIcon)),
     center || h('div', { class: 'pt' }, h('h1', null, title), sub ? h('p', { class: 'sub' }, sub) : null), right);
@@ -10744,7 +10865,7 @@ const Train = (() => {
             h('button', { class: 'set-type ' + x.t, 'aria-label': `Set ${si + 1}, ${{ N: 'normal set', W: 'warm-up', D: 'drop set', F: 'to failure' }[x.t]}. Tap to change type`, onclick: () => {
               const order = ['N', 'W', 'D', 'F']; x.t = order[(order.indexOf(x.t) + 1) % 4]; save(); redraw();
             } }, label),
-            h('button', { class: 'set-prev', 'aria-label': pv ? `Copy previous ${setStr(pv)}` : 'No previous set', disabled: !pv, onclick: () => { if (!pv) return; x.w = +pv.w || 0; x.r = +pv.r; save(); redraw(); } }, pv ? setStr(pv) : '–'),
+            h('button', { class: 'set-prev', 'aria-label': pv ? `Copy previous ${setStr(pv)}` : 'No previous set', disabled: !pv, onclick: () => { if (!pv) return; x.w = +pv.w || 0; x.r = +pv.r; save(); redraw(); } }, pv ? setStr(pv).replace(' × ', '×') : '–'),
             kg, reps, ...(showRpe ? [rpe] : []), ok);
           grid.append(row);
         });
@@ -11131,8 +11252,6 @@ const Train = (() => {
         const imp = units() === 'imperial', lb = U.KG_PER_LB;
         const RR = [[5, 8], [6, 10], [8, 12], [10, 15]];
         const rangeSeg = seg(RR.map((r) => [r, `${r[0]}–${r[1]}`]), cfg.range, (v) => setT({ range: v }), { label: 'Rep range', cls: 'small' });
-        // the seg matches values by identity, so mark the current range by its numbers
-        rangeSeg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(RR[i][0] === cfg.range[0] && RR[i][1] === cfg.range[1])));
         const qty = (label, text, down, up) => h('div', { class: 'qty' }, h('button', { 'aria-label': `Less ${label}`, onclick: down }, '−'), h('span', null, text), h('button', { 'aria-label': `More ${label}`, onclick: up }, '+'));
         const stepInc = imp ? 2.5 * lb : 0.5, barInc = imp ? 5 * lb : 2.5;
         out.push(h('section', { class: 'card flush' }, h('div', { class: 'list' },
@@ -12915,6 +13034,12 @@ const App = (() => {
     document.getElementById('app').classList.toggle('flow', flow);
     document.getElementById('dock').hidden = flow;
     for (const btn of document.querySelectorAll('.tab')) btn.setAttribute('aria-current', !top && btn.dataset.tab === A.tab ? 'page' : 'false');
+    // the lens stays on the tab you're in, also under a pushed page, and flexes when it moves
+    const cap = document.getElementById('tabs'), ti = String(Math.max(0, TABS.findIndex((t) => t[0] === A.tab)));
+    if (cap.style.getPropertyValue('--i') !== ti) {
+      if (cap.style.getPropertyValue('--i')) { cap.classList.remove('moving'); void cap.offsetWidth; cap.classList.add('moving'); clearTimeout(cap._mv); cap._mv = setTimeout(() => cap.classList.remove('moving'), 500); }
+      cap.style.setProperty('--i', ti);
+    }
     const view = document.getElementById('view');
     view.className = anim ? 'anim-' + anim : '';
     const restore = anim ? () => {} : keepState(view);
@@ -13019,7 +13144,7 @@ const App = (() => {
 
   function buildShell() {
     const nav = document.getElementById('tabs');
-    put(nav, TABS.map(([id, name, ic]) => h('button', { class: 'tab', 'data-tab': id, 'aria-current': 'false', onclick: () => A.go(id) }, icon(ic), name)));
+    put(nav, h('span', { class: 'tab-lens', 'aria-hidden': 'true' }), TABS.map(([id, name, ic]) => h('button', { class: 'tab', 'data-tab': id, 'aria-current': 'false', onclick: () => A.go(id) }, icon(ic), h('span', { class: 'tl' }, name))));
   }
 
   async function boot() {
@@ -13181,10 +13306,15 @@ const App = (() => {
   };
   window.addEventListener('touchend', endPull, { passive: true });
   window.addEventListener('touchcancel', () => { if (pull) { pull = null; ptrAt(0, 'back'); } }, { passive: true });
+  // scrolling down a long screen shrinks the tab bar to its icons; any scroll up, or the top of the screen, brings it back
+  let lastY = 0;
   window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    document.body.classList.toggle('scrolled', y > 6);
-    document.body.classList.toggle('past-title', y > 58);
+    const y = window.scrollY, b = document.body.classList;
+    b.toggle('scrolled', y > 6);
+    b.toggle('past-title', y > 58);
+    if (y < 120 || y < lastY - 8) b.remove('dock-min');
+    else if (y > lastY + 8 && !Sheets.count) b.add('dock-min');
+    if (Math.abs(y - lastY) > 8 || y < 120) lastY = y;
   }, { passive: true });
   document.getElementById('minihead-btn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   window.addEventListener('keydown', (e) => {
